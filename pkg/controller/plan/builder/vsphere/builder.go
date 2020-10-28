@@ -180,6 +180,29 @@ func (r *Builder) Source(vmID string, object *vmio.VirtualMachineImportSourceSpe
 }
 
 //
+// Build the VMIO Target VM Name.
+func (r *Builder) TargetVmName(vmId string, object *vmio.VirtualMachineImportSourceSpec) (err error) {
+	vm := &vsphere.VM{}
+	status, pErr := r.Inventory.Get(vm, vmID)
+	if pErr != nil {
+		err = liberr.Wrap(pErr)
+		return
+	}
+	switch status {
+	case http.StatusOK:
+		object.targetVmName = vm.Name
+	default:
+		err = liberr.New(
+			fmt.Sprintf(
+				"VM %s lookup failed: %s",
+				vmID,
+				http.StatusText(status)))
+	}
+
+	return
+}
+
+//
 // Build tasks.
 func (r *Builder) Tasks(vmID string) (list []*plan.Task, err error) {
 	vm := &vsphere.VM{}

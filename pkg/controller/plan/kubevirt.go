@@ -196,6 +196,10 @@ func (r *KubeVirt) buildImport(vmID string) (object *vmio.VirtualMachineImport, 
 	if err != nil {
 		return
 	}
+	targetVmName, err := r.BuildTargetVmName(vmID)
+	if err != nil {
+		return
+	}
 	namespace := r.namespace()
 	object = &vmio.VirtualMachineImport{
 		ObjectMeta: meta.ObjectMeta{
@@ -277,6 +281,18 @@ func (r *KubeVirt) buildSecret(vmID string) (object *core.Secret, err error) {
 func (r *KubeVirt) buildSource(vmID string) (object *vmio.VirtualMachineImportSourceSpec, err error) {
 	object = &vmio.VirtualMachineImportSourceSpec{}
 	err = r.Builder.Source(vmID, object)
+	if err != nil {
+		err = liberr.Wrap(err)
+	}
+
+	return
+}
+
+//
+// Build the VMIO TargetVmName.
+func (r *KubeVirt) buildTargetVmName(vmID string) (object *vmio.VirtualMachineImportSourceSpec, err error) {
+	object = &vmio.VirtualMachineImportSourceSpec{}
+	err = r.Builder.TargetVmName(vmID, object)
 	if err != nil {
 		err = liberr.Wrap(err)
 	}
