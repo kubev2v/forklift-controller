@@ -115,7 +115,7 @@ type Host struct {
 	InMaintenanceMode bool          `json:"inMaintenance"`
 	ProductName       string        `json:"productName"`
 	ProductVersion    string        `json:"productVersion"`
-	Thumbprint        string        `json:thumbprint`
+	Thumbprint        string        `json:"thumbprint"`
 	Networks          model.RefList `json:"networks"`
 	Datastores        model.RefList `json:"datastores"`
 	VMs               model.RefList `json:"vms"`
