@@ -127,3 +127,9 @@ type StorageClass struct {
 type NetworkAttachmentDefinition struct {
 	Base
 }
+
+//
+// VirtualMachine
+type VirtualMachine struct {
+	Base
+}

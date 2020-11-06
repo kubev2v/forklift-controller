@@ -10,6 +10,7 @@ import (
 	core "k8s.io/api/core/v1"
 	storage "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	kubevirt "kubevirt.io/client-go/api/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
@@ -319,5 +320,108 @@ func (r *Namespace) Delete(e event.DeleteEvent) bool {
 //
 // Ignored.
 func (r *Namespace) Generic(e event.GenericEvent) bool {
+	return false
+}
+
+//
+// NetworkAttachmentDefinition
+type VirtualMachine struct {
+	libocp.BaseCollection
+}
+
+//
+// Get the kubernetes object being collected.
+func (r *VirtualMachine) Object() runtime.Object {
+	return &kubevirt.VirtualMachine{}
+}
+
+//
+// Reconcile.
+// Achieve initial consistency.
+func (r *VirtualMachine) Reconcile(ctx context.Context) (err error) {
+	pClient := r.Reconciler.Client()
+	list := &kubevirt.VirtualMachineList{}
+	err = pClient.List(context.TODO(), nil, list)
+	if err != nil {
+		err = liberr.Wrap(err)
+		return
+	}
+	db := r.Reconciler.DB()
+	tx, err := db.Begin()
+	if err != nil {
+		err = liberr.Wrap(err)
+		return
+	}
+	defer tx.End()
+	for _, resource := range list.Items {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+		}
+		m := &model.VirtualMachine{}
+		m.With(&resource)
+		r.Reconciler.UpdateThreshold(m)
+		Log.Info("Create", libref.ToKind(m), m.String())
+		err = db.Insert(m)
+		if err != nil {
+			err = liberr.Wrap(err)
+			return
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		err = liberr.Wrap(err)
+		return
+	}
+
+	return
+}
+
+//
+// Resource created watch event.
+func (r *VirtualMachine) Create(e event.CreateEvent) bool {
+	object, cast := e.Object.(*kubevirt.VirtualMachine)
+	if !cast {
+		return false
+	}
+	m := &model.VirtualMachine{}
+	m.With(object)
+	r.Reconciler.Create(m)
+
+	return false
+}
+
+//
+// Resource updated watch event.
+func (r *VirtualMachine) Update(e event.UpdateEvent) bool {
+	object, cast := e.ObjectNew.(*kubevirt.VirtualMachine)
+	if !cast {
+		return false
+	}
+	m := &model.VirtualMachine{}
+	m.With(object)
+	r.Reconciler.Update(m)
+
+	return false
+}
+
+//
+// Resource deleted watch event.
+func (r *VirtualMachine) Delete(e event.DeleteEvent) bool {
+	object, cast := e.Object.(*kubevirt.VirtualMachine)
+	if !cast {
+		return false
+	}
+	m := &model.VirtualMachine{}
+	m.With(object)
+	r.Reconciler.Delete(m)
+
+	return false
+}
+
+//
+// Ignored.
+func (r *VirtualMachine) Generic(e event.GenericEvent) bool {
 	return false
 }
