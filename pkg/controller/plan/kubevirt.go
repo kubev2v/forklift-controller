@@ -233,19 +233,6 @@ func (r *KubeVirt) buildSecret(vmID string) (object *core.Secret, err error) {
 }
 
 //
-// Generated name for kubevirt VM Import mapping CR.
-func (r *KubeVirt) nameForMapping() string {
-	uid := string(r.Plan.UID)
-	parts := []string{
-		"plan",
-		r.Plan.Name,
-		uid[len(uid)-4:],
-	}
-
-	return strings.Join(parts, "-")
-}
-
-//
 // Generated name for kubevirt VM Import CR secret.
 func (r *KubeVirt) nameForSecret(vmID string) string {
 	uid := string(r.Plan.UID)
