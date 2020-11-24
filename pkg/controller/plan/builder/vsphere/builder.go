@@ -12,10 +12,10 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/apis/forklift/v1alpha1/ref"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web"
 	model "github.com/konveyor/forklift-controller/pkg/controller/provider/web/vsphere"
-	vmio "github.com/kubevirt/vm-import-operator/pkg/apis/v2v/v1beta1"
 	"github.com/vmware/govmomi/vim25"
 	"gopkg.in/yaml.v2"
 	core "k8s.io/api/core/v1"
+	vmio "kubevirt.io/vm-import-operator/pkg/apis/v2v/v1beta1"
 	liburl "net/url"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -146,10 +146,11 @@ func (r *Builder) Load() (err error) {
 	list := &api.HostList{}
 	err = r.Client.List(
 		context.TODO(),
+		list,
 		&client.ListOptions{
 			Namespace: r.Provider.Namespace,
 		},
-		list)
+	)
 	if err != nil {
 		err = liberr.Wrap(err)
 		return

@@ -587,7 +587,6 @@ func (r *Migration) updatePipeline(vm *plan.VMStatus, imp *VmImport) {
 	}
 }
 
-//
 // Step predicate.
 type Predicate struct {
 	// VM listed on the plan.
