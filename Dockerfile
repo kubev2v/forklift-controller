@@ -1,7 +1,7 @@
 # Builder image
 FROM registry.access.redhat.com/ubi8/go-toolset:1.14.7 as builder
 ENV GOPATH=$APP_ROOT
-COPY pkg    $APP_ROOT/src/github.com/konveyor/forkliftt-controller/pkg
+COPY pkg    $APP_ROOT/src/github.com/konveyor/forklift-controller/pkg
 COPY cmd    $APP_ROOT/src/github.com/konveyor/forklift-controller/cmd
 COPY vendor $APP_ROOT/src/github.com/konveyor/forklift-controller/vendor
 RUN GO111MODULE=off CGO_ENABLED=1 GOOS=linux go build -a -o manager github.com/konveyor/forklift-controller/cmd/manager

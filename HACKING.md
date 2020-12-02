@@ -1,6 +1,6 @@
-# Hacking on forkliftt-controller
+# Hacking on forklift-controller
 
-## Building and running forkliftt-controller with `make run`
+## Building and running forklift-controller with `make run`
 
 __1. Install prerequisites__
 
