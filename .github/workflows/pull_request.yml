@@ -26,6 +26,16 @@ jobs:
         with:
           path: go/src/github.com/${{github.repository}}
 
+      - name: Cache Go modules
+        uses: actions/cache@v2
+        with:
+          path: ${HOME}/go/pkg/mod
+          key: ${{ runner.os }}-build-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}
+
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
