@@ -341,7 +341,7 @@ func (r *VirtualMachine) Object() runtime.Object {
 func (r *VirtualMachine) Reconcile(ctx context.Context) (err error) {
 	pClient := r.Reconciler.Client()
 	list := &kubevirt.VirtualMachineList{}
-	err = pClient.List(context.TODO(), nil, list)
+	err = pClient.List(context.TODO(), list, nil)
 	if err != nil {
 		err = liberr.Wrap(err)
 		return

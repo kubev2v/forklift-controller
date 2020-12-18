@@ -4,9 +4,9 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
-	api "github.com/konveyor/virt-controller/pkg/apis/virt/v1alpha1"
-	model "github.com/konveyor/virt-controller/pkg/controller/provider/model/ocp"
-	"github.com/konveyor/virt-controller/pkg/controller/provider/web/base"
+	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1alpha1"
+	model "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ocp"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
 	kubevirt "kubevirt.io/client-go/api/v1"
 	"net/http"
 )
@@ -149,14 +149,14 @@ func (h VirtualMachineHandler) Link(p *api.Provider, m *model.VirtualMachine) st
 // REST Resource.
 type VirtualMachine struct {
 	Resource
-	Object interface{} `json:"object"`
+	Object kubevirt.VirtualMachine `json:"object"`
 }
 
 //
 // Set fields with the specified object.
 func (r *VirtualMachine) With(m *model.VirtualMachine) {
 	r.Resource.With(&m.Base)
-	r.Object = m.DecodeObject(&kubevirt.VirtualMachine{})
+	m.DecodeObject(&r.Object)
 }
 
 //

@@ -168,11 +168,12 @@ func (h ProviderHandler) Link(m *model.Provider) string {
 // REST Resource.
 type Provider struct {
 	Resource
-	Type           string       `json:"type"`
-	Object         api.Provider `json:"object"`
-	VMCount        int64        `json:"vmCount"`
-	NetworkCount   int64        `json:"networkCount"`
-	NamespaceCount int64        `json:"namespaceCount"`
+	Type              string       `json:"type"`
+	Object            api.Provider `json:"object"`
+	VMCount           int64        `json:"vmCount"`
+	NetworkCount      int64        `json:"networkCount"`
+	NamespaceCount    int64        `json:"namespaceCount"`
+	StorageClassCount int64        `json:"storageclassCount"`
 }
 
 //
