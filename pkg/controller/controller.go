@@ -23,6 +23,7 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/controller/migration"
 	"github.com/konveyor/forklift-controller/pkg/controller/plan"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider"
+	"github.com/konveyor/forklift-controller/pkg/controller/vmimport"
 	"github.com/konveyor/forklift-controller/pkg/settings"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -44,6 +45,7 @@ var MainControllers = []AddFunction{
 	network.Add,
 	storage.Add,
 	host.Add,
+	vmimport.Add,
 }
 
 //
