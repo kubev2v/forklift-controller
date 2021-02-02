@@ -149,8 +149,9 @@ func (r *KubeVirt) DeleteImport(vm *plan.VMStatus) (err error) {
 		if k8serr.IsNotFound(err) {
 			err = nil
 		} else {
-			return liberr.Wrap(err)
+			err = liberr.Wrap(err)
 		}
+		return
 	}
 	err = r.Context.Destination.Client.Delete(context.TODO(), object)
 	if err != nil {
