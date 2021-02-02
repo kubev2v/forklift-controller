@@ -319,6 +319,27 @@ func (r *Reconciler) execute(plan *api.Plan) (reQ time.Duration, err error) {
 		err = liberr.Wrap(err)
 		return
 	}
+	if newMigration {
+		r.newSnapshot(ctx)
+	} else {
+		r.matchSnapshot(ctx)
+	}
+	snapshot := plan.Status.Migration.ActiveSnapshot()
+	snapshot.BeginStagingConditions()
+	runner := Migration{Context: ctx}
+	if !snapshot.HasCondition(Canceled) {
+		reQ, err = runner.Run()
+		if err != nil {
+			err = liberr.Wrap(err)
+			return
+		}
+	} else {
+		reQ, err = runner.Cancel()
+		if err != nil {
+			err = liberr.Wrap(err)
+			return
+		}
+	}
 	//
 	// Reflect the plan status on the active
 	// snapshot in the history.
@@ -352,7 +373,6 @@ func (r *Reconciler) newSnapshot(ctx *plancontext.Context) *planapi.Snapshot {
 
 //
 // Match the snapshot and detect mutation.
-// When detected, the (active) snapshot will get marked as canceled.
 func (r *Reconciler) matchSnapshot(ctx *plancontext.Context) (matched bool) {
 	plan := ctx.Plan
 	snapshot := plan.Status.Migration.ActiveSnapshot()

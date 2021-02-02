@@ -197,12 +197,7 @@ func (r Migration) Run() (reQ time.Duration, err error) {
 //
 // Cancel the migration.
 // Delete resources associated with un-migrated VMs.
-func (r *Migration) Cancel() (err error) {
-	err = r.init()
-	if err != nil {
-		err = liberr.Wrap(err)
-		return
-	}
+func (r *Migration) Cancel() (reQ time.Duration, err error) {
 	for _, vm := range r.Plan.Status.Migration.VMs {
 		if vm.MarkedCompleted() && vm.Error == nil {
 			continue // migrated.
@@ -409,7 +404,7 @@ func (r *Migration) end() (completed bool, err error) {
 				Message:  "The plan execution has FAILED.",
 				Durable:  true,
 			})
-		err = r.Cancel()
+		_, err = r.Cancel()
 		if err != nil {
 			err = liberr.Wrap(err)
 		}
