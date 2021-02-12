@@ -1,7 +1,8 @@
 package plan
 
 import (
-	"errors"
+	"time"
+
 	libcnd "github.com/konveyor/controller/pkg/condition"
 	liberr "github.com/konveyor/controller/pkg/error"
 	libitr "github.com/konveyor/controller/pkg/itinerary"
@@ -10,8 +11,6 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/apis/forklift/v1alpha1/plan"
 	"github.com/konveyor/forklift-controller/pkg/controller/plan/builder"
 	plancontext "github.com/konveyor/forklift-controller/pkg/controller/plan/context"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web"
-	"time"
 )
 
 //
@@ -38,21 +37,22 @@ var (
 //
 // Phases.
 const (
-	Started         = "Started"
-	CreatePreHook   = "CreatePreHook"
-	PreHookCreated  = "PreHookCreated"
-	CreateImport    = "CreateImport"
-	ImportCreated   = "ImportCreated"
-	CreatePostHook  = "CreatePostHook"
-	PostHookCreated = "PostHookCreated"
-	Completed       = "Completed"
-)
-
-//
-// Steps.
-const (
-	DiskTransfer    = "DiskTransfer"
-	ImageConversion = "ImageConversion"
+	Started                    = "Started"
+	CreatePreHook              = "CreatePreHook"
+	PreHookCreated             = "PreHookCreated"
+	StopVM                     = "StopVM"
+	PrepareVM                  = "PrepareVM"
+	CreateDataVolumes          = "CreateDataVolumes"
+	CreateDataVolumesCompleted = "CreateDataVolumesCompleted"
+	AddDVCheckpoint            = "AddDVCheckpoint"
+	DataVolumesCompleted       = "DataVolumesCompleted"
+	ConvertGuest               = "ConvertGuest"
+	ConvertGuestCompleted      = "ConvertGuestCompleted"
+	StartVM                    = "StartVM"
+	ResourcesCleanup           = "ResourcesCleanup"
+	CreatePostHook             = "CreatePostHook"
+	PostHookCreated            = "PostHookCreated"
+	Completed                  = "Completed"
 )
 
 var (
@@ -62,8 +62,16 @@ var (
 			{Name: Started},
 			{Name: CreatePreHook, All: HasPreHook},
 			{Name: PreHookCreated, All: HasPreHook},
-			{Name: CreateImport},
-			{Name: ImportCreated},
+			{Name: StopVM}, // if running
+			{Name: PrepareVM},
+			{Name: CreateDataVolumes},
+			{Name: CreateDataVolumesCompleted},
+			{Name: AddDVCheckpoint}, //if warmimport
+			{Name: DataVolumesCompleted},
+			{Name: ConvertGuest},
+			{Name: ConvertGuestCompleted},
+			{Name: StartVM}, //if was running before
+			{Name: ResourcesCleanup},
 			{Name: CreatePostHook, All: HasPostHook},
 			{Name: PostHookCreated, All: HasPostHook},
 			{Name: Completed},
@@ -145,51 +153,26 @@ func (r Migration) Run() (reQ time.Duration, err error) {
 			vm.Phase = r.next(vm.Phase)
 		case PreHookCreated:
 			vm.Phase = r.next(vm.Phase)
-		case CreateImport:
-			err = r.kubevirt.EnsureSecret(vm.Ref)
-			if err != nil {
-				if !errors.As(err, &web.ProviderNotReadyError{}) {
-					vm.AddError(err.Error())
-					err = nil
-					break
-				} else {
-					return
-				}
-			}
-			err = r.kubevirt.EnsureImport(vm)
-			if err != nil {
-				if !errors.As(err, &web.ProviderNotReadyError{}) {
-					vm.AddError(err.Error())
-					err = nil
-					break
-				} else {
-					return
-				}
-			}
-			err = r.kubevirt.SetSecretOwner(vm)
-			if err != nil {
-				if !errors.As(err, &web.ProviderNotReadyError{}) {
-					vm.AddError(err.Error())
-					err = nil
-					break
-				} else {
-					return
-				}
-			}
+		case StopVM:
 			vm.Phase = r.next(vm.Phase)
-		case ImportCreated:
-			completed, failed, rErr := r.updateVM(vm)
-			if rErr != nil {
-				err = liberr.Wrap(rErr)
-				return
-			}
-			if completed {
-				if !failed {
-					vm.Phase = r.next(vm.Phase)
-				} else {
-					vm.Phase = Completed
-				}
-			}
+		case PrepareVM:
+			vm.Phase = r.next(vm.Phase)
+		case CreateDataVolumes:
+			vm.Phase = r.next(vm.Phase)
+		case CreateDataVolumesCompleted:
+			vm.Phase = r.next(vm.Phase)
+		case AddDVCheckpoint:
+			vm.Phase = r.next(vm.Phase)
+		case DataVolumesCompleted:
+			vm.Phase = r.next(vm.Phase)
+		case ConvertGuest:
+			vm.Phase = r.next(vm.Phase)
+		case ConvertGuestCompleted:
+			vm.Phase = r.next(vm.Phase)
+		case StartVM:
+			vm.Phase = r.next(vm.Phase)
+		case ResourcesCleanup:
+			vm.Phase = r.next(vm.Phase)
 		case CreatePostHook:
 			vm.Phase = r.next(vm.Phase)
 		case PostHookCreated:
@@ -374,40 +357,6 @@ func (r *Migration) buildPipeline(vm *plan.VM) (pipeline []*plan.Step, err error
 					Task: plan.Task{
 						Name:        PreHook,
 						Description: "Run pre-migration hook.",
-						Progress:    libitr.Progress{Total: 1},
-					},
-				})
-		case CreateImport:
-			tasks, pErr := r.builder.Tasks(vm.Ref)
-			if pErr != nil {
-				err = liberr.Wrap(pErr)
-				return
-			}
-			total := int64(0)
-			for _, task := range tasks {
-				total += task.Progress.Total
-			}
-			pipeline = append(
-				pipeline,
-				&plan.Step{
-					Task: plan.Task{
-						Name:        DiskTransfer,
-						Description: "Transfer disks.",
-						Progress: libitr.Progress{
-							Total: total,
-						},
-						Annotations: map[string]string{
-							"unit": "MB",
-						},
-					},
-					Tasks: tasks,
-				})
-			pipeline = append(
-				pipeline,
-				&plan.Step{
-					Task: plan.Task{
-						Name:        ImageConversion,
-						Description: "Convert image to kubevirt.",
 						Progress:    libitr.Progress{Total: 1},
 					},
 				})
