@@ -141,7 +141,11 @@ func (r *Destination) build(client k8sclient.Client, sn snapshot.Snapshot) (err 
 			return
 		}
 	} else {
-		r.Client = client
+		r.Client, err = r.Provider.Client(nil)
+		if err != nil {
+			err = liberr.Wrap(err)
+			return
+		}
 	}
 	r.Inventory, err = web.NewClient(r.Provider)
 	if err != nil {
