@@ -11,6 +11,7 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/controller/plan/builder"
 	plancontext "github.com/konveyor/forklift-controller/pkg/controller/plan/context"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web"
+	"kubevirt.io/vm-import-operator/pkg/apis/v2v/v1beta1"
 	"time"
 )
 
@@ -535,6 +536,18 @@ func (r *Migration) updateVM(vm *plan.VMStatus) (completed bool, failed bool, er
 					Category: Advisory,
 					Message:  "The VM migration has SUCCEEDED.",
 					Durable:  true,
+				})
+		}
+	} else {
+		cnd = conditions.FindCondition(string(v1beta1.Processing))
+		if cnd != nil && cnd.Reason == string(v1beta1.CopyingPaused) {
+			vm.SetCondition(
+				libcnd.Condition{
+					Type:     Paused,
+					Status:   True,
+					Category: Advisory,
+					Message:  "The VM migration is PAUSED.",
+					Durable:  false,
 				})
 		}
 	}

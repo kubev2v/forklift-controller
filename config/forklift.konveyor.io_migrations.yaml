@@ -51,6 +51,11 @@ spec:
                     type: string
                 type: object
               type: array
+            cutover:
+              description: Date and time to finalize a warm migration. If present,
+                this will override the value set on the Plan.
+              format: date-time
+              type: string
             plan:
               description: Reference to the associated Plan.
               properties:
@@ -87,6 +92,10 @@ spec:
                   description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                   type: string
               type: object
+            warm:
+              description: Whether this is a warm migration. If present, this will
+                override the value set on the Plan.
+              type: boolean
           required:
           - plan
           type: object

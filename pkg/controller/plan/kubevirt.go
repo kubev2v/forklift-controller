@@ -285,6 +285,20 @@ func (r *KubeVirt) buildImport(vm *plan.VMStatus) (object *vmio.VirtualMachineIm
 		object.Spec.TargetVMName = &vm.Name
 	}
 
+	// the value set on the migration, if any, takes precedence over the value set on the plan.
+	warm := (r.Migration.Spec.Warm == nil && r.Plan.Spec.Warm) || (r.Migration.Spec.Warm != nil && *r.Migration.Spec.Warm == true)
+	if warm {
+		object.Spec.Warm = true
+		if r.Migration.Spec.Cutover != nil {
+			object.Spec.FinalizeDate = r.Migration.Spec.Cutover
+		} else if r.Plan.Spec.Cutover != nil {
+			object.Spec.FinalizeDate = r.Plan.Spec.Cutover
+		} else {
+			now := meta.Now()
+			object.Spec.FinalizeDate = &now
+		}
+	}
+
 	return
 }
 
