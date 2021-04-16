@@ -108,6 +108,7 @@ const (
 	fStorageUsed         = "summary.storage.committed"
 	fRuntimeHost         = "runtime.host"
 	fPowerState          = "runtime.powerState"
+	fConnectionState     = "runtime.connectionState"
 	fSnapshot            = "snapshot"
 )
 
@@ -685,6 +686,7 @@ func (r *Reconciler) propertySpec() []types.PropertySpec {
 				fNetwork,
 				fRuntimeHost,
 				fPowerState,
+				fConnectionState,
 				fSnapshot,
 				fChangeTracking,
 			},
