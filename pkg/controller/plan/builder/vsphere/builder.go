@@ -77,7 +77,7 @@ func (r *Builder) Secret(vmRef ref.Ref, in, object *core.Secret) (err error) {
 			"thumbprint": string(in.Data["thumbprint"]),
 		})
 	if mErr != nil {
-		err = mErr
+		err = liberr.Wrap(mErr)
 		return
 	}
 	object.StringData = map[string]string{
@@ -266,6 +266,7 @@ func (r *Builder) hostSecret(host *api.Host) (secret *core.Secret, err error) {
 			Name:      ref.Name,
 		},
 		secret)
+	err = liberr.Wrap(err)
 
 	return
 }
@@ -314,7 +315,7 @@ func (r *Builder) mapping(vm *model.VM) (out *vmio.VmwareMappings, err error) {
 		}
 		id, pErr := r.networkID(vm, network)
 		if pErr != nil {
-			err = liberr.Wrap(pErr)
+			err = pErr
 			return
 		}
 		netMap = append(
@@ -337,7 +338,7 @@ func (r *Builder) mapping(vm *model.VM) (out *vmio.VmwareMappings, err error) {
 		ds := &model.Datastore{}
 		fErr := r.Source.Inventory.Find(ds, ref)
 		if fErr != nil {
-			err = liberr.Wrap(fErr)
+			err = fErr
 			return
 		}
 		needed := false
@@ -352,12 +353,12 @@ func (r *Builder) mapping(vm *model.VM) (out *vmio.VmwareMappings, err error) {
 		}
 		id, pErr := r.datastoreID(vm, ds)
 		if pErr != nil {
-			err = liberr.Wrap(pErr)
+			err = pErr
 			return
 		}
 		mErr := r.defaultModes(&mapped.Destination)
 		if mErr != nil {
-			err = liberr.Wrap(mErr)
+			err = mErr
 			return
 		}
 		item := vmio.StorageResourceMappingItem{
@@ -391,12 +392,12 @@ func (r *Builder) mapping(vm *model.VM) (out *vmio.VmwareMappings, err error) {
 func (r *Builder) networkID(vm *model.VM, network *model.Network) (id string, err error) {
 	if host, found, hErr := r.esxHost(vm); found {
 		if hErr != nil {
-			err = liberr.Wrap(hErr)
+			err = hErr
 			return
 		}
 		hostID, hErr := host.networkID(network)
 		if hErr != nil {
-			err = liberr.Wrap(hErr)
+			err = hErr
 			return
 		}
 		id = hostID
@@ -413,12 +414,12 @@ func (r *Builder) networkID(vm *model.VM, network *model.Network) (id string, er
 func (r *Builder) datastoreID(vm *model.VM, ds *model.Datastore) (id string, err error) {
 	if host, found, hErr := r.esxHost(vm); found {
 		if hErr != nil {
-			err = liberr.Wrap(hErr)
+			err = hErr
 			return
 		}
 		hostID, hErr := host.DatastoreID(ds)
 		if hErr != nil {
-			err = liberr.Wrap(hErr)
+			err = hErr
 			return
 		}
 		id = hostID
@@ -451,7 +452,7 @@ func (r *Builder) esxHost(vm *model.VM) (esxHost *EsxHost, found bool, err error
 	}
 	hostModel, nErr := r.host(vm.Host.ID)
 	if nErr != nil {
-		err = liberr.Wrap(nErr)
+		err = nErr
 		return
 	}
 	secret.Data["thumbprint"] = []byte(hostModel.Thumbprint)
