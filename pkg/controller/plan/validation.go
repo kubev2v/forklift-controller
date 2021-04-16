@@ -10,6 +10,8 @@ import (
 	libref "github.com/konveyor/controller/pkg/ref"
 	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1alpha1"
 	refapi "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1alpha1/ref"
+	"github.com/konveyor/forklift-controller/pkg/controller/plan/builder"
+	plancontext "github.com/konveyor/forklift-controller/pkg/controller/plan/context"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web"
 	"github.com/konveyor/forklift-controller/pkg/controller/validation"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -29,6 +31,8 @@ const (
 	VMRefNotValid       = "VMRefNotValid"
 	VMNotFound          = "VMNotFound"
 	VMAlreadyExists     = "VMAlreadyExists"
+	VMNetworkNotMapped  = "VMNetworkNotMapped"
+	VMStorageNotMapped  = "VMStorageNotMapped"
 	DuplicateVM         = "DuplicateVM"
 	NameNotValid        = "TargetNameNotValid"
 	HookNotValid        = "HookNotValid"
@@ -73,43 +77,43 @@ const (
 
 //
 // Validate the plan resource.
-func (r *Reconciler) validate(plan *api.Plan) error {
+func (r *Reconciler) validate(ctx *plancontext.Context) error {
 	// Provider.
 	pv := validation.ProviderPair{Client: r}
-	conditions, err := pv.Validate(plan.Spec.Provider)
+	conditions, err := pv.Validate(ctx.Plan.Spec.Provider)
 	if err != nil {
 		return liberr.Wrap(err)
 	}
-	plan.Status.SetCondition(conditions.List...)
-	if plan.Status.HasCondition(validation.SourceProviderNotReady) {
+	ctx.Plan.Status.SetCondition(conditions.List...)
+	if ctx.Plan.Status.HasCondition(validation.SourceProviderNotReady) {
 		return nil
 	}
-	plan.Referenced.Provider.Source = pv.Referenced.Source
-	plan.Referenced.Provider.Destination = pv.Referenced.Destination
+	ctx.Plan.Referenced.Provider.Source = pv.Referenced.Source
+	ctx.Plan.Referenced.Provider.Destination = pv.Referenced.Destination
 	//
 	// Mapping
-	err = r.validateNetworkMap(plan)
+	err = r.validateNetworkMap(ctx.Plan)
 	if err != nil {
 		return err
 	}
-	err = r.validateStorageMap(plan)
+	err = r.validateStorageMap(ctx.Plan)
 	if err != nil {
 		return err
 	}
 	//
 	// VM list.
-	err = r.validateVM(plan)
+	err = r.validateVM(ctx)
 	if err != nil {
 		return err
 	}
 	//
 	// Transfer network
-	err = r.validateTransferNetwork(plan)
+	err = r.validateTransferNetwork(ctx.Plan)
 	if err != nil {
 		return err
 	}
 	// VM Hooks.
-	err = r.validateHooks(plan)
+	err = r.validateHooks(ctx.Plan)
 	if err != nil {
 		return err
 	}
@@ -209,8 +213,8 @@ func (r *Reconciler) validateStorageMap(plan *api.Plan) (err error) {
 
 //
 // Validate listed VMs.
-func (r *Reconciler) validateVM(plan *api.Plan) error {
-	if plan.Status.HasCondition(Executing) {
+func (r *Reconciler) validateVM(ctx *plancontext.Context) error {
+	if ctx.Plan.Status.HasCondition(Executing) {
 		return nil
 	}
 	notFound := libcnd.Condition{
@@ -253,13 +257,36 @@ func (r *Reconciler) validateVM(plan *api.Plan) error {
 		Message:  "Target VM already exists.",
 		Items:    []string{},
 	}
+	unmappedNetwork := libcnd.Condition{
+		Type:     VMNetworkNotMapped,
+		Status:   True,
+		Reason:   NotValid,
+		Category: Critical,
+		Message:  "VM has unmapped networks.",
+		Items:    []string{},
+	}
+	unmappedStorage := libcnd.Condition{
+		Type:     VMStorageNotMapped,
+		Status:   True,
+		Reason:   NotValid,
+		Category: Critical,
+		Message:  "VM has unmapped storage.",
+		Items:    []string{},
+	}
+
+	builder, err := builder.New(ctx)
+	if err != nil {
+		err = liberr.Wrap(err)
+		return err
+	}
+
 	setOf := map[string]bool{}
 	//
 	// Referenced VMs.
-	for _, vm := range plan.Spec.VMs {
+	for _, vm := range ctx.Plan.Spec.VMs {
 		ref := &vm.Ref
 		if ref.NotSet() {
-			plan.Status.SetCondition(libcnd.Condition{
+			ctx.Plan.Status.SetCondition(libcnd.Condition{
 				Type:     VMRefNotValid,
 				Status:   True,
 				Reason:   NotSet,
@@ -269,7 +296,7 @@ func (r *Reconciler) validateVM(plan *api.Plan) error {
 			continue
 		}
 		// Source.
-		provider := plan.Referenced.Provider.Source
+		provider := ctx.Plan.Referenced.Provider.Source
 		if provider == nil {
 			return nil
 		}
@@ -297,8 +324,22 @@ func (r *Reconciler) validateVM(plan *api.Plan) error {
 		} else {
 			setOf[ref.ID] = true
 		}
+		ok, err := builder.ValidateNetworkMapped(*ref)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			unmappedNetwork.Items = append(unmappedNetwork.Items, ref.String())
+		}
+		ok, err = builder.ValidateStorageMapped(*ref)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			unmappedStorage.Items = append(unmappedStorage.Items, ref.String())
+		}
 		// Destination.
-		provider = plan.Referenced.Provider.Destination
+		provider = ctx.Plan.Referenced.Provider.Destination
 		if provider == nil {
 			return nil
 		}
@@ -307,11 +348,11 @@ func (r *Reconciler) validateVM(plan *api.Plan) error {
 			return liberr.Wrap(pErr)
 		}
 		id := path.Join(
-			plan.TargetNamespace(),
+			ctx.Plan.TargetNamespace(),
 			ref.Name)
 		_, pErr = inventory.VM(&refapi.Ref{Name: id})
 		if pErr == nil {
-			if vm, found := plan.Status.Migration.FindVM(*ref); found {
+			if vm, found := ctx.Plan.Status.Migration.FindVM(*ref); found {
 				if vm.Completed != nil && vm.Error == nil {
 					continue // migrated.
 				}
@@ -326,19 +367,25 @@ func (r *Reconciler) validateVM(plan *api.Plan) error {
 		}
 	}
 	if len(notFound.Items) > 0 {
-		plan.Status.SetCondition(notFound)
+		ctx.Plan.Status.SetCondition(notFound)
 	}
 	if len(notUnique.Items) > 0 {
-		plan.Status.SetCondition(notUnique)
+		ctx.Plan.Status.SetCondition(notUnique)
 	}
 	if len(alreadyExists.Items) > 0 {
-		plan.Status.SetCondition(alreadyExists)
+		ctx.Plan.Status.SetCondition(alreadyExists)
 	}
 	if len(nameNotValid.Items) > 0 {
-		plan.Status.SetCondition(nameNotValid)
+		ctx.Plan.Status.SetCondition(nameNotValid)
 	}
 	if len(ambiguous.Items) > 0 {
-		plan.Status.SetCondition(ambiguous)
+		ctx.Plan.Status.SetCondition(ambiguous)
+	}
+	if len(unmappedNetwork.Items) > 0 {
+		ctx.Plan.Status.SetCondition(unmappedNetwork)
+	}
+	if len(unmappedStorage.Items) > 0 {
+		ctx.Plan.Status.SetCondition(unmappedStorage)
 	}
 
 	return nil

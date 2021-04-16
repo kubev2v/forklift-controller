@@ -230,11 +230,18 @@ func (r Reconciler) Reconcile(request reconcile.Request) (result reconcile.Resul
 		return slowReQ, nil
 	}
 
+	// Assemble plan context.
+	ctx, err := r.newPlanContext(plan)
+	if err != nil {
+		result = fastReQ
+		return
+	}
+
 	// Begin staging conditions.
 	plan.Status.BeginStagingConditions()
 
 	// Validations.
-	err = r.validate(plan)
+	err = r.validate(ctx)
 	if err != nil {
 		if errors.As(err, &web.ProviderNotReadyError{}) {
 			result = slowReQ
@@ -272,7 +279,7 @@ func (r Reconciler) Reconcile(request reconcile.Request) (result reconcile.Resul
 	//
 	// Execute.
 	// The plan is updated as needed to reflect status.
-	reQ, err := r.execute(plan)
+	reQ, err := r.execute(ctx)
 	if err != nil {
 		result = fastReQ
 		return
@@ -296,36 +303,22 @@ func (r Reconciler) Reconcile(request reconcile.Request) (result reconcile.Resul
 //   4. If not, find the next pending migration.
 //   5. If a new migration is being started, update the context and snapshot.
 //   6. Run the migration.
-func (r *Reconciler) execute(plan *api.Plan) (reQ time.Duration, err error) {
-	if plan.Status.HasBlockerCondition() {
+func (r *Reconciler) execute(ctx *plancontext.Context) (reQ time.Duration, err error) {
+	if ctx.Plan.Status.HasBlockerCondition() {
 		return
 	}
 	defer func() {
 		if err == nil {
-			err = r.Status().Update(context.TODO(), plan)
+			err = r.Status().Update(context.TODO(), ctx.Plan)
 			if err != nil {
 				err = liberr.Wrap(err)
 			}
 		}
 	}()
-	var migration *api.Migration
-	snapshot := plan.Status.Migration.ActiveSnapshot()
-	ctx, err := plancontext.New(
-		r,
-		plan,
-		&api.Migration{
-			ObjectMeta: meta.ObjectMeta{
-				Namespace: snapshot.Migration.Namespace,
-				Name:      snapshot.Migration.Name,
-				UID:       snapshot.Migration.UID,
-			},
-		})
-	if err != nil {
-		return
-	}
 	//
 	// Find and validate the current (active) migration.
-	migration, err = r.activeMigration(plan)
+	var migration *api.Migration
+	migration, err = r.activeMigration(ctx.Plan)
 	if err != nil {
 		return
 	}
@@ -337,8 +330,9 @@ func (r *Reconciler) execute(plan *api.Plan) (reQ time.Duration, err error) {
 	// The active snapshot may be marked canceled by:
 	//   activeMigration()
 	//   matchSnapshot()
+	snapshot := ctx.Plan.Status.Migration.ActiveSnapshot()
 	if snapshot.HasCondition(Canceled) {
-		for _, vm := range plan.Status.Migration.VMs {
+		for _, vm := range ctx.Plan.Status.Migration.VMs {
 			if !vm.HasCondition(Succeeded) {
 				vm.SetCondition(
 					libcnd.Condition{
@@ -369,7 +363,7 @@ func (r *Reconciler) execute(plan *api.Plan) (reQ time.Duration, err error) {
 	//
 	// Find pending migrations.
 	pending := []*api.Migration{}
-	pending, err = r.pendingMigrations(plan)
+	pending, err = r.pendingMigrations(ctx.Plan)
 	if err != nil {
 		return
 	}
@@ -380,13 +374,13 @@ func (r *Reconciler) execute(plan *api.Plan) (reQ time.Duration, err error) {
 		migration = pending[0]
 		ctx.Migration = migration
 		snapshot = r.newSnapshot(ctx)
-		plan.Status.DeleteCondition(Failed, Canceled)
+		ctx.Plan.Status.DeleteCondition(Failed, Canceled)
 	}
 	//
 	// No (active) migration.
 	// Done.
 	if migration == nil {
-		plan.Status.DeleteCondition(Executing)
+		ctx.Plan.Status.DeleteCondition(Executing)
 		reQ = NoReQ
 		return
 	}
@@ -410,15 +404,32 @@ func (r *Reconciler) execute(plan *api.Plan) (reQ time.Duration, err error) {
 	// Reflect the active snapshot status on the plan.
 	for _, t := range []string{Executing, Succeeded, Failed, Canceled} {
 		if cnd := snapshot.FindCondition(t); cnd != nil {
-			plan.Status.SetCondition(*cnd)
+			ctx.Plan.Status.SetCondition(*cnd)
 		} else {
-			plan.Status.DeleteCondition(t)
+			ctx.Plan.Status.DeleteCondition(t)
 		}
 	}
 	if len(pending) > 1 && reQ == 0 {
 		reQ = FastReQ
 	}
 
+	return
+}
+
+//
+// Create a new plan context.
+func (r *Reconciler) newPlanContext(plan *api.Plan) (ctx *plancontext.Context, err error) {
+	snapshot := plan.Status.Migration.ActiveSnapshot()
+	ctx, err = plancontext.New(
+		r,
+		plan,
+		&api.Migration{
+			ObjectMeta: meta.ObjectMeta{
+				Namespace: snapshot.Migration.Namespace,
+				Name:      snapshot.Migration.Name,
+				UID:       snapshot.Migration.UID,
+			},
+		})
 	return
 }
 
