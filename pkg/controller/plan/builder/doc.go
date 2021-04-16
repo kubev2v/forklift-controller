@@ -25,6 +25,10 @@ type Builder interface {
 	Tasks(vmRef ref.Ref) ([]*plan.Task, error)
 	// Return a stable identifier for a DataVolume.
 	ResolveDataVolumeIdentifier(dv *cdi.DataVolume) string
+	// Validate that a VM's networks have been mapped.
+	ValidateNetworkMapped(vmRef ref.Ref) (bool, error)
+	// Validate that a VM's disk backing storage has been mapped.
+	ValidateStorageMapped(vmRef ref.Ref) (bool, error)
 }
 
 //

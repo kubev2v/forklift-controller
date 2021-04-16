@@ -155,6 +155,52 @@ func (r *Builder) ResolveDataVolumeIdentifier(dv *cdi.DataVolume) string {
 }
 
 //
+// Validate that a VM's networks have been mapped.
+func (r *Builder) ValidateNetworkMapped(vmRef ref.Ref) (ok bool, err error) {
+	vm := &model.VM{}
+	pErr := r.Source.Inventory.Find(vm, vmRef)
+	if pErr != nil {
+		err = liberr.New(
+			fmt.Sprintf(
+				"VM %s lookup failed: %s",
+				vmRef.String(),
+				pErr.Error()))
+		return
+	}
+
+	for _, net := range vm.Networks {
+		if !r.Map.Network.Status.Refs.Find(ref.Ref{ID: net.ID}) {
+			return
+		}
+	}
+	ok = true
+	return
+}
+
+//
+// Validate that a VM's disk backing storage has been mapped.
+func (r *Builder) ValidateStorageMapped(vmRef ref.Ref) (ok bool, err error) {
+	vm := &model.VM{}
+	pErr := r.Source.Inventory.Find(vm, vmRef)
+	if pErr != nil {
+		err = liberr.New(
+			fmt.Sprintf(
+				"VM %s lookup failed: %s",
+				vmRef.String(),
+				pErr.Error()))
+		return
+	}
+
+	for _, disk := range vm.Disks {
+		if !r.Map.Storage.Status.Refs.Find(ref.Ref{ID: disk.Datastore.ID}) {
+			return
+		}
+	}
+	ok = true
+	return
+}
+
+//
 // Load
 func (r *Builder) Load() (err error) {
 	err = r.loadProvisioners()
