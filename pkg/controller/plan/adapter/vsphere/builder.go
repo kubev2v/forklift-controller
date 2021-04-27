@@ -95,7 +95,8 @@ func (r *Builder) Import(vmRef ref.Ref, object *vmio.VirtualMachineImportSpec) (
 	if pErr != nil {
 		err = liberr.New(
 			fmt.Sprintf(
-				"VM %s lookup failed: %s",
+				"VM %s (%s) lookup failed: %s",
+				vm.Name,
 				vmRef.String(),
 				pErr.Error()))
 		return
@@ -103,14 +104,16 @@ func (r *Builder) Import(vmRef ref.Ref, object *vmio.VirtualMachineImportSpec) (
 	if types.VirtualMachineConnectionState(vm.ConnectionState) != types.VirtualMachineConnectionStateConnected {
 		err = liberr.New(
 			fmt.Sprintf(
-				"VM %s is not connected",
+				"VM %s (%s) is not connected",
+				vm.Name,
 				vmRef.String()))
 		return
 	}
 	if r.Plan.Spec.Warm && !vm.ChangeTrackingEnabled {
 		err = liberr.New(
 			fmt.Sprintf(
-				"Changed Block Tracking (CBT) is disabled for VM %s",
+				"Changed Block Tracking (CBT) is disabled for VM %s (%s)",
+				vm.Name,
 				vmRef.String()))
 		return
 	}
@@ -139,7 +142,8 @@ func (r *Builder) Tasks(vmRef ref.Ref) (list []*plan.Task, err error) {
 	if pErr != nil {
 		err = liberr.New(
 			fmt.Sprintf(
-				"VM %s lookup failed: %s",
+				"VM %s (%s) lookup failed: %s",
+				vm.Name,
 				vmRef.String(),
 				pErr.Error()))
 		return
@@ -257,7 +261,8 @@ func (r *Builder) hostID(vmRef ref.Ref) (hostID string, err error) {
 	if pErr != nil {
 		err = liberr.New(
 			fmt.Sprintf(
-				"VM %s lookup failed: %s",
+				"VM %s (%s) lookup failed: %s",
+				vm.Name,
 				vmRef.String(),
 				pErr.Error()))
 		return
