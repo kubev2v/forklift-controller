@@ -1,5 +1,7 @@
 package ref
 
+import "fmt"
+
 //
 // Source reference.
 // Either the ID or Name must be specified.
