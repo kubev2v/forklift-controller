@@ -360,9 +360,7 @@ func (r *KubeVirt) vmImport(
 	// the value set on the migration, if any, takes precedence over the value set on the plan.
 	if r.Plan.Spec.Warm {
 		object.Spec.Warm = true
-		if r.Migration.Spec.Cutover != nil {
-			object.Spec.FinalizeDate = r.Migration.Spec.Cutover
-		}
+		object.Spec.FinalizeDate = r.Migration.Spec.Cutover
 	}
 
 	return
