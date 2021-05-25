@@ -29,6 +29,7 @@ import (
 	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
 	refapi "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1/ref"
 	model "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
+	web "github.com/konveyor/forklift-controller/pkg/controller/provider/web/vsphere"
 	"github.com/konveyor/forklift-controller/pkg/controller/validation/policy"
 	"github.com/konveyor/forklift-controller/pkg/settings"
 	"time"
@@ -252,7 +253,7 @@ func (r *VMEventHandler) validate(vm *model.VM) {
 	var err error
 	task := &policy.Task{
 		Context:  r.context,
-		Provider: r.Provider,
+		Workload: r.workload,
 		Result:   r.taskResult,
 		Revision: vm.Revision,
 		Ref: refapi.Ref{
@@ -320,6 +321,49 @@ func (r *VMEventHandler) validated(batch []*policy.Task) {
 		r.log.Error(err, "Tx commit failed.")
 		return
 	}
+}
+
+//
+// Build the workload.
+func (r *VMEventHandler) workload(vmID string) (object interface{}, err error) {
+	vm := &model.VM{
+		Base: model.Base{
+			ID: vmID,
+		},
+	}
+	err = r.DB.Get(vm)
+	if err != nil {
+		return
+	}
+	workload := web.Workload{}
+	host := &model.Host{
+		Base: model.Base{
+			ID: vm.Host,
+		},
+	}
+	workload.VM = &web.VM{}
+	workload.VM.With(vm)
+	err = r.DB.Get(host)
+	if err != nil {
+		return
+	}
+	workload.Host.Host = &web.Host{}
+	workload.Host.Host.With(host)
+	cluster := &model.Cluster{
+		Base: model.Base{
+			ID: host.Cluster,
+		},
+	}
+	err = r.DB.Get(cluster)
+	if err != nil {
+		return
+	}
+	workload.Host.Cluster.Cluster = &web.Cluster{}
+	workload.Host.Cluster.Cluster.With(cluster)
+
+	object = workload
+
+	return
 }
 
 //
