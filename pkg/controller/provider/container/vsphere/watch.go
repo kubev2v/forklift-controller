@@ -338,7 +338,7 @@ func (r *VMEventHandler) workload(vmID string) (object interface{}, err error) {
 	workload := web.Workload{}
 	host := &model.Host{
 		Base: model.Base{
-			ID: vm.Host,
+			ID: vm.Host.ID,
 		},
 	}
 	workload.VM = &web.VM{}
@@ -351,7 +351,7 @@ func (r *VMEventHandler) workload(vmID string) (object interface{}, err error) {
 	workload.Host.Host.With(host)
 	cluster := &model.Cluster{
 		Base: model.Base{
-			ID: host.Cluster,
+			ID: host.Parent.ID,
 		},
 	}
 	err = r.DB.Get(cluster)
