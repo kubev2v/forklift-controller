@@ -65,6 +65,8 @@ func (r *Handler) Deleted(e libweb.Event) {
 // Network changed.
 // Find all of the NetworkMap CRs the reference both the
 // provider and the changed network and enqueue reconcile events.
+// The network is only matched on name because the namespace is only
+// required to resolve ambiguity.
 func (r *Handler) changed(network *ocp.NetworkAttachmentDefinition) {
 	log.V(3).Info(
 		"Network (NAD) changed.",
@@ -86,7 +88,7 @@ func (r *Handler) changed(network *ocp.NetworkAttachmentDefinition) {
 		}
 		for _, pair := range mp.Spec.Map {
 			ref := pair.Destination
-			if ref.Namespace == network.Namespace && ref.Name == network.Name {
+			if ref.Name == network.Name {
 				log.V(3).Info(
 					"Queue reconcile event.",
 					"map",
