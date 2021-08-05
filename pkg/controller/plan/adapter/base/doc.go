@@ -46,4 +46,6 @@ type Validator interface {
 	NetworksMapped(vmRef ref.Ref) (bool, error)
 	// Validate that a VM's Host isn't in maintenance mode.
 	MaintenanceMode(vmRef ref.Ref) (bool, error)
+	// Preflight check to ensure VM Import resource can be created from source VM.
+	Preflight(vmRef ref.Ref) (err error)
 }

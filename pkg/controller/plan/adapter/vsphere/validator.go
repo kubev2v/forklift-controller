@@ -1,11 +1,14 @@
 package vsphere
 
 import (
+	"errors"
+	"fmt"
 	liberr "github.com/konveyor/controller/pkg/error"
 	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
 	"github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1/ref"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web"
 	model "github.com/konveyor/forklift-controller/pkg/controller/provider/web/vsphere"
+	"github.com/vmware/govmomi/vim25/types"
 )
 
 //
@@ -103,5 +106,46 @@ func (r *Validator) MaintenanceMode(vmRef ref.Ref) (ok bool, err error) {
 	}
 
 	ok = !host.InMaintenanceMode
+	return
+}
+
+//
+// Preflight check to ensure VM Import resource can be created from source VM.
+func (r *Validator) Preflight(vmRef ref.Ref) (err error) {
+	vm := &model.VM{}
+	err = r.inventory.Find(vm, vmRef)
+	if err != nil {
+		if errors.As(err, &web.ProviderNotReadyError{}) {
+			return
+		}
+		err = liberr.New(
+			fmt.Sprintf(
+				"VM %s lookup failed: %s.",
+				vmRef.String(),
+				err.Error(),
+			))
+		return
+	}
+	if vm.IsTemplate {
+		err = liberr.New(
+			fmt.Sprintf(
+				"VM %s is a template",
+				vmRef.String()))
+		return
+	}
+	if types.VirtualMachineConnectionState(vm.ConnectionState) != types.VirtualMachineConnectionStateConnected {
+		err = liberr.New(
+			fmt.Sprintf(
+				"VM %s is not connected",
+				vmRef.String()))
+		return
+	}
+	if r.plan.Spec.Warm && !vm.ChangeTrackingEnabled {
+		err = liberr.New(
+			fmt.Sprintf(
+				"Changed Block Tracking (CBT) is disabled for VM %s",
+				vmRef.String()))
+		return
+	}
 	return
 }

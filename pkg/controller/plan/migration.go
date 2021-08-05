@@ -44,6 +44,7 @@ const (
 //
 // Steps.
 const (
+	Preflight       = "Preflight"
 	DiskTransfer    = "DiskTransfer"
 	ImageConversion = "ImageConversion"
 )
@@ -74,6 +75,8 @@ type Migration struct {
 	importMap ImportMap
 	// VM scheduler
 	scheduler scheduler.Scheduler
+	// Validator
+	validator adapter.Validator
 }
 
 //
@@ -165,6 +168,21 @@ func (r *Migration) step(vm *plan.VMStatus) (err error) {
 	switch vm.Phase {
 	case Started:
 		vm.MarkStarted()
+		if step, found := vm.FindStep(Preflight); found {
+			step.MarkStarted()
+			err = r.validator.Preflight(vm.Ref)
+			if err != nil {
+				if !errors.As(err, &web.ProviderNotReadyError{}) {
+					step.AddError(err.Error())
+					err = nil
+					vm.Phase = Completed
+				} else {
+					return
+				}
+			}
+			step.MarkCompleted()
+			step.Progress.Completed = step.Progress.Total
+		}
 		vm.Phase = r.next(vm.Phase)
 	case PreHook, PostHook:
 		runner := HookRunner{Context: r.Context}
@@ -341,6 +359,10 @@ func (r *Migration) init() (err error) {
 	if err != nil {
 		return
 	}
+	r.validator, err = adapter.Validator(r.Plan)
+	if err != nil {
+		return
+	}
 
 	return
 }
@@ -451,6 +473,15 @@ func (r *Migration) buildPipeline(vm *plan.VM) (pipeline []*plan.Step, err error
 	step, _ := itinerary.First()
 	for {
 		switch step.Name {
+		case Started:
+			preflight := plan.Step{
+				Task: plan.Task{
+					Name:        Preflight,
+					Description: "Perform preflight check.",
+					Progress:    libitr.Progress{Total: 1},
+				},
+			}
+			pipeline = append(pipeline, &preflight)
 		case PreHook:
 			pipeline = append(
 				pipeline,

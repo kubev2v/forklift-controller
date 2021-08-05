@@ -1,6 +1,8 @@
 package ovirt
 
 import (
+	"errors"
+	"fmt"
 	liberr "github.com/konveyor/controller/pkg/error"
 	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
 	"github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1/ref"
@@ -77,5 +79,23 @@ func (r *Validator) StorageMapped(vmRef ref.Ref) (ok bool, err error) {
 // Validate that a VM's Host isn't in maintenance mode. No-op for oVirt.
 func (r *Validator) MaintenanceMode(_ ref.Ref) (ok bool, err error) {
 	ok = true
+	return
+}
+
+//
+// Preflight check to ensure VM Import resource can be created from source VM.
+func (r *Validator) Preflight(vmRef ref.Ref) (err error) {
+	vm := &model.VM{}
+	err = r.inventory.Find(vm, vmRef)
+	if err != nil {
+		if errors.As(err, &web.ProviderNotReadyError{}) {
+			return
+		}
+		err = liberr.New(
+			fmt.Sprintf(
+				"VM %s lookup failed: %s",
+				vmRef.String(),
+				err.Error()))
+	}
 	return
 }

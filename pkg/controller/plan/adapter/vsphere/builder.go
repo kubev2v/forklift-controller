@@ -100,27 +100,7 @@ func (r *Builder) Import(vmRef ref.Ref, object *vmio.VirtualMachineImportSpec) (
 				pErr.Error()))
 		return
 	}
-	if vm.IsTemplate {
-		err = liberr.New(
-			fmt.Sprintf(
-				"VM %s is a template",
-				vmRef.String()))
-		return
-	}
-	if types.VirtualMachineConnectionState(vm.ConnectionState) != types.VirtualMachineConnectionStateConnected {
-		err = liberr.New(
-			fmt.Sprintf(
-				"VM %s is not connected",
-				vmRef.String()))
-		return
-	}
-	if r.Plan.Spec.Warm && !vm.ChangeTrackingEnabled {
-		err = liberr.New(
-			fmt.Sprintf(
-				"Changed Block Tracking (CBT) is disabled for VM %s",
-				vmRef.String()))
-		return
-	}
+
 	uuid := vm.UUID
 	object.TargetVMName = &vm.Name
 	if !r.Plan.Spec.Warm {
