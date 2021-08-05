@@ -61,6 +61,7 @@ func (r *Auth) Permit(ctx *gin.Context, p *api.Provider) (status int) {
 	}
 	allowed, err := r.permit(token, p)
 	if err != nil {
+		log.Error(err, "Authorization failed.")
 		status = http.StatusInternalServerError
 		return
 	}
@@ -69,6 +70,10 @@ func (r *Auth) Permit(ctx *gin.Context, p *api.Provider) (status int) {
 	} else {
 		status = http.StatusForbidden
 		delete(r.cache, token)
+		log.Info(
+			http.StatusText(status),
+			"token",
+			token)
 	}
 
 	return
