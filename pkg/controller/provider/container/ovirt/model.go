@@ -39,9 +39,9 @@ const (
 	USER_UPDATE_CLUSTER = 811
 	USER_REMOVE_CLUSTER = 813
 	// Host
-	USER_ADD_HOST    = 42
-	USER_UPDATE_HOST = 43
-	USER_REMOVE_HOST = 44
+	USER_ADD_VDS    = 42
+	USER_UPDATE_VDS = 43
+	USER_REMOVE_VDS = 44
 	// VM
 	USER_ADD_VM                           = 34
 	USER_ADD_VM_FINISHED_SUCCESS          = 53
@@ -658,9 +658,9 @@ type HostAdapter struct {
 // Handled events.
 func (r *HostAdapter) Event() []int {
 	return []int{
-		USER_ADD_HOST,
-		USER_UPDATE_HOST,
-		USER_REMOVE_HOST,
+		USER_ADD_VDS,
+		USER_UPDATE_VDS,
+		USER_REMOVE_VDS,
 	}
 }
 
@@ -702,7 +702,7 @@ func (r *HostAdapter) Apply(ctx *Context, event *Event) (updater Updater, err er
 		}
 	}()
 	switch event.code() {
-	case USER_ADD_HOST:
+	case USER_ADD_VDS:
 		object := &Host{}
 		err = ctx.client.get(event.Host.Ref, object, r.follow())
 		if err != nil {
@@ -716,7 +716,7 @@ func (r *HostAdapter) Apply(ctx *Context, event *Event) (updater Updater, err er
 			err = tx.Insert(m)
 			return
 		}
-	case USER_UPDATE_HOST:
+	case USER_UPDATE_VDS:
 		object := &Host{}
 		err = ctx.client.get(event.Host.Ref, object, r.follow())
 		if err != nil {
@@ -734,7 +734,7 @@ func (r *HostAdapter) Apply(ctx *Context, event *Event) (updater Updater, err er
 			err = tx.Update(m)
 			return
 		}
-	case USER_REMOVE_HOST:
+	case USER_REMOVE_VDS:
 		updater = func(tx *libmodel.Tx) (err error) {
 			err = tx.Delete(
 				&model.Host{
