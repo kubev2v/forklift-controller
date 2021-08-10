@@ -52,26 +52,32 @@ const (
 	USER_VDS_MAINTENANCE_MANUAL_HA      = 10453
 	VDS_DETECTED                        = 13
 	// VM
-	USER_ADD_VM                           = 34
-	USER_ADD_VM_FINISHED_SUCCESS          = 53
-	USER_UPDATE_VM                        = 35
-	USER_REMOVE_VM                        = 113
-	USER_ADD_DISK_TO_VM_SUCCESS           = 97
-	USER_UPDATE_VM_DISK                   = 88
-	USER_REMOVE_DISK_FROM_VM              = 80
-	USER_ATTACH_DISK_TO_VM                = 2016
-	USER_DETACH_DISK_FROM_VM              = 2018
-	USER_EJECT_VM_DISK                    = 521
-	NETWORK_USER_ADD_VM_INTERFACE         = 932
-	NETWORK_USER_UPDATE_VM_INTERFACE      = 934
-	NETWORK_USER_REMOVE_VM_INTERFACE      = 930
-	USER_CREATE_SNAPSHOT_FINISHED_SUCCESS = 68
-	USER_REMOVE_SNAPSHOT_FINISHED_SUCCESS = 356
-	USER_RUN_VM                           = 32
-	USER_SUSPEND_VM_OK                    = 503
-	USER_PAUSE_VM                         = 39
-	USER_RESUME_VM                        = 40
-	VM_DOWN                               = 61
+	USER_ADD_VM                                    = 34
+	USER_ADD_VM_FINISHED_SUCCESS                   = 53
+	USER_UPDATE_VM                                 = 35
+	SYSTEM_UPDATE_VM                               = 253
+	USER_REMOVE_VM                                 = 113
+	USER_REMOVE_VM_FINISHED_INTERNAL               = 1130
+	USER_REMOVE_VM_FINISHED_ILLEGAL_DISKS          = 172
+	USER_REMOVE_VM_FINISHED_ILLEGAL_DISKS_INTERNAL = 1720
+	IMPORTEXPORT_IMPORT_VM                         = 1152
+	USER_ADD_DISK_TO_VM_SUCCESS                    = 97
+	USER_UPDATE_VM_DISK                            = 88
+	USER_REMOVE_DISK_FROM_VM                       = 80
+	USER_ATTACH_DISK_TO_VM                         = 2016
+	USER_DETACH_DISK_FROM_VM                       = 2018
+	USER_EJECT_VM_DISK                             = 521
+	USER_CHANGE_DISK_VM                            = 38
+	NETWORK_USER_ADD_VM_INTERFACE                  = 932
+	NETWORK_USER_UPDATE_VM_INTERFACE               = 934
+	NETWORK_USER_REMOVE_VM_INTERFACE               = 930
+	USER_CREATE_SNAPSHOT_FINISHED_SUCCESS          = 68
+	USER_REMOVE_SNAPSHOT_FINISHED_SUCCESS          = 356
+	USER_RUN_VM                                    = 32
+	USER_SUSPEND_VM_OK                             = 503
+	USER_PAUSE_VM                                  = 39
+	USER_RESUME_VM                                 = 40
+	VM_DOWN                                        = 61
 	// Disk
 	USER_ADD_DISK_FINISHED_SUCCESS            = 2021
 	USER_REMOVE_DISK                          = 2014
@@ -820,6 +826,7 @@ func (r *VMAdapter) Event() []int {
 		USER_ADD_VM_FINISHED_SUCCESS,
 		// Update
 		USER_UPDATE_VM,
+		SYSTEM_UPDATE_VM,
 		USER_UPDATE_VM_DISK,
 		USER_ADD_DISK_TO_VM_SUCCESS,
 		USER_REMOVE_DISK_FROM_VM,
@@ -832,12 +839,16 @@ func (r *VMAdapter) Event() []int {
 		NETWORK_USER_REMOVE_VM_INTERFACE,
 		USER_CREATE_SNAPSHOT_FINISHED_SUCCESS,
 		USER_REMOVE_SNAPSHOT_FINISHED_SUCCESS,
+		IMPORTEXPORT_IMPORT_VM,
 		USER_RUN_VM,
 		USER_PAUSE_VM,
 		USER_RESUME_VM,
 		USER_SUSPEND_VM_OK,
 		VM_DOWN,
 		// Delete
+		USER_REMOVE_VM_FINISHED_INTERNAL,
+		USER_REMOVE_VM_FINISHED_ILLEGAL_DISKS,
+		USER_REMOVE_VM_FINISHED_ILLEGAL_DISKS_INTERNAL,
 		USER_REMOVE_VM,
 	}
 }
@@ -915,17 +926,20 @@ func (r *VMAdapter) Apply(ctx *Context, event *Event) (updater Updater, err erro
 			return
 		}
 	case USER_UPDATE_VM,
+		SYSTEM_UPDATE_VM,
 		USER_UPDATE_VM_DISK,
 		USER_ADD_DISK_TO_VM_SUCCESS,
 		USER_REMOVE_DISK_FROM_VM,
 		USER_ATTACH_DISK_TO_VM,
 		USER_DETACH_DISK_FROM_VM,
 		USER_EJECT_VM_DISK,
+		USER_CHANGE_DISK_VM,
 		NETWORK_USER_ADD_VM_INTERFACE,
 		NETWORK_USER_UPDATE_VM_INTERFACE,
 		NETWORK_USER_REMOVE_VM_INTERFACE,
 		USER_CREATE_SNAPSHOT_FINISHED_SUCCESS,
 		USER_REMOVE_SNAPSHOT_FINISHED_SUCCESS,
+		IMPORTEXPORT_IMPORT_VM,
 		USER_RUN_VM,
 		USER_PAUSE_VM,
 		USER_RESUME_VM,
@@ -948,7 +962,10 @@ func (r *VMAdapter) Apply(ctx *Context, event *Event) (updater Updater, err erro
 			err = tx.Update(m)
 			return
 		}
-	case USER_REMOVE_VM:
+	case USER_REMOVE_VM_FINISHED_INTERNAL,
+		USER_REMOVE_VM_FINISHED_ILLEGAL_DISKS,
+		USER_REMOVE_VM_FINISHED_ILLEGAL_DISKS_INTERNAL,
+		USER_REMOVE_VM:
 		updater = func(tx *libmodel.Tx) (err error) {
 			err = tx.Delete(
 				&model.VM{
