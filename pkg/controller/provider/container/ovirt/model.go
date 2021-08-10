@@ -973,7 +973,8 @@ func (r *VMAdapter) Apply(ctx *Context, event *Event) (updater Updater, err erro
 				})
 			return
 		}
-	case USER_FINISHED_REMOVE_DISK_ATTACHED_TO_VMS:
+	case USER_FINISHED_REMOVE_DISK_ATTACHED_TO_VMS,
+		USER_DETACH_STORAGE_DOMAIN_FROM_POOL:
 		var desired fb.Iterator
 		desired, err = r.List(ctx)
 		if err != nil {
@@ -992,7 +993,7 @@ func (r *VMAdapter) Apply(ctx *Context, event *Event) (updater Updater, err erro
 				Stored: stored,
 				Tx:     tx,
 			}
-			err = collection.Update(desired)
+			err = collection.Reconcile(desired)
 			return
 		}
 	default:
@@ -1028,6 +1029,7 @@ func (r *DiskAdapter) Event() []int {
 		USER_REMOVE_DISK,
 		USER_REMOVE_DISK_FROM_VM,
 		USER_FINISHED_REMOVE_DISK_ATTACHED_TO_VMS,
+		USER_DETACH_STORAGE_DOMAIN_FROM_POOL,
 		USER_ADD_VM,
 		USER_ADD_VM_FINISHED_SUCCESS,
 		USER_REMOVE_VM,
@@ -1085,7 +1087,8 @@ func (r *DiskAdapter) Apply(ctx *Context, event *Event) (updater Updater, err er
 			err = collection.Add(desired)
 		case USER_REMOVE_DISK,
 			USER_REMOVE_DISK_FROM_VM,
-			USER_FINISHED_REMOVE_DISK_ATTACHED_TO_VMS:
+			USER_FINISHED_REMOVE_DISK_ATTACHED_TO_VMS,
+			USER_DETACH_STORAGE_DOMAIN_FROM_POOL:
 			err = collection.Delete(desired)
 		case USER_ADD_VM,
 			USER_ADD_VM_FINISHED_SUCCESS,
