@@ -26,6 +26,11 @@ const (
 	NETWORK_ADD_NETWORK    = 942
 	NETWORK_UPDATE_NETWORK = 1114
 	NETWORK_REMOVE_NETWORK = 944
+	// Storage Domain
+	USER_ADD_STORAGE_DOMAIN              = 956
+	USER_UPDATE_STORAGE_DOMAIN           = 958
+	USER_REMOVE_STORAGE_DOMAIN           = 960
+	USER_DETACH_STORAGE_DOMAIN_FROM_POOL = 964
 	// vNIC Profile
 	ADD_VNIC_PROFILE    = 1122
 	UPDATE_VNIC_PROFILE = 1124
@@ -515,7 +520,12 @@ type StorageDomainAdapter struct {
 //
 // Handled events.
 func (r *StorageDomainAdapter) Event() []int {
-	return []int{}
+	return []int{
+		USER_ADD_STORAGE_DOMAIN,
+		USER_UPDATE_STORAGE_DOMAIN,
+		USER_REMOVE_STORAGE_DOMAIN,
+		USER_DETACH_STORAGE_DOMAIN_FROM_POOL,
+	}
 }
 
 //
@@ -543,9 +553,36 @@ func (r *StorageDomainAdapter) List(ctx *Context) (itr fb.Iterator, err error) {
 //
 // Apply and event tot the inventory model.
 func (r *StorageDomainAdapter) Apply(ctx *Context, event *Event) (updater Updater, err error) {
-	switch event.code() {
-	default:
-		err = liberr.New("unknown event", "event", event)
+	var desired fb.Iterator
+	desired, err = r.List(ctx)
+	if err != nil {
+		return
+	}
+	updater = func(tx *libmodel.Tx) (err error) {
+		stored, err := tx.Find(
+			&model.StorageDomain{},
+			model.ListOptions{
+				Detail: model.MaxDetail,
+			})
+		if err != nil {
+			return
+		}
+		collection := libcnt.Collection{
+			Stored: stored,
+			Tx:     tx,
+		}
+		switch event.code() {
+		case USER_ADD_STORAGE_DOMAIN:
+			err = collection.Add(desired)
+		case USER_UPDATE_STORAGE_DOMAIN:
+			err = collection.Update(desired)
+		case USER_REMOVE_STORAGE_DOMAIN,
+			USER_DETACH_STORAGE_DOMAIN_FROM_POOL:
+			err = collection.Delete(desired)
+		default:
+			err = liberr.New("unknown event", "event", event)
+		}
+		return
 	}
 
 	return
