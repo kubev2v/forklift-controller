@@ -39,9 +39,13 @@ const (
 	USER_UPDATE_CLUSTER = 811
 	USER_REMOVE_CLUSTER = 813
 	// Host
-	USER_ADD_VDS    = 42
-	USER_UPDATE_VDS = 43
-	USER_REMOVE_VDS = 44
+	USER_ADD_VDS                        = 42
+	USER_UPDATE_VDS                     = 43
+	USER_REMOVE_VDS                     = 44
+	USER_VDS_MAINTENANCE                = 600
+	USER_VDS_MAINTENANCE_WITHOUT_REASON = 620
+	USER_VDS_MAINTENANCE_MANUAL_HA      = 10453
+	VDS_DETECTED                        = 13
 	// VM
 	USER_ADD_VM                           = 34
 	USER_ADD_VM_FINISHED_SUCCESS          = 53
@@ -649,7 +653,7 @@ func (r *ClusterAdapter) Apply(ctx *Context, event *Event) (updater Updater, err
 }
 
 //
-// Host adapter.
+// Host (VDS) adapter.
 type HostAdapter struct {
 	BaseAdapter
 }
@@ -661,6 +665,10 @@ func (r *HostAdapter) Event() []int {
 		USER_ADD_VDS,
 		USER_UPDATE_VDS,
 		USER_REMOVE_VDS,
+		USER_VDS_MAINTENANCE,
+		USER_VDS_MAINTENANCE_WITHOUT_REASON,
+		USER_VDS_MAINTENANCE_MANUAL_HA,
+		VDS_DETECTED,
 	}
 }
 
@@ -716,7 +724,11 @@ func (r *HostAdapter) Apply(ctx *Context, event *Event) (updater Updater, err er
 			err = tx.Insert(m)
 			return
 		}
-	case USER_UPDATE_VDS:
+	case USER_UPDATE_VDS,
+		USER_VDS_MAINTENANCE,
+		USER_VDS_MAINTENANCE_WITHOUT_REASON,
+		USER_VDS_MAINTENANCE_MANUAL_HA,
+		VDS_DETECTED:
 		object := &Host{}
 		err = ctx.client.get(event.Host.Ref, object, r.follow())
 		if err != nil {
