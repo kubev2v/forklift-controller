@@ -377,9 +377,12 @@ type NICProfileAdapter struct {
 // Handled events.
 func (r *NICProfileAdapter) Event() []int {
 	return []int{
+		// Profile.
 		ADD_VNIC_PROFILE,
 		UPDATE_VNIC_PROFILE,
 		REMOVE_VNIC_PROFILE,
+		// Network
+		NETWORK_REMOVE_NETWORK,
 	}
 }
 
@@ -432,7 +435,8 @@ func (r *NICProfileAdapter) Apply(ctx *Context, event *Event) (updater Updater, 
 			err = collection.Add(desired)
 		case UPDATE_VNIC_PROFILE:
 			err = collection.Update(desired)
-		case REMOVE_VNIC_PROFILE:
+		case REMOVE_VNIC_PROFILE,
+			NETWORK_REMOVE_NETWORK:
 			err = collection.Delete(desired)
 		default:
 			err = liberr.New("unknown event", "event", event)
@@ -453,9 +457,13 @@ type DiskProfileAdapter struct {
 // Handled events.
 func (r *DiskProfileAdapter) Event() []int {
 	return []int{
+		// Profile.
 		USER_ADD_DISK_PROFILE,
 		USER_UPDATE_DISK_PROFILE,
 		USER_REMOVE_DISK_PROFILE,
+		// StorageDomain
+		USER_REMOVE_STORAGE_DOMAIN,
+		USER_FORCE_REMOVE_STORAGE_DOMAIN,
 	}
 }
 
@@ -507,7 +515,9 @@ func (r *DiskProfileAdapter) Apply(ctx *Context, event *Event) (updater Updater,
 			err = collection.Add(desired)
 		case USER_UPDATE_DISK_PROFILE:
 			err = collection.Update(desired)
-		case USER_REMOVE_DISK_PROFILE:
+		case USER_REMOVE_DISK_PROFILE,
+			USER_REMOVE_STORAGE_DOMAIN,
+			USER_FORCE_REMOVE_STORAGE_DOMAIN:
 			err = collection.Delete(desired)
 		default:
 			err = liberr.New("unknown event", "event", event)
