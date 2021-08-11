@@ -30,6 +30,7 @@ const (
 	USER_ADD_STORAGE_DOMAIN              = 956
 	USER_UPDATE_STORAGE_DOMAIN           = 958
 	USER_REMOVE_STORAGE_DOMAIN           = 960
+	USER_FORCE_REMOVE_STORAGE_DOMAIN     = 981
 	USER_DETACH_STORAGE_DOMAIN_FROM_POOL = 964
 	// vNIC Profile
 	ADD_VNIC_PROFILE    = 1122
@@ -530,6 +531,7 @@ func (r *StorageDomainAdapter) Event() []int {
 		USER_ADD_STORAGE_DOMAIN,
 		USER_UPDATE_STORAGE_DOMAIN,
 		USER_REMOVE_STORAGE_DOMAIN,
+		USER_FORCE_REMOVE_STORAGE_DOMAIN,
 		USER_DETACH_STORAGE_DOMAIN_FROM_POOL,
 	}
 }
@@ -580,10 +582,11 @@ func (r *StorageDomainAdapter) Apply(ctx *Context, event *Event) (updater Update
 		switch event.code() {
 		case USER_ADD_STORAGE_DOMAIN:
 			err = collection.Add(desired)
-		case USER_UPDATE_STORAGE_DOMAIN:
+		case USER_UPDATE_STORAGE_DOMAIN,
+			USER_DETACH_STORAGE_DOMAIN_FROM_POOL:
 			err = collection.Update(desired)
 		case USER_REMOVE_STORAGE_DOMAIN,
-			USER_DETACH_STORAGE_DOMAIN_FROM_POOL:
+			USER_FORCE_REMOVE_STORAGE_DOMAIN:
 			err = collection.Delete(desired)
 		default:
 			err = liberr.New("unknown event", "event", event)
@@ -850,6 +853,9 @@ func (r *VMAdapter) Event() []int {
 		USER_REMOVE_VM_FINISHED_ILLEGAL_DISKS,
 		USER_REMOVE_VM_FINISHED_ILLEGAL_DISKS_INTERNAL,
 		USER_REMOVE_VM,
+		// StorageDomain.
+		USER_DETACH_STORAGE_DOMAIN_FROM_POOL,
+		USER_FORCE_REMOVE_STORAGE_DOMAIN,
 	}
 }
 
@@ -974,7 +980,8 @@ func (r *VMAdapter) Apply(ctx *Context, event *Event) (updater Updater, err erro
 			return
 		}
 	case USER_FINISHED_REMOVE_DISK_ATTACHED_TO_VMS,
-		USER_DETACH_STORAGE_DOMAIN_FROM_POOL:
+		USER_DETACH_STORAGE_DOMAIN_FROM_POOL,
+		USER_FORCE_REMOVE_STORAGE_DOMAIN:
 		var desired fb.Iterator
 		desired, err = r.List(ctx)
 		if err != nil {
@@ -1024,15 +1031,20 @@ type DiskAdapter struct {
 // Handled events.
 func (r *DiskAdapter) Event() []int {
 	return []int{
+		// Disk
 		USER_ADD_DISK_FINISHED_SUCCESS,
 		USER_ADD_DISK_TO_VM_SUCCESS,
 		USER_REMOVE_DISK,
-		USER_REMOVE_DISK_FROM_VM,
+		// VM
 		USER_FINISHED_REMOVE_DISK_ATTACHED_TO_VMS,
-		USER_DETACH_STORAGE_DOMAIN_FROM_POOL,
+		USER_REMOVE_DISK_FROM_VM,
+		USER_FORCE_REMOVE_STORAGE_DOMAIN,
 		USER_ADD_VM,
 		USER_ADD_VM_FINISHED_SUCCESS,
 		USER_REMOVE_VM,
+		// StorageDomain.
+		USER_DETACH_STORAGE_DOMAIN_FROM_POOL,
+		USER_FORCE_REMOVE_STORAGE_DOMAIN,
 	}
 }
 
@@ -1088,7 +1100,8 @@ func (r *DiskAdapter) Apply(ctx *Context, event *Event) (updater Updater, err er
 		case USER_REMOVE_DISK,
 			USER_REMOVE_DISK_FROM_VM,
 			USER_FINISHED_REMOVE_DISK_ATTACHED_TO_VMS,
-			USER_DETACH_STORAGE_DOMAIN_FROM_POOL:
+			USER_DETACH_STORAGE_DOMAIN_FROM_POOL,
+			USER_FORCE_REMOVE_STORAGE_DOMAIN:
 			err = collection.Delete(desired)
 		case USER_ADD_VM,
 			USER_ADD_VM_FINISHED_SUCCESS,
