@@ -152,7 +152,7 @@ func (h *Handler) permit(ctx *gin.Context) (status int) {
 // Match (compare) paths.
 // Determine if the relative path is contained
 // in the absolute path.
-func (h Handler) PathMatch(absolute, relative string) (matched bool) {
+func (h *Handler) PathMatch(absolute, relative string) (matched bool) {
 	absolute = strings.TrimLeft(absolute, "/")
 	relative = strings.TrimLeft(relative, "/")
 	pathA := strings.Split(absolute, "/")
@@ -179,7 +179,7 @@ func (h Handler) PathMatch(absolute, relative string) (matched bool) {
 //
 // Match (compare) paths.
 // Determine if the paths have the same root.
-func (h Handler) PathMatchRoot(absolute, path string) (matched bool) {
+func (h *Handler) PathMatchRoot(absolute, path string) (matched bool) {
 	absolute = strings.TrimLeft(absolute, "/")
 	path = strings.TrimLeft(path, "/")
 	dcA := strings.Split(absolute, "/")[0]
