@@ -1,16 +1,17 @@
 package base
 
 import (
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	libcontainer "github.com/konveyor/controller/pkg/inventory/container"
 	libweb "github.com/konveyor/controller/pkg/inventory/web"
 	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 //

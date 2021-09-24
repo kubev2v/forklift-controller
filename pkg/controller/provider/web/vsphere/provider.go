@@ -1,13 +1,19 @@
 package vsphere
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
 	model "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ocp"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/ocp"
-	"net/http"
+
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 )
 
 //
@@ -24,12 +30,32 @@ type ProviderHandler struct {
 	base.Handler
 }
 
+func (h *ProviderHandler) graphqlHandler() gin.HandlerFunc {
+	// NewExecutableSchema and Config are in the generated.go file
+	// Resolver is in the resolver.go file
+	gqlh := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+
+	return func(c *gin.Context) {
+		gqlh.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+func playgroundHandler() gin.HandlerFunc {
+	h := playground.Handler("GraphQL Playground", "/query")
+
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
 //
 // Add routes to the `gin` router.
 func (h *ProviderHandler) AddRoutes(e *gin.Engine) {
 	e.GET(ProvidersRoot, h.List)
 	e.GET(ProvidersRoot+"/", h.List)
 	e.GET(ProviderRoot, h.Get)
+	e.GET(ProvidersRoot+"/playground", playgroundHandler())
+	e.POST(ProvidersRoot+"/graphql", h.graphqlHandler())
 }
 
 //
