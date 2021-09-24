@@ -37,6 +37,13 @@ func (h *ProviderHandler) AddRoutes(e *gin.Engine) {
 
 //
 // List resources in a REST collection.
+func (h ProviderHandler) Serve(ctx *gin.Context) {
+	//
+	log.Info("Graphql endpoint")
+}
+
+//
+// List resources in a REST collection.
 func (h ProviderHandler) List(ctx *gin.Context) {
 	status := h.Prepare(ctx)
 	if status != http.StatusOK {

@@ -3,6 +3,7 @@ module github.com/konveyor/forklift-controller
 go 1.14
 
 require (
+	github.com/99designs/gqlgen v0.14.0
 	github.com/gin-gonic/gin v1.7.2
 	github.com/go-kit/kit v0.10.0 // indirect
 	github.com/go-logr/logr v0.3.0
@@ -14,7 +15,8 @@ require (
 	github.com/openshift/library-go v0.0.0-20200821154433-215f00df72cc
 	github.com/ovirt/go-ovirt v4.3.4+incompatible
 	github.com/pkg/profile v1.3.0
-	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/client_golang v1.8.0 // indirect
+	github.com/vektah/gqlparser/v2 v2.2.0
 	github.com/vmware/govmomi v0.23.1
 	go.uber.org/zap v1.14.1 // indirect
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b

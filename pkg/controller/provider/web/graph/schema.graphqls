@@ -1,0 +1,11 @@
+
+type VsphereProvider {
+  id: ID!
+  name: String!
+  kind: String!
+  product: String!
+}
+
+type Query {
+  vsphereProviders: [VsphereProvider!]!
+}
