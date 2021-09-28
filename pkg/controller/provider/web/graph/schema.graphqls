@@ -6,6 +6,12 @@ type VsphereProvider {
   product: String!
 }
 
+type VsphereHost {
+  id: ID!
+  name: String!
+}
+
 type Query {
   vsphereProviders: [VsphereProvider!]!
+  vsphereHosts: [VsphereHost!]!
 }

@@ -12,7 +12,6 @@ import (
 
 func (r *queryResolver) VsphereProviders(ctx context.Context) ([]*model.VsphereProvider, error) {
 	var providers []*model.VsphereProvider
-
 	dummyProvider := model.VsphereProvider{
 		Name:    "our dummy provider",
 		Kind:    "Provider",
@@ -20,6 +19,15 @@ func (r *queryResolver) VsphereProviders(ctx context.Context) ([]*model.VsphereP
 	}
 	providers = append(providers, &dummyProvider)
 	return providers, nil
+}
+
+func (r *queryResolver) VsphereHosts(ctx context.Context) ([]*model.VsphereHost, error) {
+	var hosts []*model.VsphereHost
+	dummyProvider := model.VsphereHost{
+		Name: "a dummy host",
+	}
+	hosts = append(hosts, &dummyProvider)
+	return hosts, nil
 }
 
 // Query returns generated.QueryResolver implementation.

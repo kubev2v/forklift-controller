@@ -7,12 +7,6 @@ import (
 )
 
 //
-// Routes
-const (
-	Root = base.GraphqlRoot
-)
-
-//
 // Build all handlers.
 func Handlers(container *container.Container) []libweb.RequestHandler {
 	return []libweb.RequestHandler{

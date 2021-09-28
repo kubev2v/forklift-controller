@@ -2,6 +2,11 @@
 
 package model
 
+type VsphereHost struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type VsphereProvider struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
