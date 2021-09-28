@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
@@ -13,9 +14,8 @@ import (
 func (r *queryResolver) VsphereProviders(ctx context.Context) ([]*model.VsphereProvider, error) {
 	var providers []*model.VsphereProvider
 	dummyProvider := model.VsphereProvider{
-		Name:    "our dummy provider",
-		Kind:    "Provider",
-		Product: "VMware",
+		Name: "our dummy provider",
+		Kind: "Provider",
 	}
 	providers = append(providers, &dummyProvider)
 	return providers, nil
@@ -23,6 +23,14 @@ func (r *queryResolver) VsphereProviders(ctx context.Context) ([]*model.VsphereP
 
 func (r *queryResolver) VsphereHosts(ctx context.Context) ([]*model.VsphereHost, error) {
 	var hosts []*model.VsphereHost
+
+	c := ctx.Value("HandlerContainer")
+	if c == nil {
+		log.Info("could not retrieve Handler Container")
+		return hosts, nil
+	}
+	fmt.Printf("%+v\n", c)
+
 	dummyProvider := model.VsphereHost{
 		Name: "a dummy host",
 	}

@@ -8,8 +8,7 @@ type VsphereHost struct {
 }
 
 type VsphereProvider struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Kind    string `json:"kind"`
-	Product string `json:"product"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Kind string `json:"kind"`
 }

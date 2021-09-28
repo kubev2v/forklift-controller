@@ -29,29 +29,24 @@ type GraphHandler struct {
 //
 // Add routes to the `gin` router.
 func (h *GraphHandler) AddRoutes(e *gin.Engine) {
-	e.POST(GraphqlRoot, h.Post())
-	e.GET(GraphqlRoot+"/playground", h.Get())
+	e.POST(GraphqlRoot, h.Post)
+	e.GET(GraphqlRoot+"/playground", h.Get)
 }
 
 //
 // GraphQL Handler.
-func (h GraphHandler) Post() gin.HandlerFunc {
+func (h GraphHandler) Post(ctx *gin.Context) {
 	handler := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{}}))
 
-	return func(c *gin.Context) {
-		ctx := context.WithValue(c.Request.Context(), "HandlerContainer", h.Container)
-		c.Request = c.Request.WithContext(ctx)
-		c.Next()
-		handler.ServeHTTP(c.Writer, c.Request)
-	}
+	c := context.WithValue(ctx.Request.Context(), "HandlerContainer", h.Container)
+	ctx.Request = ctx.Request.WithContext(c)
+	ctx.Next()
+	handler.ServeHTTP(ctx.Writer, ctx.Request)
 }
 
 //
 // GraphQL Playground plugin Handler.
-func (h GraphHandler) Get() gin.HandlerFunc {
+func (h GraphHandler) Get(ctx *gin.Context) {
 	handler := playground.Handler("GraphQL Playground", "/query")
-
-	return func(c *gin.Context) {
-		handler.ServeHTTP(c.Writer, c.Request)
-	}
+	handler.ServeHTTP(ctx.Writer, ctx.Request)
 }
