@@ -40,7 +40,6 @@ func (h GraphHandler) Post(ctx *gin.Context) {
 
 	c := context.WithValue(ctx.Request.Context(), "HandlerContainer", h.Container)
 	ctx.Request = ctx.Request.WithContext(c)
-	ctx.Next()
 	handler.ServeHTTP(ctx.Writer, ctx.Request)
 }
 
