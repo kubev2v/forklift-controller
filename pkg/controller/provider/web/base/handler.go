@@ -18,6 +18,7 @@ import (
 //
 // Root - all routes.
 const (
+	GraphqlRoot   = "graphql"
 	ProvidersRoot = "providers"
 	ProviderParam = "provider"
 	DetailParam   = "detail"

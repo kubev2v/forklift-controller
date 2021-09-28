@@ -1,14 +1,13 @@
 package vsphere
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
 	model "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ocp"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/ocp"
+	"net/http"
 )
 
 //

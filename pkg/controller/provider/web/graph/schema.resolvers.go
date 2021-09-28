@@ -12,6 +12,7 @@ import (
 
 func (r *queryResolver) VsphereProviders(ctx context.Context) ([]*model.VsphereProvider, error) {
 	var providers []*model.VsphereProvider
+
 	dummyProvider := model.VsphereProvider{
 		Name:    "our dummy provider",
 		Kind:    "Provider",
