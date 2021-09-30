@@ -8,9 +8,17 @@ type VsphereProvider {
 type VsphereHost {
   id: ID!
   name: String!
+  kind: String!
+  productName: String!
+  productVersion: String!
+  inMaintenance: Boolean!
+  cpuSockets: Int!
+  cpuCores: Int!
 }
 
 type Query {
   vsphereProviders: [VsphereProvider!]!
-  vsphereHosts: [VsphereHost!]!
+  vsphereHosts(provider: ID!): [VsphereHost!]!
+  vsphereHost(id: ID!, provider: ID!): VsphereHost!
 }
+

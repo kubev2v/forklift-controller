@@ -38,7 +38,7 @@ func (h *GraphHandler) AddRoutes(e *gin.Engine) {
 func (h GraphHandler) Post(ctx *gin.Context) {
 	handler := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{}}))
 
-	c := context.WithValue(ctx.Request.Context(), "HandlerContainer", h.Container)
+	c := context.WithValue(ctx.Request.Context(), "GraphqlContainer", h.Container)
 	ctx.Request = ctx.Request.WithContext(c)
 	handler.ServeHTTP(ctx.Writer, ctx.Request)
 }

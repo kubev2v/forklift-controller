@@ -3,8 +3,14 @@
 package model
 
 type VsphereHost struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID             string `json:"id"`
+	Name           string `json:"name"`
+	Kind           string `json:"kind"`
+	ProductName    string `json:"productName"`
+	ProductVersion string `json:"productVersion"`
+	InMaintenance  bool   `json:"inMaintenance"`
+	CPUSockets     int    `json:"cpuSockets"`
+	CPUCores       int    `json:"cpuCores"`
 }
 
 type VsphereProvider struct {

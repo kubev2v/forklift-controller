@@ -43,13 +43,20 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Query struct {
-		VsphereHosts     func(childComplexity int) int
+		VsphereHost      func(childComplexity int, id string, provider string) int
+		VsphereHosts     func(childComplexity int, provider string) int
 		VsphereProviders func(childComplexity int) int
 	}
 
 	VsphereHost struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
+		CPUCores       func(childComplexity int) int
+		CPUSockets     func(childComplexity int) int
+		ID             func(childComplexity int) int
+		InMaintenance  func(childComplexity int) int
+		Kind           func(childComplexity int) int
+		Name           func(childComplexity int) int
+		ProductName    func(childComplexity int) int
+		ProductVersion func(childComplexity int) int
 	}
 
 	VsphereProvider struct {
@@ -61,7 +68,8 @@ type ComplexityRoot struct {
 
 type QueryResolver interface {
 	VsphereProviders(ctx context.Context) ([]*model.VsphereProvider, error)
-	VsphereHosts(ctx context.Context) ([]*model.VsphereHost, error)
+	VsphereHosts(ctx context.Context, provider string) ([]*model.VsphereHost, error)
+	VsphereHost(ctx context.Context, id string, provider string) (*model.VsphereHost, error)
 }
 
 type executableSchema struct {
@@ -79,12 +87,29 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "Query.vsphereHost":
+		if e.complexity.Query.VsphereHost == nil {
+			break
+		}
+
+		args, err := ec.field_Query_vsphereHost_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.VsphereHost(childComplexity, args["id"].(string), args["provider"].(string)), true
+
 	case "Query.vsphereHosts":
 		if e.complexity.Query.VsphereHosts == nil {
 			break
 		}
 
-		return e.complexity.Query.VsphereHosts(childComplexity), true
+		args, err := ec.field_Query_vsphereHosts_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.VsphereHosts(childComplexity, args["provider"].(string)), true
 
 	case "Query.vsphereProviders":
 		if e.complexity.Query.VsphereProviders == nil {
@@ -93,6 +118,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.VsphereProviders(childComplexity), true
 
+	case "VsphereHost.cpuCores":
+		if e.complexity.VsphereHost.CPUCores == nil {
+			break
+		}
+
+		return e.complexity.VsphereHost.CPUCores(childComplexity), true
+
+	case "VsphereHost.cpuSockets":
+		if e.complexity.VsphereHost.CPUSockets == nil {
+			break
+		}
+
+		return e.complexity.VsphereHost.CPUSockets(childComplexity), true
+
 	case "VsphereHost.id":
 		if e.complexity.VsphereHost.ID == nil {
 			break
@@ -100,12 +139,40 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.VsphereHost.ID(childComplexity), true
 
+	case "VsphereHost.inMaintenance":
+		if e.complexity.VsphereHost.InMaintenance == nil {
+			break
+		}
+
+		return e.complexity.VsphereHost.InMaintenance(childComplexity), true
+
+	case "VsphereHost.kind":
+		if e.complexity.VsphereHost.Kind == nil {
+			break
+		}
+
+		return e.complexity.VsphereHost.Kind(childComplexity), true
+
 	case "VsphereHost.name":
 		if e.complexity.VsphereHost.Name == nil {
 			break
 		}
 
 		return e.complexity.VsphereHost.Name(childComplexity), true
+
+	case "VsphereHost.productName":
+		if e.complexity.VsphereHost.ProductName == nil {
+			break
+		}
+
+		return e.complexity.VsphereHost.ProductName(childComplexity), true
+
+	case "VsphereHost.productVersion":
+		if e.complexity.VsphereHost.ProductVersion == nil {
+			break
+		}
+
+		return e.complexity.VsphereHost.ProductVersion(childComplexity), true
 
 	case "VsphereProvider.id":
 		if e.complexity.VsphereProvider.ID == nil {
@@ -188,12 +255,20 @@ type VsphereProvider {
 type VsphereHost {
   id: ID!
   name: String!
+  kind: String!
+  productName: String!
+  productVersion: String!
+  inMaintenance: Boolean!
+  cpuSockets: Int!
+  cpuCores: Int!
 }
 
 type Query {
   vsphereProviders: [VsphereProvider!]!
-  vsphereHosts: [VsphereHost!]!
+  vsphereHosts(provider: ID!): [VsphereHost!]!
+  vsphereHost(id: ID!, provider: ID!): VsphereHost!
 }
+
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -214,6 +289,45 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_vsphereHost_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["provider"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("provider"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["provider"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_vsphereHosts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["provider"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("provider"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["provider"] = arg0
 	return args, nil
 }
 
@@ -306,9 +420,16 @@ func (ec *executionContext) _Query_vsphereHosts(ctx context.Context, field graph
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_vsphereHosts_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().VsphereHosts(rctx)
+		return ec.resolvers.Query().VsphereHosts(rctx, args["provider"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -323,6 +444,48 @@ func (ec *executionContext) _Query_vsphereHosts(ctx context.Context, field graph
 	res := resTmp.([]*model.VsphereHost)
 	fc.Result = res
 	return ec.marshalNVsphereHost2ᚕᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVsphereHostᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_vsphereHost(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_vsphereHost_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().VsphereHost(rctx, args["id"].(string), args["provider"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.VsphereHost)
+	fc.Result = res
+	return ec.marshalNVsphereHost2ᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVsphereHost(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -464,6 +627,216 @@ func (ec *executionContext) _VsphereHost_name(ctx context.Context, field graphql
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereHost_kind(ctx context.Context, field graphql.CollectedField, obj *model.VsphereHost) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereHost",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Kind, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereHost_productName(ctx context.Context, field graphql.CollectedField, obj *model.VsphereHost) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereHost",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProductName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereHost_productVersion(ctx context.Context, field graphql.CollectedField, obj *model.VsphereHost) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereHost",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProductVersion, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereHost_inMaintenance(ctx context.Context, field graphql.CollectedField, obj *model.VsphereHost) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereHost",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InMaintenance, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereHost_cpuSockets(ctx context.Context, field graphql.CollectedField, obj *model.VsphereHost) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereHost",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CPUSockets, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereHost_cpuCores(ctx context.Context, field graphql.CollectedField, obj *model.VsphereHost) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereHost",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CPUCores, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _VsphereProvider_id(ctx context.Context, field graphql.CollectedField, obj *model.VsphereProvider) (ret graphql.Marshaler) {
@@ -1744,6 +2117,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "vsphereHost":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_vsphereHost(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -1777,6 +2164,36 @@ func (ec *executionContext) _VsphereHost(ctx context.Context, sel ast.SelectionS
 			}
 		case "name":
 			out.Values[i] = ec._VsphereHost_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "kind":
+			out.Values[i] = ec._VsphereHost_kind(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "productName":
+			out.Values[i] = ec._VsphereHost_productName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "productVersion":
+			out.Values[i] = ec._VsphereHost_productVersion(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "inMaintenance":
+			out.Values[i] = ec._VsphereHost_inMaintenance(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "cpuSockets":
+			out.Values[i] = ec._VsphereHost_cpuSockets(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "cpuCores":
+			out.Values[i] = ec._VsphereHost_cpuCores(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2108,6 +2525,21 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -2121,6 +2553,10 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNVsphereHost2githubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVsphereHost(ctx context.Context, sel ast.SelectionSet, v model.VsphereHost) graphql.Marshaler {
+	return ec._VsphereHost(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNVsphereHost2ᚕᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVsphereHostᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.VsphereHost) graphql.Marshaler {
