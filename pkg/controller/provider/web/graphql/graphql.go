@@ -1,4 +1,4 @@
-package graph
+package graphql
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/konveyor/controller/pkg/logging"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -36,7 +37,7 @@ func (h *GraphHandler) AddRoutes(e *gin.Engine) {
 //
 // GraphQL Handler.
 func (h GraphHandler) Post(ctx *gin.Context) {
-	handler := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{}}))
+	handler := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 
 	c := context.WithValue(ctx.Request.Context(), "GraphqlContainer", h.Container)
 	ctx.Request = ctx.Request.WithContext(c)

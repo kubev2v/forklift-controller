@@ -14,28 +14,13 @@ import (
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
+	"github.com/prometheus/common/log"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 func (r *queryResolver) VsphereProviders(ctx context.Context) ([]*graphmodel.VsphereProvider, error) {
-	var providers []*graphmodel.VsphereProvider
-
-	container := ctx.Value("GraphqlContainer").(*libcontainer.Container)
-	if container == nil {
-		log.Info("could not retrieve Container")
-		return providers, nil
-	}
-
-	list := container.List()
-
-	for _, collector := range list {
-		fmt.Println(collector)
-		provider := graphmodel.VsphereProvider{Name: "Name", Kind: "Kind"}
-		providers = append(providers, &provider)
-	}
-
-	return providers, nil
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) VsphereHosts(ctx context.Context, provider string) ([]*graphmodel.VsphereHost, error) {
@@ -43,7 +28,7 @@ func (r *queryResolver) VsphereHosts(ctx context.Context, provider string) ([]*g
 
 	c := ctx.Value("GraphqlContainer").(*libcontainer.Container)
 	if c == nil {
-		log.Info("could not retrieve Container")
+		// log.Info("could not retrieve Container")
 		return hosts, nil
 	}
 
@@ -56,7 +41,7 @@ func (r *queryResolver) VsphereHosts(ctx context.Context, provider string) ([]*g
 	var found bool
 	var collector libcontainer.Collector
 	if collector, found = c.Get(p); !found {
-		log.Info("Provider not found")
+		// log.Info("Provider not found")
 		return nil, nil
 	}
 
@@ -74,6 +59,7 @@ func (r *queryResolver) VsphereHosts(ctx context.Context, provider string) ([]*g
 
 	for _, m := range list {
 		host := &graphmodel.VsphereHost{
+			ID:             m.ID,
 			Name:           m.Name,
 			Kind:           m.Parent.Kind,
 			ProductName:    m.ProductName,
@@ -93,7 +79,7 @@ func (r *queryResolver) VsphereHost(ctx context.Context, id string, provider str
 
 	c := ctx.Value("GraphqlContainer").(*libcontainer.Container)
 	if c == nil {
-		log.Info("could not retrieve Container")
+		// log.Info("could not retrieve Container")
 		return host, nil
 	}
 
@@ -106,7 +92,7 @@ func (r *queryResolver) VsphereHost(ctx context.Context, id string, provider str
 	var found bool
 	var collector libcontainer.Collector
 	if collector, found = c.Get(p); !found {
-		log.Info("Provider not found")
+		// log.Info("Provider not found")
 		return nil, nil
 	}
 
@@ -127,6 +113,7 @@ func (r *queryResolver) VsphereHost(ctx context.Context, id string, provider str
 	}
 
 	host = &graphmodel.VsphereHost{
+		ID:             m.ID,
 		Name:           m.Name,
 		Kind:           m.Parent.Kind,
 		ProductName:    m.ProductName,
