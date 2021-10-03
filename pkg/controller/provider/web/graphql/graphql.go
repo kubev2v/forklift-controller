@@ -6,7 +6,7 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/repository"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/repository/vsphere"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -36,12 +36,17 @@ func (h *GraphHandler) AddRoutes(e *gin.Engine) {
 //
 // GraphQL Queries handler.
 func (h GraphHandler) Post(ctx *gin.Context) {
-	hostService := &repository.HostImpl{
+	providerRepository := &vsphere.ProviderRepository{
 		Container: h.Container,
 		Log:       log,
 	}
 
-	config := generated.Config{Resolvers: &graph.Resolver{Host: hostService}}
+	hostRepository := &vsphere.HostRepository{
+		Container: h.Container,
+		Log:       log,
+	}
+
+	config := generated.Config{Resolvers: &graph.Resolver{Host: hostRepository, Provider: providerRepository}}
 	handler := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 
 	handler.ServeHTTP(ctx.Writer, ctx.Request)

@@ -16,7 +16,6 @@ require (
 	github.com/ovirt/go-ovirt v4.3.4+incompatible
 	github.com/pkg/profile v1.3.0
 	github.com/prometheus/client_golang v1.8.0 // indirect
-	github.com/prometheus/common v0.14.0
 	github.com/vektah/gqlparser/v2 v2.2.0
 	github.com/vmware/govmomi v0.23.1
 	go.uber.org/zap v1.14.1 // indirect
