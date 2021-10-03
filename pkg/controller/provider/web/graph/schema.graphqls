@@ -18,6 +18,7 @@ type VsphereHost {
 
 type Query {
   vsphereProviders: [VsphereProvider!]!
+  vsphereProvider(id: ID!): VsphereProvider!
   vsphereHosts(provider: ID!): [VsphereHost!]!
   vsphereHost(id: ID!, provider: ID!): VsphereHost!
 }

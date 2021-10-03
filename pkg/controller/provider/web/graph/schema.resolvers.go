@@ -14,6 +14,10 @@ func (r *queryResolver) VsphereProviders(ctx context.Context) ([]*graphmodel.Vsp
 	return r.Resolver.Provider.List()
 }
 
+func (r *queryResolver) VsphereProvider(ctx context.Context, id string) (*graphmodel.VsphereProvider, error) {
+	return r.Resolver.Provider.Get(id)
+}
+
 func (r *queryResolver) VsphereHosts(ctx context.Context, provider string) ([]*graphmodel.VsphereHost, error) {
 	return r.Resolver.Host.List(provider)
 }
