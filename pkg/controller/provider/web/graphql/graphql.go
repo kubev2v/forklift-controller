@@ -1,13 +1,12 @@
 package graphql
 
 import (
-	"context"
-
 	"github.com/gin-gonic/gin"
 	"github.com/konveyor/controller/pkg/logging"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/repository"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -35,17 +34,21 @@ func (h *GraphHandler) AddRoutes(e *gin.Engine) {
 }
 
 //
-// GraphQL Handler.
+// GraphQL Queries handler.
 func (h GraphHandler) Post(ctx *gin.Context) {
-	handler := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	hostService := &repository.HostImpl{
+		Container: h.Container,
+		Log:       log,
+	}
 
-	c := context.WithValue(ctx.Request.Context(), "GraphqlContainer", h.Container)
-	ctx.Request = ctx.Request.WithContext(c)
+	config := generated.Config{Resolvers: &graph.Resolver{Host: hostService}}
+	handler := handler.NewDefaultServer(generated.NewExecutableSchema(config))
+
 	handler.ServeHTTP(ctx.Writer, ctx.Request)
 }
 
 //
-// GraphQL Playground plugin Handler.
+// GraphQL Playground plugin handler.
 func (h GraphHandler) Get(ctx *gin.Context) {
 	handler := playground.Handler("GraphQL Playground", "/query")
 	handler.ServeHTTP(ctx.Writer, ctx.Request)

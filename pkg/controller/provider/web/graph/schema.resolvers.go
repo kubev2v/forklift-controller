@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"errors"
 
 	libcontainer "github.com/konveyor/controller/pkg/inventory/container"
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
@@ -98,55 +97,7 @@ func (r *queryResolver) VsphereHosts(ctx context.Context, provider string) ([]*g
 }
 
 func (r *queryResolver) VsphereHost(ctx context.Context, id string, provider string) (*graphmodel.VsphereHost, error) {
-	var host *graphmodel.VsphereHost
-
-	c := ctx.Value("GraphqlContainer").(*libcontainer.Container)
-	if c == nil {
-		log.Info("could not retrieve Container")
-		return host, nil
-	}
-
-	p := &api.Provider{
-		ObjectMeta: meta.ObjectMeta{
-			UID: types.UID(provider),
-		},
-	}
-
-	var found bool
-	var collector libcontainer.Collector
-	if collector, found = c.Get(p); !found {
-		// log.Info("Provider not found")
-		return nil, nil
-	}
-
-	p = collector.Owner().(*api.Provider)
-	// TODO: EnsureParity
-
-	m := &vspheremodel.Host{
-		Base: vspheremodel.Base{
-			ID: id,
-		},
-	}
-
-	db := collector.DB()
-	err := db.Get(m)
-	if errors.Is(err, vspheremodel.NotFound) {
-		log.Info("Host not found")
-		return nil, nil
-	}
-
-	host = &graphmodel.VsphereHost{
-		ID:             m.ID,
-		Name:           m.Name,
-		Kind:           m.Parent.Kind,
-		ProductName:    m.ProductName,
-		ProductVersion: m.ProductVersion,
-		InMaintenance:  m.InMaintenanceMode,
-		CPUSockets:     int(m.CpuSockets),
-		CPUCores:       int(m.CpuCores),
-	}
-
-	return host, nil
+	return r.Resolver.Host.Get(id, provider)
 }
 
 // Query returns generated.QueryResolver implementation.
