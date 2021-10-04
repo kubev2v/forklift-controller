@@ -1,4 +1,4 @@
-package vsphere
+package provider
 
 import (
 	libcontainer "github.com/konveyor/controller/pkg/inventory/container"
@@ -11,12 +11,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-type ProviderRepository struct {
+type Repository struct {
 	Container *libcontainer.Container
 	Log       *logging.Logger
 }
 
-func (t *ProviderRepository) Get(id string) (*graphmodel.VsphereProvider, error) {
+func (t *Repository) Get(id string) (*graphmodel.VsphereProvider, error) {
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
 			UID: types.UID(id),
@@ -33,7 +33,7 @@ func (t *ProviderRepository) Get(id string) (*graphmodel.VsphereProvider, error)
 	return provider, nil
 }
 
-func (t *ProviderRepository) List() ([]*graphmodel.VsphereProvider, error) {
+func (t *Repository) List() ([]*graphmodel.VsphereProvider, error) {
 	var providers []*graphmodel.VsphereProvider
 
 	list := t.Container.List()

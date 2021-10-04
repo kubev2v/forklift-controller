@@ -6,7 +6,8 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/repository/vsphere"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/repository/vsphere/host"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/repository/vsphere/provider"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -36,12 +37,12 @@ func (h *GraphHandler) AddRoutes(e *gin.Engine) {
 //
 // GraphQL Queries handler.
 func (h GraphHandler) Post(ctx *gin.Context) {
-	providerRepository := &vsphere.ProviderRepository{
+	providerRepository := &provider.Repository{
 		Container: h.Container,
 		Log:       log,
 	}
 
-	hostRepository := &vsphere.HostRepository{
+	hostRepository := &host.Repository{
 		Container: h.Container,
 		Log:       log,
 	}

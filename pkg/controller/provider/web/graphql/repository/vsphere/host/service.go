@@ -1,4 +1,4 @@
-package vsphere
+package host
 
 import (
 	"errors"
@@ -13,12 +13,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-type HostRepository struct {
+type Repository struct {
 	Container *libcontainer.Container
 	Log       *logging.Logger
 }
 
-func (t *HostRepository) Get(id string, provider string) (*graphmodel.VsphereHost, error) {
+func (t *Repository) Get(id string, provider string) (*graphmodel.VsphereHost, error) {
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
 			UID: types.UID(provider),
@@ -59,7 +59,7 @@ func (t *HostRepository) Get(id string, provider string) (*graphmodel.VsphereHos
 	return h, nil
 }
 
-func (t *HostRepository) List(provider string) ([]*graphmodel.VsphereHost, error) {
+func (t *Repository) List(provider string) ([]*graphmodel.VsphereHost, error) {
 	var hosts []*graphmodel.VsphereHost
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
