@@ -1,8 +1,7 @@
-package host
+package cluster
 
 import (
 	"errors"
-	"fmt"
 
 	libcontainer "github.com/konveyor/controller/pkg/inventory/container"
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
@@ -19,8 +18,8 @@ type Repository struct {
 	Log       *logging.Logger
 }
 
-func (t *Repository) List(provider string) ([]*graphmodel.VsphereHost, error) {
-	var hosts []*graphmodel.VsphereHost
+func (t *Repository) List(provider string) ([]*graphmodel.VsphereCluster, error) {
+	var clusters []*graphmodel.VsphereCluster
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
 			UID: types.UID(provider),
@@ -35,7 +34,7 @@ func (t *Repository) List(provider string) ([]*graphmodel.VsphereHost, error) {
 	}
 
 	db := collector.DB()
-	list := []vspheremodel.Host{}
+	list := []vspheremodel.Cluster{}
 
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
 	err := db.List(&list, listOptions)
@@ -44,13 +43,15 @@ func (t *Repository) List(provider string) ([]*graphmodel.VsphereHost, error) {
 	}
 
 	for _, m := range list {
-		hosts = append(hosts, With(&m))
+		c := With(&m)
+		c.Provider = provider
+		clusters = append(clusters, c)
 	}
 
-	return hosts, nil
+	return clusters, nil
 }
 
-func (t *Repository) Get(id string, provider string) (*graphmodel.VsphereHost, error) {
+func (t *Repository) Get(id string, provider string) (*graphmodel.VsphereCluster, error) {
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
 			UID: types.UID(provider),
@@ -64,7 +65,7 @@ func (t *Repository) Get(id string, provider string) (*graphmodel.VsphereHost, e
 		return nil, nil
 	}
 
-	m := &vspheremodel.Host{
+	m := &vspheremodel.Cluster{
 		Base: vspheremodel.Base{
 			ID: id,
 		},
@@ -73,55 +74,24 @@ func (t *Repository) Get(id string, provider string) (*graphmodel.VsphereHost, e
 	db := collector.DB()
 	err := db.Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
-		t.Log.Info("Host not found")
+		t.Log.Info("Cluster not found")
 		return nil, nil
 	}
 
-	h := With(m)
+	c := With(m)
+	c.Provider = provider
 
-	return h, nil
+	return c, nil
 }
 
-func (t *Repository) GetByCluster(clusterId, provider string) ([]*graphmodel.VsphereHost, error) {
-	var hosts []*graphmodel.VsphereHost
-	p := &api.Provider{
-		ObjectMeta: meta.ObjectMeta{
-			UID: types.UID(provider),
-		},
-	}
-
-	var found bool
-	var collector libcontainer.Collector
-	if collector, found = t.Container.Get(p); !found {
-		t.Log.Info("Provider not found")
-		return nil, nil
-	}
-
-	db := collector.DB()
-	list := []vspheremodel.Host{}
-	fmt.Println((clusterId))
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("cluster", clusterId)}
-	err := db.List(&list, listOptions)
-	if err != nil {
-		return nil, nil
-	}
-
-	for _, m := range list {
-		hosts = append(hosts, With(&m))
-	}
-
-	return hosts, nil
-}
-
-func With(m *vspheremodel.Host) (h *graphmodel.VsphereHost) {
-	return &graphmodel.VsphereHost{
-		ID:             m.ID,
-		Name:           m.Name,
-		Kind:           m.Parent.Kind,
-		ProductName:    m.ProductName,
-		ProductVersion: m.ProductVersion,
-		InMaintenance:  m.InMaintenanceMode,
-		CPUSockets:     int(m.CpuSockets),
-		CPUCores:       int(m.CpuCores),
+func With(m *vspheremodel.Cluster) (h *graphmodel.VsphereCluster) {
+	return &graphmodel.VsphereCluster{
+		ID:   m.ID,
+		Name: m.Name,
+		Kind: m.Parent.Kind,
+		// DasVms:      m.DasVms,
+		DrsEnabled:  m.DrsEnabled,
+		DrsBehavior: m.DrsBehavior,
+		// DrsVms:      m.DrsVms,
 	}
 }

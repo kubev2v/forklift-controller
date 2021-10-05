@@ -5,6 +5,19 @@ type VsphereProvider {
   kind: String!
 }
 
+type VsphereCluster {
+  id: ID!
+  provider: String!
+  kind: String!
+  name: String!
+  hosts: [VsphereHost!]!
+  dasEnabled: Boolean!
+  dasVms: [String!]!
+  drsEnabled: Boolean!
+  drsBehavior: String!
+  drsVms: [String]!
+}
+
 type VsphereHost {
   id: ID!
   name: String!
@@ -19,6 +32,8 @@ type VsphereHost {
 type Query {
   vsphereProviders: [VsphereProvider!]!
   vsphereProvider(id: ID!): VsphereProvider!
+  vsphereClusters(provider: ID!): [VsphereCluster!]!
+  vsphereCluster(id: ID!, provider: ID!): VsphereCluster!
   vsphereHosts(provider: ID!): [VsphereHost!]!
   vsphereHost(id: ID!, provider: ID!): VsphereHost!
 }

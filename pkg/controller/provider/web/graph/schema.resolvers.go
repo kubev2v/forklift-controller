@@ -18,6 +18,14 @@ func (r *queryResolver) VsphereProvider(ctx context.Context, id string) (*graphm
 	return r.Resolver.Provider.Get(id)
 }
 
+func (r *queryResolver) VsphereClusters(ctx context.Context, provider string) ([]*graphmodel.VsphereCluster, error) {
+	return r.Resolver.Cluster.List(provider)
+}
+
+func (r *queryResolver) VsphereCluster(ctx context.Context, id string, provider string) (*graphmodel.VsphereCluster, error) {
+	return r.Resolver.Cluster.Get(id, provider)
+}
+
 func (r *queryResolver) VsphereHosts(ctx context.Context, provider string) ([]*graphmodel.VsphereHost, error) {
 	return r.Resolver.Host.List(provider)
 }
@@ -26,7 +34,17 @@ func (r *queryResolver) VsphereHost(ctx context.Context, id string, provider str
 	return r.Resolver.Host.Get(id, provider)
 }
 
+func (r *vsphereClusterResolver) Hosts(ctx context.Context, obj *graphmodel.VsphereCluster) ([]*graphmodel.VsphereHost, error) {
+	return r.Resolver.Host.GetByCluster(obj.ID, obj.Provider)
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// VsphereCluster returns generated.VsphereClusterResolver implementation.
+func (r *Resolver) VsphereCluster() generated.VsphereClusterResolver {
+	return &vsphereClusterResolver{r}
+}
+
 type queryResolver struct{ *Resolver }
+type vsphereClusterResolver struct{ *Resolver }

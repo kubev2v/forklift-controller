@@ -4,5 +4,6 @@ import graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provid
 
 type Host interface {
 	Get(id string, provider string) (*graphmodel.VsphereHost, error)
+	GetByCluster(clusterId, provider string) ([]*graphmodel.VsphereHost, error)
 	List(provider string) ([]*graphmodel.VsphereHost, error)
 }

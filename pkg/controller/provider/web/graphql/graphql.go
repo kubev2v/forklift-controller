@@ -6,6 +6,7 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/repository/vsphere/cluster"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/repository/vsphere/host"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/repository/vsphere/provider"
 
@@ -47,7 +48,12 @@ func (h GraphHandler) Post(ctx *gin.Context) {
 		Log:       log,
 	}
 
-	config := generated.Config{Resolvers: &graph.Resolver{Host: hostRepository, Provider: providerRepository}}
+	clusterRepository := &cluster.Repository{
+		Container: h.Container,
+		Log:       log,
+	}
+
+	config := generated.Config{Resolvers: &graph.Resolver{Provider: providerRepository, Cluster: clusterRepository, Host: hostRepository}}
 	handler := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 
 	handler.ServeHTTP(ctx.Writer, ctx.Request)

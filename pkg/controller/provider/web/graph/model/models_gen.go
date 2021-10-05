@@ -2,6 +2,19 @@
 
 package model
 
+type VsphereCluster struct {
+	ID          string         `json:"id"`
+	Provider    string         `json:"provider"`
+	Kind        string         `json:"kind"`
+	Name        string         `json:"name"`
+	Hosts       []*VsphereHost `json:"hosts"`
+	DasEnabled  bool           `json:"dasEnabled"`
+	DasVms      []string       `json:"dasVms"`
+	DrsEnabled  bool           `json:"drsEnabled"`
+	DrsBehavior string         `json:"drsBehavior"`
+	DrsVms      []*string      `json:"drsVms"`
+}
+
 type VsphereHost struct {
 	ID             string `json:"id"`
 	Name           string `json:"name"`
