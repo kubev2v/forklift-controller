@@ -1,8 +1,16 @@
 
 type VsphereProvider {
   id: ID!
-  name: String!
   kind: String!
+  name: String!
+}
+
+type VsphereDatacenter {
+  id: ID!
+  kind: String!
+  name: String!
+  provider: String!
+  clusters: [VsphereCluster!]!
 }
 
 type VsphereCluster {
@@ -20,8 +28,8 @@ type VsphereCluster {
 
 type VsphereHost {
   id: ID!
-  name: String!
   kind: String!
+  name: String!
   productName: String!
   productVersion: String!
   inMaintenance: Boolean!
@@ -32,6 +40,8 @@ type VsphereHost {
 type Query {
   vsphereProviders: [VsphereProvider!]!
   vsphereProvider(id: ID!): VsphereProvider!
+  vsphereDatacenters(provider: ID!): [VsphereDatacenter!]!
+  vsphereDatacenter(id: ID!, provider: ID!): VsphereDatacenter!
   vsphereClusters(provider: ID!): [VsphereCluster!]!
   vsphereCluster(id: ID!, provider: ID!): VsphereCluster!
   vsphereHosts(provider: ID!): [VsphereHost!]!

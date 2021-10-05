@@ -1,4 +1,4 @@
-package cluster
+package datacenter
 
 import (
 	"errors"
@@ -18,8 +18,8 @@ type Repository struct {
 	Log       *logging.Logger
 }
 
-func (t *Repository) List(provider string) ([]*graphmodel.VsphereCluster, error) {
-	var clusters []*graphmodel.VsphereCluster
+func (t *Repository) List(provider string) ([]*graphmodel.VsphereDatacenter, error) {
+	var datacenters []*graphmodel.VsphereDatacenter
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
 			UID: types.UID(provider),
@@ -34,7 +34,7 @@ func (t *Repository) List(provider string) ([]*graphmodel.VsphereCluster, error)
 	}
 
 	db := collector.DB()
-	list := []vspheremodel.Cluster{}
+	list := []vspheremodel.Datacenter{}
 
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
 	err := db.List(&list, listOptions)
@@ -43,15 +43,15 @@ func (t *Repository) List(provider string) ([]*graphmodel.VsphereCluster, error)
 	}
 
 	for _, m := range list {
-		c := With(&m)
-		c.Provider = provider
-		clusters = append(clusters, c)
+		dc := With(&m)
+		dc.Provider = provider
+		datacenters = append(datacenters, dc)
 	}
 
-	return clusters, nil
+	return datacenters, nil
 }
 
-func (t *Repository) Get(id string, provider string) (*graphmodel.VsphereCluster, error) {
+func (t *Repository) Get(id string, provider string) (*graphmodel.VsphereDatacenter, error) {
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
 			UID: types.UID(provider),
@@ -65,7 +65,7 @@ func (t *Repository) Get(id string, provider string) (*graphmodel.VsphereCluster
 		return nil, nil
 	}
 
-	m := &vspheremodel.Cluster{
+	m := &vspheremodel.Datacenter{
 		Base: vspheremodel.Base{
 			ID: id,
 		},
@@ -74,54 +74,20 @@ func (t *Repository) Get(id string, provider string) (*graphmodel.VsphereCluster
 	db := collector.DB()
 	err := db.Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
-		t.Log.Info("Cluster not found")
+		t.Log.Info("Datacenter not found")
 		return nil, nil
 	}
 
-	c := With(m)
-	c.Provider = provider
+	dc := With(m)
+	dc.Provider = provider
 
-	return c, nil
+	return dc, nil
 }
 
-func (t *Repository) GetByDatacenter(datacenterId, provider string) ([]*graphmodel.VsphereCluster, error) {
-	var clusters []*graphmodel.VsphereCluster
-	p := &api.Provider{
-		ObjectMeta: meta.ObjectMeta{
-			UID: types.UID(provider),
-		},
-	}
-
-	var found bool
-	var collector libcontainer.Collector
-	if collector, found = t.Container.Get(p); !found {
-		t.Log.Info("Provider not found")
-		return nil, nil
-	}
-
-	db := collector.DB()
-	list := []vspheremodel.Cluster{}
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("folder", datacenterId)}
-	err := db.List(&list, listOptions)
-	if err != nil {
-		return nil, nil
-	}
-
-	for _, m := range list {
-		clusters = append(clusters, With(&m))
-	}
-
-	return clusters, nil
-}
-
-func With(m *vspheremodel.Cluster) (h *graphmodel.VsphereCluster) {
-	return &graphmodel.VsphereCluster{
+func With(m *vspheremodel.Datacenter) (h *graphmodel.VsphereDatacenter) {
+	return &graphmodel.VsphereDatacenter{
 		ID:   m.ID,
 		Name: m.Name,
 		Kind: m.Parent.Kind,
-		// DasVms:      m.DasVms,
-		DrsEnabled:  m.DrsEnabled,
-		DrsBehavior: m.DrsBehavior,
-		// DrsVms:      m.DrsVms,
 	}
 }

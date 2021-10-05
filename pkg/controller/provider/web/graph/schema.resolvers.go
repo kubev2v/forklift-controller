@@ -18,6 +18,14 @@ func (r *queryResolver) VsphereProvider(ctx context.Context, id string) (*graphm
 	return r.Resolver.Provider.Get(id)
 }
 
+func (r *queryResolver) VsphereDatacenters(ctx context.Context, provider string) ([]*graphmodel.VsphereDatacenter, error) {
+	return r.Resolver.Datacenter.List(provider)
+}
+
+func (r *queryResolver) VsphereDatacenter(ctx context.Context, id string, provider string) (*graphmodel.VsphereDatacenter, error) {
+	return r.Resolver.Datacenter.Get(id, provider)
+}
+
 func (r *queryResolver) VsphereClusters(ctx context.Context, provider string) ([]*graphmodel.VsphereCluster, error) {
 	return r.Resolver.Cluster.List(provider)
 }
@@ -38,6 +46,10 @@ func (r *vsphereClusterResolver) Hosts(ctx context.Context, obj *graphmodel.Vsph
 	return r.Resolver.Host.GetByCluster(obj.ID, obj.Provider)
 }
 
+func (r *vsphereDatacenterResolver) Clusters(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]*graphmodel.VsphereCluster, error) {
+	return r.Resolver.Cluster.GetByDatacenter(obj.ID, obj.Provider)
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
@@ -46,5 +58,11 @@ func (r *Resolver) VsphereCluster() generated.VsphereClusterResolver {
 	return &vsphereClusterResolver{r}
 }
 
+// VsphereDatacenter returns generated.VsphereDatacenterResolver implementation.
+func (r *Resolver) VsphereDatacenter() generated.VsphereDatacenterResolver {
+	return &vsphereDatacenterResolver{r}
+}
+
 type queryResolver struct{ *Resolver }
 type vsphereClusterResolver struct{ *Resolver }
+type vsphereDatacenterResolver struct{ *Resolver }

@@ -15,10 +15,18 @@ type VsphereCluster struct {
 	DrsVms      []*string      `json:"drsVms"`
 }
 
+type VsphereDatacenter struct {
+	ID       string            `json:"id"`
+	Kind     string            `json:"kind"`
+	Name     string            `json:"name"`
+	Provider string            `json:"provider"`
+	Clusters []*VsphereCluster `json:"clusters"`
+}
+
 type VsphereHost struct {
 	ID             string `json:"id"`
-	Name           string `json:"name"`
 	Kind           string `json:"kind"`
+	Name           string `json:"name"`
 	ProductName    string `json:"productName"`
 	ProductVersion string `json:"productVersion"`
 	InMaintenance  bool   `json:"inMaintenance"`
@@ -28,6 +36,6 @@ type VsphereHost struct {
 
 type VsphereProvider struct {
 	ID   string `json:"id"`
-	Name string `json:"name"`
 	Kind string `json:"kind"`
+	Name string `json:"name"`
 }

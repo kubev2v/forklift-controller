@@ -2,6 +2,7 @@ package graph
 
 import (
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/vsphere/cluster"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/vsphere/datacenter"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/vsphere/host"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/vsphere/provider"
 )
@@ -11,7 +12,8 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	Provider provider.Provider
-	Cluster  cluster.Cluster
-	Host     host.Host
+	Provider   provider.Provider
+	Datacenter datacenter.Datacenter
+	Cluster    cluster.Cluster
+	Host       host.Host
 }
