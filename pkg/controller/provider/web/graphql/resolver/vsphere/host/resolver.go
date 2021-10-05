@@ -2,7 +2,6 @@ package host
 
 import (
 	"errors"
-	"fmt"
 
 	libcontainer "github.com/konveyor/controller/pkg/inventory/container"
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
@@ -99,7 +98,6 @@ func (t *Repository) GetByCluster(clusterId, provider string) ([]*graphmodel.Vsp
 
 	db := collector.DB()
 	list := []vspheremodel.Host{}
-	fmt.Println((clusterId))
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("cluster", clusterId)}
 	err := db.List(&list, listOptions)
 	if err != nil {

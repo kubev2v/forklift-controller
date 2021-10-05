@@ -6,10 +6,10 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/repository/vsphere/cluster"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/repository/vsphere/datacenter"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/repository/vsphere/host"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/repository/vsphere/provider"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/cluster"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/datacenter"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/host"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/provider"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -39,27 +39,27 @@ func (h *GraphHandler) AddRoutes(e *gin.Engine) {
 //
 // GraphQL Queries handler.
 func (h GraphHandler) Post(ctx *gin.Context) {
-	providerRepository := &provider.Repository{
+	provider := provider.Repository{
 		Container: h.Container,
 		Log:       log,
 	}
 
-	datacenterRepository := &datacenter.Repository{
+	datacenter := datacenter.Repository{
 		Container: h.Container,
 		Log:       log,
 	}
 
-	clusterRepository := &cluster.Repository{
+	cluster := cluster.Repository{
 		Container: h.Container,
 		Log:       log,
 	}
 
-	hostRepository := &host.Repository{
+	host := host.Repository{
 		Container: h.Container,
 		Log:       log,
 	}
 
-	config := generated.Config{Resolvers: &graph.Resolver{Provider: providerRepository, Datacenter: datacenterRepository, Cluster: clusterRepository, Host: hostRepository}}
+	config := generated.Config{Resolvers: &graph.Resolver{Provider: provider, Datacenter: datacenter, Cluster: cluster, Host: host}}
 	handler := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 
 	handler.ServeHTTP(ctx.Writer, ctx.Request)
