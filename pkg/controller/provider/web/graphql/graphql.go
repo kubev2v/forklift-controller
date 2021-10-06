@@ -15,8 +15,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 )
 
-var log = logging.WithName("web|graphql")
-
 //
 // Routes.
 const (
@@ -41,22 +39,22 @@ func (h *GraphHandler) AddRoutes(e *gin.Engine) {
 func (h GraphHandler) Post(ctx *gin.Context) {
 	provider := provider.Repository{
 		Container: h.Container,
-		Log:       log,
+		Log:       logging.WithName("graphql|provider"),
 	}
 
 	datacenter := datacenter.Repository{
 		Container: h.Container,
-		Log:       log,
+		Log:       logging.WithName("graphql|datacenter"),
 	}
 
 	cluster := cluster.Repository{
 		Container: h.Container,
-		Log:       log,
+		Log:       logging.WithName("graphql|cluster"),
 	}
 
 	host := host.Repository{
 		Container: h.Container,
-		Log:       log,
+		Log:       logging.WithName("graphql|host"),
 	}
 
 	config := generated.Config{Resolvers: &graph.Resolver{Provider: provider, Datacenter: datacenter, Cluster: cluster, Host: host}}
