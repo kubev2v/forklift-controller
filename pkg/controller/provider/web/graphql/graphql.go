@@ -37,22 +37,22 @@ func (h *GraphHandler) AddRoutes(e *gin.Engine) {
 //
 // GraphQL Queries handler.
 func (h GraphHandler) Post(ctx *gin.Context) {
-	provider := provider.Repository{
+	provider := provider.Resolver{
 		Container: h.Container,
 		Log:       logging.WithName("graphql|provider"),
 	}
 
-	datacenter := datacenter.Repository{
+	datacenter := datacenter.Resolver{
 		Container: h.Container,
 		Log:       logging.WithName("graphql|datacenter"),
 	}
 
-	cluster := cluster.Repository{
+	cluster := cluster.Resolver{
 		Container: h.Container,
 		Log:       logging.WithName("graphql|cluster"),
 	}
 
-	host := host.Repository{
+	host := host.Resolver{
 		Container: h.Container,
 		Log:       logging.WithName("graphql|host"),
 	}

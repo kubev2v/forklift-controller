@@ -12,8 +12,8 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	Provider   provider.Repository
-	Datacenter datacenter.Repository
-	Cluster    cluster.Repository
-	Host       host.Repository
+	Provider   provider.Resolver
+	Datacenter datacenter.Resolver
+	Cluster    cluster.Resolver
+	Host       host.Resolver
 }

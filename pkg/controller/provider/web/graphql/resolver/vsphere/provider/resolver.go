@@ -11,12 +11,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-type Repository struct {
+type Resolver struct {
 	Container *libcontainer.Container
 	Log       *logging.Logger
 }
 
-func (t *Repository) Get(id string) (*graphmodel.VsphereProvider, error) {
+func (t *Resolver) Get(id string) (*graphmodel.VsphereProvider, error) {
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
 			UID: types.UID(id),
@@ -33,7 +33,7 @@ func (t *Repository) Get(id string) (*graphmodel.VsphereProvider, error) {
 	return provider, nil
 }
 
-func (t *Repository) List() ([]*graphmodel.VsphereProvider, error) {
+func (t *Resolver) List() ([]*graphmodel.VsphereProvider, error) {
 	var providers []*graphmodel.VsphereProvider
 
 	list := t.Container.List()

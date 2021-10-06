@@ -13,12 +13,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-type Repository struct {
+type Resolver struct {
 	Container *libcontainer.Container
 	Log       *logging.Logger
 }
 
-func (t *Repository) List(provider string) ([]*graphmodel.VsphereHost, error) {
+func (t *Resolver) List(provider string) ([]*graphmodel.VsphereHost, error) {
 	var hosts []*graphmodel.VsphereHost
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
@@ -49,7 +49,7 @@ func (t *Repository) List(provider string) ([]*graphmodel.VsphereHost, error) {
 	return hosts, nil
 }
 
-func (t *Repository) Get(id string, provider string) (*graphmodel.VsphereHost, error) {
+func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereHost, error) {
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
 			UID: types.UID(provider),
@@ -81,7 +81,7 @@ func (t *Repository) Get(id string, provider string) (*graphmodel.VsphereHost, e
 	return h, nil
 }
 
-func (t *Repository) GetByCluster(clusterId, provider string) ([]*graphmodel.VsphereHost, error) {
+func (t *Resolver) GetByCluster(clusterId, provider string) ([]*graphmodel.VsphereHost, error) {
 	var hosts []*graphmodel.VsphereHost
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
