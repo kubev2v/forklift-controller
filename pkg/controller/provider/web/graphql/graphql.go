@@ -6,6 +6,7 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
+	baseresolver "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/cluster"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/datacenter"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/host"
@@ -38,23 +39,31 @@ func (h *GraphHandler) AddRoutes(e *gin.Engine) {
 // GraphQL Queries handler.
 func (h GraphHandler) Post(ctx *gin.Context) {
 	provider := provider.Resolver{
-		Container: h.Container,
-		Log:       logging.WithName("graphql|provider"),
+		Resolver: baseresolver.Resolver{
+			Container: h.Container,
+			Log:       logging.WithName("graphql|provider"),
+		},
 	}
 
 	datacenter := datacenter.Resolver{
-		Container: h.Container,
-		Log:       logging.WithName("graphql|datacenter"),
+		Resolver: baseresolver.Resolver{
+			Container: h.Container,
+			Log:       logging.WithName("graphql|datacenter"),
+		},
 	}
 
 	cluster := cluster.Resolver{
-		Container: h.Container,
-		Log:       logging.WithName("graphql|cluster"),
+		Resolver: baseresolver.Resolver{
+			Container: h.Container,
+			Log:       logging.WithName("graphql|cluster"),
+		},
 	}
 
 	host := host.Resolver{
-		Container: h.Container,
-		Log:       logging.WithName("graphql|host"),
+		Resolver: baseresolver.Resolver{
+			Container: h.Container,
+			Log:       logging.WithName("graphql|host"),
+		},
 	}
 
 	config := generated.Config{Resolvers: &graph.Resolver{Provider: provider, Datacenter: datacenter, Cluster: cluster, Host: host}}

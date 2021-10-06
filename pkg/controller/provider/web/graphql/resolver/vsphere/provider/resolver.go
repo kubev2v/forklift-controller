@@ -1,19 +1,17 @@
 package provider
 
 import (
-	libcontainer "github.com/konveyor/controller/pkg/inventory/container"
-	"github.com/konveyor/controller/pkg/logging"
 	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
 	model "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ocp"
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/vsphere"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 type Resolver struct {
-	Container *libcontainer.Container
-	Log       *logging.Logger
+	base.Resolver
 }
 
 func (t *Resolver) Get(id string) (*graphmodel.VsphereProvider, error) {
