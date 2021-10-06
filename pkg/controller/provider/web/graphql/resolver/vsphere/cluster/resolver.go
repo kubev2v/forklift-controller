@@ -57,15 +57,23 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereCluster, 
 func (t *Resolver) GetByDatacenter(datacenterId, provider string) ([]*graphmodel.VsphereCluster, error) {
 	var clusters []*graphmodel.VsphereCluster
 	db := *t.GetDB(provider)
-	list := []vspheremodel.Cluster{}
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("folder", datacenterId)}
-	err := db.List(&list, listOptions)
+	folderList := []vspheremodel.Folder{}
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.And(libmodel.Eq("datacenter", datacenterId), libmodel.Eq("name", "host"))}
+	err := db.List(&folderList, listOptions)
 	if err != nil {
 		return nil, nil
 	}
 
-	for _, m := range list {
-		clusters = append(clusters, With(&m))
+	for _, f := range folderList {
+		for _, c := range f.Children {
+			if c.Kind == "Cluster" {
+				cluster, err := t.Get(c.ID, provider)
+				if err != nil {
+					return nil, nil
+				}
+				clusters = append(clusters, cluster)
+			}
+		}
 	}
 
 	return clusters, nil
