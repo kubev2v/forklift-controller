@@ -28,6 +28,7 @@ type VsphereCluster {
 
 type VsphereHost {
   id: ID!
+  provider: String!
   kind: String!
   name: String!
   productName: String!
@@ -35,6 +36,57 @@ type VsphereHost {
   inMaintenance: Boolean!
   cpuSockets: Int!
   cpuCores: Int!
+  vms: [VsphereVM!]!
+}
+
+type VsphereVM {
+  id: ID!
+  kind: String!
+  name: String!
+  path: String!
+  revision: Int!
+  selfLink: String!
+  uuid: String!
+  firmware: String!
+  powerState: String!
+  cpuHotAddEnabled: Boolean!
+  cpuHotRemoveEnabled: Boolean!
+  memoryHotAddEnabled: Boolean!
+  faultToleranceEnabled: Boolean!
+  cpuCount: Int!
+  coresPerSocket: Int!
+  memoryMB: Int!
+  guestName: String!
+  balloonedMemory: Int!
+  ipAddress: String!
+  storageUsed: Int!
+  numaNodeAffinity: [String!]
+  devices: [Device]
+  cpuAffinity: [Int!]!
+  host(id: String!): VsphereHost!
+  revisionAnalyzed: Int!
+  disks: [Disk!]!
+  concerns(label: String!, category: String!): [Concern]
+}
+
+type Device {
+  Kind: String!
+}
+
+type Disk {
+  id: ID!
+  kind: String!
+  file: String!
+  datastore: String!
+  capacity: String!
+  shared: Boolean!
+  rdm: Boolean!
+}
+
+type Concern {
+  label: String!
+  category: String!
+  assessment: String!
 }
 
 type Query {
@@ -46,5 +98,7 @@ type Query {
   vsphereCluster(id: ID!, provider: ID!): VsphereCluster!
   vsphereHosts(provider: ID!): [VsphereHost!]!
   vsphereHost(id: ID!, provider: ID!): VsphereHost!
+  vsphereVMs(provider: ID!): [VsphereVM!]!
+  vsphereVM(id: ID!, provider: ID!): VsphereVM!
 }
 

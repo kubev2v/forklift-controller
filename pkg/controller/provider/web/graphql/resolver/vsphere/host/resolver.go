@@ -26,7 +26,9 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereHost, error) {
 	}
 
 	for _, m := range list {
-		hosts = append(hosts, With(&m))
+		h := With(&m)
+		h.Provider = provider
+		hosts = append(hosts, h)
 	}
 
 	return hosts, nil
@@ -48,6 +50,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereHost, err
 	}
 
 	h := With(m)
+	h.Provider = provider
 
 	return h, nil
 }
@@ -63,7 +66,9 @@ func (t *Resolver) GetByCluster(clusterId, provider string) ([]*graphmodel.Vsphe
 	}
 
 	for _, m := range list {
-		hosts = append(hosts, With(&m))
+		h := With(&m)
+		h.Provider = provider
+		hosts = append(hosts, h)
 	}
 
 	return hosts, nil

@@ -62,3 +62,7 @@ models:
     fields:
       hosts:
         resolver: true
+  VsphereHost:
+    fields:
+      vms:
+        resolver: true
