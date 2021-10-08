@@ -62,6 +62,10 @@ func (r *vsphereHostResolver) Vms(ctx context.Context, obj *graphmodel.VsphereHo
 	return r.Resolver.VM.GetByHost(obj.ID, obj.Provider)
 }
 
+func (r *vsphereProviderResolver) Datacenters(ctx context.Context, obj *graphmodel.VsphereProvider) ([]*graphmodel.VsphereDatacenter, error) {
+	return r.Resolver.Datacenter.List(obj.ID)
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
@@ -78,7 +82,13 @@ func (r *Resolver) VsphereDatacenter() generated.VsphereDatacenterResolver {
 // VsphereHost returns generated.VsphereHostResolver implementation.
 func (r *Resolver) VsphereHost() generated.VsphereHostResolver { return &vsphereHostResolver{r} }
 
+// VsphereProvider returns generated.VsphereProviderResolver implementation.
+func (r *Resolver) VsphereProvider() generated.VsphereProviderResolver {
+	return &vsphereProviderResolver{r}
+}
+
 type queryResolver struct{ *Resolver }
 type vsphereClusterResolver struct{ *Resolver }
 type vsphereDatacenterResolver struct{ *Resolver }
 type vsphereHostResolver struct{ *Resolver }
+type vsphereProviderResolver struct{ *Resolver }

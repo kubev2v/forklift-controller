@@ -39,6 +39,7 @@ type ResolverRoot interface {
 	VsphereCluster() VsphereClusterResolver
 	VsphereDatacenter() VsphereDatacenterResolver
 	VsphereHost() VsphereHostResolver
+	VsphereProvider() VsphereProviderResolver
 }
 
 type DirectiveRoot struct {
@@ -113,9 +114,10 @@ type ComplexityRoot struct {
 	}
 
 	VsphereProvider struct {
-		ID   func(childComplexity int) int
-		Kind func(childComplexity int) int
-		Name func(childComplexity int) int
+		Datacenters func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Kind        func(childComplexity int) int
+		Name        func(childComplexity int) int
 	}
 
 	VsphereVM struct {
@@ -169,6 +171,9 @@ type VsphereDatacenterResolver interface {
 }
 type VsphereHostResolver interface {
 	Vms(ctx context.Context, obj *model.VsphereHost) ([]*model.VsphereVM, error)
+}
+type VsphereProviderResolver interface {
+	Datacenters(ctx context.Context, obj *model.VsphereProvider) ([]*model.VsphereDatacenter, error)
 }
 
 type executableSchema struct {
@@ -553,6 +558,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.VsphereHost.Vms(childComplexity), true
 
+	case "VsphereProvider.datacenters":
+		if e.complexity.VsphereProvider.Datacenters == nil {
+			break
+		}
+
+		return e.complexity.VsphereProvider.Datacenters(childComplexity), true
+
 	case "VsphereProvider.id":
 		if e.complexity.VsphereProvider.ID == nil {
 			break
@@ -828,6 +840,7 @@ type VsphereProvider {
   id: ID!
   kind: String!
   name: String!
+  datacenters: [VsphereDatacenter!]!
 }
 
 type VsphereDatacenter {
@@ -3045,6 +3058,41 @@ func (ec *executionContext) _VsphereProvider_name(ctx context.Context, field gra
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereProvider_datacenters(ctx context.Context, field graphql.CollectedField, obj *model.VsphereProvider) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereProvider",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.VsphereProvider().Datacenters(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.VsphereDatacenter)
+	fc.Result = res
+	return ec.marshalNVsphereDatacenter2ᚕᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVsphereDatacenterᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _VsphereVM_id(ctx context.Context, field graphql.CollectedField, obj *model.VsphereVM) (ret graphql.Marshaler) {
@@ -5650,18 +5698,32 @@ func (ec *executionContext) _VsphereProvider(ctx context.Context, sel ast.Select
 		case "id":
 			out.Values[i] = ec._VsphereProvider_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "kind":
 			out.Values[i] = ec._VsphereProvider_kind(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._VsphereProvider_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "datacenters":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._VsphereProvider_datacenters(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

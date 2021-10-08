@@ -57,9 +57,10 @@ type VsphereHost struct {
 }
 
 type VsphereProvider struct {
-	ID   string `json:"id"`
-	Kind string `json:"kind"`
-	Name string `json:"name"`
+	ID          string               `json:"id"`
+	Kind        string               `json:"kind"`
+	Name        string               `json:"name"`
+	Datacenters []*VsphereDatacenter `json:"datacenters"`
 }
 
 type VsphereVM struct {

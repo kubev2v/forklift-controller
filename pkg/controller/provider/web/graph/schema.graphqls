@@ -3,6 +3,7 @@ type VsphereProvider {
   id: ID!
   kind: String!
   name: String!
+  datacenters: [VsphereDatacenter!]!
 }
 
 type VsphereDatacenter {
