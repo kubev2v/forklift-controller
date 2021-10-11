@@ -42,6 +42,14 @@ func (r *queryResolver) VsphereHost(ctx context.Context, id string, provider str
 	return r.Resolver.Host.Get(id, provider)
 }
 
+func (r *queryResolver) VsphereDatastore(ctx context.Context, id string, provider string) (*graphmodel.VsphereDatastore, error) {
+	return r.Resolver.Datastore.Get(id, provider)
+}
+
+func (r *queryResolver) VsphereDatastores(ctx context.Context, provider string) ([]*graphmodel.VsphereDatastore, error) {
+	return r.Resolver.Datastore.List(provider)
+}
+
 func (r *queryResolver) VsphereVMs(ctx context.Context, provider string) ([]*graphmodel.VsphereVM, error) {
 	return r.Resolver.VM.List(provider)
 }
@@ -56,6 +64,14 @@ func (r *vsphereClusterResolver) Hosts(ctx context.Context, obj *graphmodel.Vsph
 
 func (r *vsphereDatacenterResolver) Clusters(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]*graphmodel.VsphereCluster, error) {
 	return r.Resolver.Cluster.GetByDatacenter(obj.ID, obj.Provider)
+}
+
+func (r *vsphereDatastoreResolver) Hosts(ctx context.Context, obj *graphmodel.VsphereDatastore) ([]*graphmodel.VsphereHost, error) {
+	return r.Resolver.Host.GetbyDatastore(obj.ID, obj.Provider)
+}
+
+func (r *vsphereDatastoreResolver) Vms(ctx context.Context, obj *graphmodel.VsphereDatastore) ([]*graphmodel.VsphereVM, error) {
+	return r.Resolver.VM.GetbyDatastore(obj.ID, obj.Provider)
 }
 
 func (r *vsphereHostResolver) Vms(ctx context.Context, obj *graphmodel.VsphereHost) ([]*graphmodel.VsphereVM, error) {
@@ -79,6 +95,11 @@ func (r *Resolver) VsphereDatacenter() generated.VsphereDatacenterResolver {
 	return &vsphereDatacenterResolver{r}
 }
 
+// VsphereDatastore returns generated.VsphereDatastoreResolver implementation.
+func (r *Resolver) VsphereDatastore() generated.VsphereDatastoreResolver {
+	return &vsphereDatastoreResolver{r}
+}
+
 // VsphereHost returns generated.VsphereHostResolver implementation.
 func (r *Resolver) VsphereHost() generated.VsphereHostResolver { return &vsphereHostResolver{r} }
 
@@ -90,5 +111,6 @@ func (r *Resolver) VsphereProvider() generated.VsphereProviderResolver {
 type queryResolver struct{ *Resolver }
 type vsphereClusterResolver struct{ *Resolver }
 type vsphereDatacenterResolver struct{ *Resolver }
+type vsphereDatastoreResolver struct{ *Resolver }
 type vsphereHostResolver struct{ *Resolver }
 type vsphereProviderResolver struct{ *Resolver }

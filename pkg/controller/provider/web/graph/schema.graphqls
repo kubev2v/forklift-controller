@@ -38,6 +38,19 @@ type VsphereHost {
   cpuSockets: Int!
   cpuCores: Int!
   vms: [VsphereVM!]!
+  datastores: [String!]!
+}
+
+type VsphereDatastore {
+  id: ID!
+  provider: String!
+  kind: String!
+  name: String!
+  capacity: Int!
+  free: Int!
+  maintenance: String!
+  hosts: [VsphereHost!]!
+  vms: [VsphereVM!]!
 }
 
 type VsphereVM {
@@ -64,10 +77,10 @@ type VsphereVM {
   numaNodeAffinity: [String!]
   devices: [Device]
   cpuAffinity: [Int!]!
-  host(id: String!): VsphereHost!
+  host(id: String!): String!
   revisionAnalyzed: Int!
   disks: [Disk!]!
-  concerns(label: String!, category: String!): [Concern]
+  concerns: [Concern!]!
 }
 
 type Device {
@@ -75,11 +88,11 @@ type Device {
 }
 
 type Disk {
-  id: ID!
   kind: String!
+  key: Int!
   file: String!
   datastore: String!
-  capacity: String!
+  capacity: Int!
   shared: Boolean!
   rdm: Boolean!
 }
@@ -99,6 +112,8 @@ type Query {
   vsphereCluster(id: ID!, provider: ID!): VsphereCluster!
   vsphereHosts(provider: ID!): [VsphereHost!]!
   vsphereHost(id: ID!, provider: ID!): VsphereHost!
+  vsphereDatastore(id: ID!, provider: ID!): VsphereDatastore!
+  vsphereDatastores(provider: ID!): [VsphereDatastore!]!
   vsphereVMs(provider: ID!): [VsphereVM!]!
   vsphereVM(id: ID!, provider: ID!): VsphereVM!
 }

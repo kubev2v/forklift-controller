@@ -9,6 +9,7 @@ import (
 	baseresolver "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/cluster"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/datacenter"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/datastore"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/host"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/provider"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/vm"
@@ -67,6 +68,13 @@ func (h GraphHandler) Post(ctx *gin.Context) {
 		},
 	}
 
+	datastore := datastore.Resolver{
+		Resolver: baseresolver.Resolver{
+			Container: h.Container,
+			Log:       logging.WithName("graphql|datastore"),
+		},
+	}
+
 	vm := vm.Resolver{
 		Resolver: baseresolver.Resolver{
 			Container: h.Container,
@@ -74,7 +82,7 @@ func (h GraphHandler) Post(ctx *gin.Context) {
 		},
 	}
 
-	config := generated.Config{Resolvers: &graph.Resolver{Provider: provider, Datacenter: datacenter, Cluster: cluster, Host: host, VM: vm}}
+	config := generated.Config{Resolvers: &graph.Resolver{Provider: provider, Datacenter: datacenter, Cluster: cluster, Host: host, Datastore: datastore, VM: vm}}
 	handler := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 
 	handler.ServeHTTP(ctx.Writer, ctx.Request)

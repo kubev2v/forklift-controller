@@ -2,6 +2,7 @@ package vm
 
 import (
 	"errors"
+	"fmt"
 
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
@@ -14,7 +15,7 @@ type Resolver struct {
 }
 
 func (t *Resolver) List(provider string) ([]*graphmodel.VsphereVM, error) {
-	var hosts []*graphmodel.VsphereVM
+	var vms []*graphmodel.VsphereVM
 
 	db := *t.GetDB(provider)
 	list := []vspheremodel.VM{}
@@ -26,10 +27,10 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereVM, error) {
 	}
 
 	for _, m := range list {
-		hosts = append(hosts, With(&m))
+		vms = append(vms, With(&m))
 	}
 
-	return hosts, nil
+	return vms, nil
 }
 
 func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereVM, error) {
@@ -47,13 +48,14 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereVM, error
 		return nil, nil
 	}
 
-	h := With(m)
+	vm := With(m)
 
-	return h, nil
+	return vm, nil
 }
 
 func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, error) {
 	var vms []*graphmodel.VsphereVM
+
 	db := *t.GetDB(provider)
 	list := []vspheremodel.VM{}
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("host", hostId)}
@@ -61,6 +63,7 @@ func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, 
 	if err != nil {
 		return nil, nil
 	}
+
 	for _, m := range list {
 		vms = append(vms, With(&m))
 	}
@@ -68,7 +71,68 @@ func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, 
 	return vms, nil
 }
 
+func contains(l []*graphmodel.Disk, s string) bool {
+	for _, d := range l {
+		if d.Datastore == s {
+			return true
+		}
+	}
+	return false
+}
+
+func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.VsphereVM, error) {
+	list, err := t.List(provider)
+	if err != nil {
+		return nil, nil
+	}
+
+	var vms []*graphmodel.VsphereVM
+	for _, vm := range list {
+		if contains(vm.Disks, datastoreId) {
+			vms = append(vms, vm)
+		}
+	}
+
+	return vms, nil
+}
+
+func WithDisk(m *vspheremodel.Disk) (h *graphmodel.Disk) {
+	return &graphmodel.Disk{
+		Kind:      "Disk",
+		Key:       int(m.Key),
+		Datastore: m.Datastore.ID,
+		File:      m.File,
+		Capacity:  int(m.Capacity),
+		Shared:    m.Shared,
+		Rdm:       m.RDM,
+	}
+}
+
+func WithConcern(m *vspheremodel.Concern) (c *graphmodel.Concern) {
+	fmt.Printf("Concern: %+v", m)
+	return &graphmodel.Concern{
+		Label:      m.Label,
+		Category:   m.Category,
+		Assessment: m.Assessment,
+	}
+}
+
 func With(m *vspheremodel.VM) (h *graphmodel.VsphereVM) {
+	var disks []*graphmodel.Disk
+	for _, d := range m.Disks {
+		disks = append(disks, WithDisk(&d))
+	}
+
+	var concerns []*graphmodel.Concern
+	for _, c := range m.Concerns {
+		concerns = append(concerns, WithConcern(&c))
+	}
+
+	var cpuAffinity []int
+	for _, c := range m.CpuAffinity {
+		cpuAffinity = append(cpuAffinity, int(c))
+	}
+
 	return &graphmodel.VsphereVM{
 		ID:                    m.ID,
 		Name:                  m.Name,
@@ -87,12 +151,14 @@ func With(m *vspheremodel.VM) (h *graphmodel.VsphereVM) {
 		BalloonedMemory:       int(m.BalloonedMemory),
 		IPAddress:             m.IpAddress,
 		StorageUsed:           int(m.StorageUsed),
-		// Host: m.Host,
-		// Concerns: m.Concerns,
+		Concerns:              concerns,
+		Disks:                 disks,
+		NumaNodeAffinity:      m.NumaNodeAffinity,
+		Revision:              int(m.Revision),
+		RevisionAnalyzed:      int(m.RevisionValidated),
+		Host:                  m.Host,
+		CPUAffinity:           cpuAffinity,
 		// Networks: m.networks,
-		// Disks: m.Disks,
-		NumaNodeAffinity: m.NumaNodeAffinity,
 		// Devices: m.Devices,
-		// CPUAffinity: m.CpuAffinity,
 	}
 }

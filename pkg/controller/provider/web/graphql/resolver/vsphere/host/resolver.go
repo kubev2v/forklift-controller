@@ -24,7 +24,6 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereHost, error) {
 	if err != nil {
 		return nil, nil
 	}
-
 	for _, m := range list {
 		h := With(&m)
 		h.Provider = provider
@@ -57,6 +56,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereHost, err
 
 func (t *Resolver) GetByCluster(clusterId, provider string) ([]*graphmodel.VsphereHost, error) {
 	var hosts []*graphmodel.VsphereHost
+
 	db := *t.GetDB(provider)
 	list := []vspheremodel.Host{}
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("cluster", clusterId)}
@@ -74,7 +74,36 @@ func (t *Resolver) GetByCluster(clusterId, provider string) ([]*graphmodel.Vsphe
 	return hosts, nil
 }
 
+func contains(l []string, s string) bool {
+	for _, i := range l {
+		if i == s {
+			return true
+		}
+	}
+	return false
+}
+
+func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.VsphereHost, error) {
+	list, err := t.List(provider)
+	if err != nil {
+		return nil, nil
+	}
+
+	var hosts []*graphmodel.VsphereHost
+	for _, h := range list {
+		if contains(h.Datastores, datastoreId) {
+			hosts = append(hosts, h)
+		}
+	}
+
+	return hosts, nil
+}
+
 func With(m *vspheremodel.Host) (h *graphmodel.VsphereHost) {
+	var datastores []string
+	for _, d := range m.Datastores {
+		datastores = append(datastores, d.ID)
+	}
 	return &graphmodel.VsphereHost{
 		ID:             m.ID,
 		Name:           m.Name,
@@ -84,5 +113,6 @@ func With(m *vspheremodel.Host) (h *graphmodel.VsphereHost) {
 		InMaintenance:  m.InMaintenanceMode,
 		CPUSockets:     int(m.CpuSockets),
 		CPUCores:       int(m.CpuCores),
+		Datastores:     datastores,
 	}
 }

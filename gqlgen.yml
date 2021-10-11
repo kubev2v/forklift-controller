@@ -70,3 +70,9 @@ models:
     fields:
       vms:
         resolver: true
+  VsphereDatastore:
+    fields:
+      vms:
+        resolver: true
+      hosts:
+        resolver: true

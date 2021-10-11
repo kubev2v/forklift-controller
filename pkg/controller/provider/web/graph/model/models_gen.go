@@ -3,6 +3,7 @@
 package model
 
 type Concern struct {
+	ID         string `json:"id"`
 	Label      string `json:"label"`
 	Category   string `json:"category"`
 	Assessment string `json:"assessment"`
@@ -13,11 +14,11 @@ type Device struct {
 }
 
 type Disk struct {
-	ID        string `json:"id"`
 	Kind      string `json:"kind"`
+	Key       int    `json:"key"`
 	File      string `json:"file"`
 	Datastore string `json:"datastore"`
-	Capacity  string `json:"capacity"`
+	Capacity  int    `json:"capacity"`
 	Shared    bool   `json:"shared"`
 	Rdm       bool   `json:"rdm"`
 }
@@ -43,6 +44,18 @@ type VsphereDatacenter struct {
 	Clusters []*VsphereCluster `json:"clusters"`
 }
 
+type VsphereDatastore struct {
+	ID          string         `json:"id"`
+	Provider    string         `json:"provider"`
+	Kind        string         `json:"kind"`
+	Name        string         `json:"name"`
+	Capacity    int            `json:"capacity"`
+	Free        int            `json:"free"`
+	Maintenance string         `json:"maintenance"`
+	Hosts       []*VsphereHost `json:"hosts"`
+	Vms         []*VsphereVM   `json:"vms"`
+}
+
 type VsphereHost struct {
 	ID             string       `json:"id"`
 	Provider       string       `json:"provider"`
@@ -54,6 +67,7 @@ type VsphereHost struct {
 	CPUSockets     int          `json:"cpuSockets"`
 	CPUCores       int          `json:"cpuCores"`
 	Vms            []*VsphereVM `json:"vms"`
+	Datastores     []string     `json:"datastores"`
 }
 
 type VsphereProvider struct {
@@ -64,31 +78,31 @@ type VsphereProvider struct {
 }
 
 type VsphereVM struct {
-	ID                    string       `json:"id"`
-	Kind                  string       `json:"kind"`
-	Name                  string       `json:"name"`
-	Path                  string       `json:"path"`
-	Revision              int          `json:"revision"`
-	SelfLink              string       `json:"selfLink"`
-	UUID                  string       `json:"uuid"`
-	Firmware              string       `json:"firmware"`
-	PowerState            string       `json:"powerState"`
-	CPUHotAddEnabled      bool         `json:"cpuHotAddEnabled"`
-	CPUHotRemoveEnabled   bool         `json:"cpuHotRemoveEnabled"`
-	MemoryHotAddEnabled   bool         `json:"memoryHotAddEnabled"`
-	FaultToleranceEnabled bool         `json:"faultToleranceEnabled"`
-	CPUCount              int          `json:"cpuCount"`
-	CoresPerSocket        int          `json:"coresPerSocket"`
-	MemoryMb              int          `json:"memoryMB"`
-	GuestName             string       `json:"guestName"`
-	BalloonedMemory       int          `json:"balloonedMemory"`
-	IPAddress             string       `json:"ipAddress"`
-	StorageUsed           int          `json:"storageUsed"`
-	NumaNodeAffinity      []string     `json:"numaNodeAffinity"`
-	Devices               []*Device    `json:"devices"`
-	CPUAffinity           []int        `json:"cpuAffinity"`
-	Host                  *VsphereHost `json:"host"`
-	RevisionAnalyzed      int          `json:"revisionAnalyzed"`
-	Disks                 []*Disk      `json:"disks"`
-	Concerns              []*Concern   `json:"concerns"`
+	ID                    string     `json:"id"`
+	Kind                  string     `json:"kind"`
+	Name                  string     `json:"name"`
+	Path                  string     `json:"path"`
+	Revision              int        `json:"revision"`
+	SelfLink              string     `json:"selfLink"`
+	UUID                  string     `json:"uuid"`
+	Firmware              string     `json:"firmware"`
+	PowerState            string     `json:"powerState"`
+	CPUHotAddEnabled      bool       `json:"cpuHotAddEnabled"`
+	CPUHotRemoveEnabled   bool       `json:"cpuHotRemoveEnabled"`
+	MemoryHotAddEnabled   bool       `json:"memoryHotAddEnabled"`
+	FaultToleranceEnabled bool       `json:"faultToleranceEnabled"`
+	CPUCount              int        `json:"cpuCount"`
+	CoresPerSocket        int        `json:"coresPerSocket"`
+	MemoryMb              int        `json:"memoryMB"`
+	GuestName             string     `json:"guestName"`
+	BalloonedMemory       int        `json:"balloonedMemory"`
+	IPAddress             string     `json:"ipAddress"`
+	StorageUsed           int        `json:"storageUsed"`
+	NumaNodeAffinity      []string   `json:"numaNodeAffinity"`
+	Devices               []*Device  `json:"devices"`
+	CPUAffinity           []int      `json:"cpuAffinity"`
+	Host                  string     `json:"host"`
+	RevisionAnalyzed      int        `json:"revisionAnalyzed"`
+	Disks                 []*Disk    `json:"disks"`
+	Concerns              []*Concern `json:"concerns"`
 }
