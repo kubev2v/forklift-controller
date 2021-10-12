@@ -13,6 +13,8 @@ type Resolver struct {
 	base.Resolver
 }
 
+//
+// List all clusters.
 func (t *Resolver) List(provider string) ([]*graphmodel.VsphereCluster, error) {
 	var clusters []*graphmodel.VsphereCluster
 
@@ -26,7 +28,7 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereCluster, error) {
 	}
 
 	for _, m := range list {
-		c := With(&m)
+		c := with(&m)
 		c.Provider = provider
 		clusters = append(clusters, c)
 	}
@@ -34,6 +36,8 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereCluster, error) {
 	return clusters, nil
 }
 
+//
+// Get a specific cluster.
 func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereCluster, error) {
 	db := *t.GetDB(provider)
 	m := &vspheremodel.Cluster{
@@ -48,12 +52,14 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereCluster, 
 		return nil, nil
 	}
 
-	c := With(m)
+	c := with(m)
 	c.Provider = provider
 
 	return c, nil
 }
 
+//
+// Get all clusters for a specific datacenter.
 func (t *Resolver) GetByDatacenter(datacenterId, provider string) ([]*graphmodel.VsphereCluster, error) {
 	var clusters []*graphmodel.VsphereCluster
 	db := *t.GetDB(provider)
@@ -81,7 +87,7 @@ func (t *Resolver) GetByDatacenter(datacenterId, provider string) ([]*graphmodel
 	}
 
 	for _, m := range list {
-		c := With(&m)
+		c := with(&m)
 		c.Provider = provider
 		clusters = append(clusters, c)
 	}
@@ -89,7 +95,7 @@ func (t *Resolver) GetByDatacenter(datacenterId, provider string) ([]*graphmodel
 	return clusters, nil
 }
 
-func With(m *vspheremodel.Cluster) (h *graphmodel.VsphereCluster) {
+func with(m *vspheremodel.Cluster) (h *graphmodel.VsphereCluster) {
 	return &graphmodel.VsphereCluster{
 		ID:   m.ID,
 		Name: m.Name,

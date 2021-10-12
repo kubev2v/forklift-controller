@@ -14,6 +14,8 @@ type Resolver struct {
 	base.Resolver
 }
 
+//
+// Get a specific provider.
 func (t *Resolver) Get(id string) (*graphmodel.VsphereProvider, error) {
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
@@ -21,7 +23,7 @@ func (t *Resolver) Get(id string) (*graphmodel.VsphereProvider, error) {
 		},
 	}
 
-	// h.Detail = true
+	// TODO Check all details are provided
 	m := &model.Provider{}
 	m.With(p)
 	r := vsphere.Provider{}
@@ -31,6 +33,8 @@ func (t *Resolver) Get(id string) (*graphmodel.VsphereProvider, error) {
 	return provider, nil
 }
 
+//
+// List all providers.
 func (t *Resolver) List() ([]*graphmodel.VsphereProvider, error) {
 	var providers []*graphmodel.VsphereProvider
 

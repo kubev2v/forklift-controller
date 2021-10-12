@@ -14,6 +14,8 @@ type Resolver struct {
 	base.Resolver
 }
 
+//
+// List all vms.
 func (t *Resolver) List(provider string) ([]*graphmodel.VsphereVM, error) {
 	var vms []*graphmodel.VsphereVM
 
@@ -27,12 +29,14 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereVM, error) {
 	}
 
 	for _, m := range list {
-		vms = append(vms, With(&m))
+		vms = append(vms, with(&m))
 	}
 
 	return vms, nil
 }
 
+//
+// Get a specific vm.
 func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereVM, error) {
 	db := *t.GetDB(provider)
 
@@ -48,7 +52,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereVM, error
 		return nil, nil
 	}
 
-	vm := With(m)
+	vm := with(m)
 
 	return vm, nil
 }
@@ -63,9 +67,8 @@ func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, 
 	if err != nil {
 		return nil, nil
 	}
-
 	for _, m := range list {
-		vms = append(vms, With(&m))
+		vms = append(vms, with(&m))
 	}
 
 	return vms, nil
@@ -96,7 +99,7 @@ func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.V
 	return vms, nil
 }
 
-func WithDisk(m *vspheremodel.Disk) (h *graphmodel.Disk) {
+func withDisk(m *vspheremodel.Disk) (h *graphmodel.Disk) {
 	return &graphmodel.Disk{
 		Kind:      "Disk",
 		Key:       int(m.Key),
@@ -108,7 +111,7 @@ func WithDisk(m *vspheremodel.Disk) (h *graphmodel.Disk) {
 	}
 }
 
-func WithConcern(m *vspheremodel.Concern) (c *graphmodel.Concern) {
+func withConcern(m *vspheremodel.Concern) (c *graphmodel.Concern) {
 	fmt.Printf("Concern: %+v", m)
 	return &graphmodel.Concern{
 		Label:      m.Label,
@@ -117,15 +120,15 @@ func WithConcern(m *vspheremodel.Concern) (c *graphmodel.Concern) {
 	}
 }
 
-func With(m *vspheremodel.VM) (h *graphmodel.VsphereVM) {
+func with(m *vspheremodel.VM) (h *graphmodel.VsphereVM) {
 	var disks []*graphmodel.Disk
 	for _, d := range m.Disks {
-		disks = append(disks, WithDisk(&d))
+		disks = append(disks, withDisk(&d))
 	}
 
 	var concerns []*graphmodel.Concern
 	for _, c := range m.Concerns {
-		concerns = append(concerns, WithConcern(&c))
+		concerns = append(concerns, withConcern(&c))
 	}
 
 	var cpuAffinity []int

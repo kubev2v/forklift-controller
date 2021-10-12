@@ -13,6 +13,8 @@ type Resolver struct {
 	base.Resolver
 }
 
+//
+// List all datacenters.
 func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatacenter, error) {
 	var datacenters []*graphmodel.VsphereDatacenter
 	db := *t.GetDB(provider)
@@ -24,7 +26,7 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatacenter, error
 	}
 
 	for _, m := range list {
-		dc := With(&m)
+		dc := with(&m)
 		dc.Provider = provider
 		datacenters = append(datacenters, dc)
 	}
@@ -32,6 +34,8 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatacenter, error
 	return datacenters, nil
 }
 
+//
+// Get a specific datacenter.
 func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatacenter, error) {
 	db := *t.GetDB(provider)
 	m := &vspheremodel.Datacenter{
@@ -46,13 +50,13 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatacente
 		return nil, nil
 	}
 
-	dc := With(m)
+	dc := with(m)
 	dc.Provider = provider
 
 	return dc, nil
 }
 
-func With(m *vspheremodel.Datacenter) (h *graphmodel.VsphereDatacenter) {
+func with(m *vspheremodel.Datacenter) (h *graphmodel.VsphereDatacenter) {
 	return &graphmodel.VsphereDatacenter{
 		ID:   m.ID,
 		Name: m.Name,

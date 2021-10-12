@@ -13,6 +13,8 @@ type Resolver struct {
 	base.Resolver
 }
 
+//
+// List all datastores.
 func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatastore, error) {
 	var datastores []*graphmodel.VsphereDatastore
 
@@ -26,7 +28,7 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatastore, error)
 	}
 
 	for _, m := range list {
-		c := With(&m)
+		c := with(&m)
 		c.Provider = provider
 		datastores = append(datastores, c)
 	}
@@ -34,6 +36,8 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatastore, error)
 	return datastores, nil
 }
 
+//
+// Get a specific datastore.
 func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatastore, error) {
 	db := *t.GetDB(provider)
 	m := &vspheremodel.Datastore{
@@ -48,13 +52,13 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatastore
 		return nil, nil
 	}
 
-	c := With(m)
+	c := with(m)
 	c.Provider = provider
 
 	return c, nil
 }
 
-func With(m *vspheremodel.Datastore) (h *graphmodel.VsphereDatastore) {
+func with(m *vspheremodel.Datastore) (h *graphmodel.VsphereDatastore) {
 	return &graphmodel.VsphereDatastore{
 		ID:          m.ID,
 		Name:        m.Name,

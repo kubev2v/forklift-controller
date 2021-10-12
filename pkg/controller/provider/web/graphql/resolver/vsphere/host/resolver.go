@@ -13,6 +13,8 @@ type Resolver struct {
 	base.Resolver
 }
 
+//
+// List all hosts.
 func (t *Resolver) List(provider string) ([]*graphmodel.VsphereHost, error) {
 	var hosts []*graphmodel.VsphereHost
 
@@ -25,7 +27,7 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereHost, error) {
 		return nil, nil
 	}
 	for _, m := range list {
-		h := With(&m)
+		h := with(&m)
 		h.Provider = provider
 		hosts = append(hosts, h)
 	}
@@ -33,6 +35,8 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereHost, error) {
 	return hosts, nil
 }
 
+//
+// Get a specific host.
 func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereHost, error) {
 	db := *t.GetDB(provider)
 
@@ -48,12 +52,14 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereHost, err
 		return nil, nil
 	}
 
-	h := With(m)
+	h := with(m)
 	h.Provider = provider
 
 	return h, nil
 }
 
+//
+// Get all host for a specific cluster.
 func (t *Resolver) GetByCluster(clusterId, provider string) ([]*graphmodel.VsphereHost, error) {
 	var hosts []*graphmodel.VsphereHost
 
@@ -66,7 +72,7 @@ func (t *Resolver) GetByCluster(clusterId, provider string) ([]*graphmodel.Vsphe
 	}
 
 	for _, m := range list {
-		h := With(&m)
+		h := with(&m)
 		h.Provider = provider
 		hosts = append(hosts, h)
 	}
@@ -83,6 +89,8 @@ func contains(l []string, s string) bool {
 	return false
 }
 
+//
+// Get al hosts for a specific datastore.
 func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.VsphereHost, error) {
 	list, err := t.List(provider)
 	if err != nil {
@@ -99,7 +107,7 @@ func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.V
 	return hosts, nil
 }
 
-func With(m *vspheremodel.Host) (h *graphmodel.VsphereHost) {
+func with(m *vspheremodel.Host) (h *graphmodel.VsphereHost) {
 	var datastores []string
 	for _, d := range m.Datastores {
 		datastores = append(datastores, d.ID)
