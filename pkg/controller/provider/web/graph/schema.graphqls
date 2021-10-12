@@ -1,3 +1,12 @@
+union NetworkGroup = Network | DvPortGroup | DvSwitch
+
+type Folder {
+  id: ID!
+  kind: String!
+  name: String!
+  parent: String!
+  children: [Folder!]!
+}
 
 type VsphereProvider {
   id: ID!
@@ -51,6 +60,39 @@ type VsphereDatastore {
   maintenance: String!
   hosts: [VsphereHost!]!
   vms: [VsphereVM!]!
+}
+
+type Network {
+  id: ID!
+  kind: String!
+  name: String!
+  parent: Folder!
+  tag: String!
+  vms: [VsphereVM!]!
+}
+
+type DvPortGroup {
+  id: ID!
+  kind: String!
+  name: String!
+  parent: Folder!
+  dvSwitch: ID!
+  ports: [String!]!
+  vms: [VsphereVM!]!
+}
+
+type DvSwitch {
+  id: ID!
+  kind: String!
+  name: String!
+  parent: Folder!
+  portgroups: [DvPortGroup!]!
+  host: [DvSHost]! 
+}
+
+type DvSHost {
+	host: String!
+	PNIC: [String!]!
 }
 
 type VsphereVM {
@@ -114,6 +156,8 @@ type Query {
   vsphereHost(id: ID!, provider: ID!): VsphereHost!
   vsphereDatastore(id: ID!, provider: ID!): VsphereDatastore!
   vsphereDatastores(provider: ID!): [VsphereDatastore!]!
+  vsphereNetwork(id: ID!, provider: ID!): NetworkGroup!
+  vsphereNetworks(provider: ID!): [NetworkGroup!]!
   vsphereVMs(provider: ID!): [VsphereVM!]!
   vsphereVM(id: ID!, provider: ID!): VsphereVM!
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/datacenter"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/datastore"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/host"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/network"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/provider"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/vm"
 )
@@ -17,6 +18,7 @@ type Resolver struct {
 	Provider   provider.Resolver
 	Datacenter datacenter.Resolver
 	Cluster    cluster.Resolver
+	Network    network.Resolver
 	Host       host.Resolver
 	Datastore  datastore.Resolver
 	VM         vm.Resolver

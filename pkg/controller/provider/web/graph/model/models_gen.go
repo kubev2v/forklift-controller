@@ -2,6 +2,10 @@
 
 package model
 
+type NetworkGroup interface {
+	IsNetworkGroup()
+}
+
 type Concern struct {
 	Label      string `json:"label"`
 	Category   string `json:"category"`
@@ -21,6 +25,53 @@ type Disk struct {
 	Shared    bool   `json:"shared"`
 	Rdm       bool   `json:"rdm"`
 }
+
+type DvPortGroup struct {
+	ID       string       `json:"id"`
+	Kind     string       `json:"kind"`
+	Name     string       `json:"name"`
+	Parent   *Folder      `json:"parent"`
+	DvSwitch string       `json:"dvSwitch"`
+	Ports    []string     `json:"ports"`
+	Vms      []*VsphereVM `json:"vms"`
+}
+
+func (DvPortGroup) IsNetworkGroup() {}
+
+type DvSHost struct {
+	Host string   `json:"host"`
+	Pnic []string `json:"PNIC"`
+}
+
+type DvSwitch struct {
+	ID         string         `json:"id"`
+	Kind       string         `json:"kind"`
+	Name       string         `json:"name"`
+	Parent     *Folder        `json:"parent"`
+	Portgroups []*DvPortGroup `json:"portgroups"`
+	Host       []*DvSHost     `json:"host"`
+}
+
+func (DvSwitch) IsNetworkGroup() {}
+
+type Folder struct {
+	ID       string    `json:"id"`
+	Kind     string    `json:"kind"`
+	Name     string    `json:"name"`
+	Parent   string    `json:"parent"`
+	Children []*Folder `json:"children"`
+}
+
+type Network struct {
+	ID     string       `json:"id"`
+	Kind   string       `json:"kind"`
+	Name   string       `json:"name"`
+	Parent *Folder      `json:"parent"`
+	Tag    string       `json:"tag"`
+	Vms    []*VsphereVM `json:"vms"`
+}
+
+func (Network) IsNetworkGroup() {}
 
 type VsphereCluster struct {
 	ID          string         `json:"id"`

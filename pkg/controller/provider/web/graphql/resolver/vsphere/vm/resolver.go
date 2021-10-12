@@ -2,7 +2,6 @@ package vm
 
 import (
 	"errors"
-	"fmt"
 
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
@@ -112,7 +111,6 @@ func withDisk(m *vspheremodel.Disk) (h *graphmodel.Disk) {
 }
 
 func withConcern(m *vspheremodel.Concern) (c *graphmodel.Concern) {
-	fmt.Printf("Concern: %+v", m)
 	return &graphmodel.Concern{
 		Label:      m.Label,
 		Category:   m.Category,

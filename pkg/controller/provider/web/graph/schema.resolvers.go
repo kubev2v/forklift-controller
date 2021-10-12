@@ -50,6 +50,14 @@ func (r *queryResolver) VsphereDatastores(ctx context.Context, provider string) 
 	return r.Resolver.Datastore.List(provider)
 }
 
+func (r *queryResolver) VsphereNetwork(ctx context.Context, id string, provider string) (graphmodel.NetworkGroup, error) {
+	return r.Resolver.Network.Get(id, provider)
+}
+
+func (r *queryResolver) VsphereNetworks(ctx context.Context, provider string) ([]graphmodel.NetworkGroup, error) {
+	return r.Resolver.Network.List(provider)
+}
+
 func (r *queryResolver) VsphereVMs(ctx context.Context, provider string) ([]*graphmodel.VsphereVM, error) {
 	return r.Resolver.VM.List(provider)
 }
