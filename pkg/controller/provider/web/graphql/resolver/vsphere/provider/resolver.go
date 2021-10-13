@@ -29,7 +29,7 @@ func (t *Resolver) Get(id string) (*graphmodel.VsphereProvider, error) {
 	r := vsphere.Provider{}
 	r.With(m)
 
-	provider := &graphmodel.VsphereProvider{ID: r.UID, Name: r.Name, Kind: r.Type}
+	provider := &graphmodel.VsphereProvider{ID: r.UID, Name: r.Name, Type: r.Type}
 	return provider, nil
 }
 
@@ -48,7 +48,7 @@ func (t *Resolver) List() ([]*graphmodel.VsphereProvider, error) {
 			m := &model.Provider{}
 			m.With(p)
 
-			provider := &graphmodel.VsphereProvider{ID: m.UID, Name: m.Name, Kind: m.Type}
+			provider := &graphmodel.VsphereProvider{ID: m.UID, Name: m.Name, Type: m.Type}
 			providers = append(providers, provider)
 		}
 	}

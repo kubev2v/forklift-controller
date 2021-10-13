@@ -17,7 +17,6 @@ type Device struct {
 }
 
 type Disk struct {
-	Kind      string `json:"kind"`
 	Key       int    `json:"key"`
 	File      string `json:"file"`
 	Datastore string `json:"datastore"`
@@ -56,7 +55,6 @@ func (DvSwitch) IsNetworkGroup() {}
 
 type Folder struct {
 	ID       string    `json:"id"`
-	Kind     string    `json:"kind"`
 	Name     string    `json:"name"`
 	Parent   string    `json:"parent"`
 	Children []*Folder `json:"children"`
@@ -76,7 +74,6 @@ func (Network) IsNetworkGroup() {}
 type VsphereCluster struct {
 	ID          string         `json:"id"`
 	Provider    string         `json:"provider"`
-	Kind        string         `json:"kind"`
 	Name        string         `json:"name"`
 	Hosts       []*VsphereHost `json:"hosts"`
 	DasEnabled  bool           `json:"dasEnabled"`
@@ -88,16 +85,14 @@ type VsphereCluster struct {
 
 type VsphereDatacenter struct {
 	ID       string            `json:"id"`
-	Kind     string            `json:"kind"`
-	Name     string            `json:"name"`
 	Provider string            `json:"provider"`
+	Name     string            `json:"name"`
 	Clusters []*VsphereCluster `json:"clusters"`
 }
 
 type VsphereDatastore struct {
 	ID          string         `json:"id"`
 	Provider    string         `json:"provider"`
-	Kind        string         `json:"kind"`
 	Name        string         `json:"name"`
 	Capacity    int            `json:"capacity"`
 	Free        int            `json:"free"`
@@ -109,7 +104,6 @@ type VsphereDatastore struct {
 type VsphereHost struct {
 	ID             string       `json:"id"`
 	Provider       string       `json:"provider"`
-	Kind           string       `json:"kind"`
 	Name           string       `json:"name"`
 	ProductName    string       `json:"productName"`
 	ProductVersion string       `json:"productVersion"`
@@ -122,15 +116,14 @@ type VsphereHost struct {
 
 type VsphereProvider struct {
 	ID          string               `json:"id"`
-	Kind        string               `json:"kind"`
 	Name        string               `json:"name"`
+	Type        string               `json:"type"`
 	Datacenters []*VsphereDatacenter `json:"datacenters"`
 }
 
 type VsphereVM struct {
 	ID                    string         `json:"id"`
 	Provider              string         `json:"provider"`
-	Kind                  string         `json:"kind"`
 	Name                  string         `json:"name"`
 	Path                  string         `json:"path"`
 	Revision              int            `json:"revision"`

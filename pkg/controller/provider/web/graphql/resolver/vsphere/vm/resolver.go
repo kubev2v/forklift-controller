@@ -103,7 +103,6 @@ func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.V
 
 func withDisk(m *vspheremodel.Disk) (h *graphmodel.Disk) {
 	return &graphmodel.Disk{
-		Kind:      "Disk",
 		Key:       int(m.Key),
 		Datastore: m.Datastore.ID,
 		File:      m.File,
@@ -145,7 +144,6 @@ func with(m *vspheremodel.VM) (h *graphmodel.VsphereVM) {
 	return &graphmodel.VsphereVM{
 		ID:                    m.ID,
 		Name:                  m.Name,
-		Kind:                  "VM",
 		Revision:              int(m.Revision),
 		RevisionValidated:     int(m.RevisionValidated),
 		UUID:                  m.UUID,

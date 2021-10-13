@@ -62,7 +62,6 @@ func with(m *vspheremodel.Datastore) (h *graphmodel.VsphereDatastore) {
 	return &graphmodel.VsphereDatastore{
 		ID:          m.ID,
 		Name:        m.Name,
-		Kind:        m.Parent.Kind,
 		Capacity:    int(m.Capacity),
 		Free:        int(m.Free),
 		Maintenance: m.MaintenanceMode,

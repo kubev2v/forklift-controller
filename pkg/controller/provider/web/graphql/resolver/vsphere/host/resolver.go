@@ -115,7 +115,6 @@ func with(m *vspheremodel.Host) (h *graphmodel.VsphereHost) {
 	return &graphmodel.VsphereHost{
 		ID:             m.ID,
 		Name:           m.Name,
-		Kind:           m.Parent.Kind,
 		ProductName:    m.ProductName,
 		ProductVersion: m.ProductVersion,
 		InMaintenance:  m.InMaintenanceMode,

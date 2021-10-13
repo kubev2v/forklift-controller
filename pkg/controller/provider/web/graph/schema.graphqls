@@ -2,7 +2,6 @@ union NetworkGroup = Network | DvPortGroup | DvSwitch
 
 type Folder {
   id: ID!
-  kind: String!
   name: String!
   parent: String!
   children: [Folder!]!
@@ -10,23 +9,21 @@ type Folder {
 
 type VsphereProvider {
   id: ID!
-  kind: String!
   name: String!
+  type: String!
   datacenters: [VsphereDatacenter!]!
 }
 
 type VsphereDatacenter {
   id: ID!
-  kind: String!
-  name: String!
   provider: ID!
+  name: String!
   clusters: [VsphereCluster!]!
 }
 
 type VsphereCluster {
   id: ID!
   provider: ID!
-  kind: String!
   name: String!
   hosts: [VsphereHost!]!
   dasEnabled: Boolean!
@@ -39,7 +36,6 @@ type VsphereCluster {
 type VsphereHost {
   id: ID!
   provider: ID!
-  kind: String!
   name: String!
   productName: String!
   productVersion: String!
@@ -53,7 +49,6 @@ type VsphereHost {
 type VsphereDatastore {
   id: ID!
   provider: ID!
-  kind: String!
   name: String!
   capacity: Int!
   free: Int!
@@ -98,7 +93,6 @@ type DvSHost {
 type VsphereVM {
   id: ID!
   provider: ID!
-  kind: String!
   name: String!
   path: String!
   revision: Int!
@@ -134,7 +128,6 @@ type Device {
 }
 
 type Disk {
-  kind: String!
   key: Int!
   file: String!
   datastore: String!

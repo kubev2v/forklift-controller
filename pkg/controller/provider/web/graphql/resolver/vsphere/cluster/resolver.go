@@ -99,7 +99,6 @@ func with(m *vspheremodel.Cluster) (h *graphmodel.VsphereCluster) {
 	return &graphmodel.VsphereCluster{
 		ID:   m.ID,
 		Name: m.Name,
-		Kind: m.Parent.Kind,
 		// DasVms:      m.DasVms,
 		DrsEnabled:  m.DrsEnabled,
 		DrsBehavior: m.DrsBehavior,
