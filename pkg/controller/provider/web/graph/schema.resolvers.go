@@ -90,6 +90,10 @@ func (r *vsphereProviderResolver) Datacenters(ctx context.Context, obj *graphmod
 	return r.Resolver.Datacenter.List(obj.ID)
 }
 
+func (r *vsphereVMResolver) Networks(ctx context.Context, obj *graphmodel.VsphereVM) ([]graphmodel.NetworkGroup, error) {
+	return r.Resolver.Network.GetByIDs(obj.NetRefs, obj.Provider)
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
@@ -116,9 +120,13 @@ func (r *Resolver) VsphereProvider() generated.VsphereProviderResolver {
 	return &vsphereProviderResolver{r}
 }
 
+// VsphereVM returns generated.VsphereVMResolver implementation.
+func (r *Resolver) VsphereVM() generated.VsphereVMResolver { return &vsphereVMResolver{r} }
+
 type queryResolver struct{ *Resolver }
 type vsphereClusterResolver struct{ *Resolver }
 type vsphereDatacenterResolver struct{ *Resolver }
 type vsphereDatastoreResolver struct{ *Resolver }
 type vsphereHostResolver struct{ *Resolver }
 type vsphereProviderResolver struct{ *Resolver }
+type vsphereVMResolver struct{ *Resolver }

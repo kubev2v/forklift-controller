@@ -28,7 +28,9 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereVM, error) {
 	}
 
 	for _, m := range list {
-		vms = append(vms, with(&m))
+		vm := with(&m)
+		vm.Provider = provider
+		vms = append(vms, vm)
 	}
 
 	return vms, nil
@@ -52,6 +54,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereVM, error
 	}
 
 	vm := with(m)
+	vm.Provider = provider
 
 	return vm, nil
 }
@@ -119,6 +122,11 @@ func withConcern(m *vspheremodel.Concern) (c *graphmodel.Concern) {
 }
 
 func with(m *vspheremodel.VM) (h *graphmodel.VsphereVM) {
+	var cpuAffinity []int
+	for _, c := range m.CpuAffinity {
+		cpuAffinity = append(cpuAffinity, int(c))
+	}
+
 	var disks []*graphmodel.Disk
 	for _, d := range m.Disks {
 		disks = append(disks, withDisk(&d))
@@ -129,15 +137,17 @@ func with(m *vspheremodel.VM) (h *graphmodel.VsphereVM) {
 		concerns = append(concerns, withConcern(&c))
 	}
 
-	var cpuAffinity []int
-	for _, c := range m.CpuAffinity {
-		cpuAffinity = append(cpuAffinity, int(c))
+	var networks []string
+	for _, n := range m.Networks {
+		networks = append(networks, n.ID)
 	}
 
 	return &graphmodel.VsphereVM{
 		ID:                    m.ID,
 		Name:                  m.Name,
 		Kind:                  "VM",
+		Revision:              int(m.Revision),
+		RevisionValidated:     int(m.RevisionValidated),
 		UUID:                  m.UUID,
 		Firmware:              m.Firmware,
 		PowerState:            m.PowerState,
@@ -155,11 +165,10 @@ func with(m *vspheremodel.VM) (h *graphmodel.VsphereVM) {
 		Concerns:              concerns,
 		Disks:                 disks,
 		NumaNodeAffinity:      m.NumaNodeAffinity,
-		Revision:              int(m.Revision),
-		RevisionAnalyzed:      int(m.RevisionValidated),
 		Host:                  m.Host,
 		CPUAffinity:           cpuAffinity,
-		// Networks: m.networks,
+		NetRefs:               networks,
+		// Networks:              m.Networks,
 		// Devices: m.Devices,
 	}
 }

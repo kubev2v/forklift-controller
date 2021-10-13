@@ -19,13 +19,13 @@ type VsphereDatacenter {
   id: ID!
   kind: String!
   name: String!
-  provider: String!
+  provider: ID!
   clusters: [VsphereCluster!]!
 }
 
 type VsphereCluster {
   id: ID!
-  provider: String!
+  provider: ID!
   kind: String!
   name: String!
   hosts: [VsphereHost!]!
@@ -38,7 +38,7 @@ type VsphereCluster {
 
 type VsphereHost {
   id: ID!
-  provider: String!
+  provider: ID!
   kind: String!
   name: String!
   productName: String!
@@ -52,7 +52,7 @@ type VsphereHost {
 
 type VsphereDatastore {
   id: ID!
-  provider: String!
+  provider: ID!
   kind: String!
   name: String!
   capacity: Int!
@@ -97,14 +97,16 @@ type DvSHost {
 
 type VsphereVM {
   id: ID!
+  provider: ID!
   kind: String!
   name: String!
   path: String!
   revision: Int!
-  selfLink: String!
+  revisionValidated: Int!
   uuid: String!
   firmware: String!
   powerState: String!
+  cpuAffinity: [Int!]!
   cpuHotAddEnabled: Boolean!
   cpuHotRemoveEnabled: Boolean!
   memoryHotAddEnabled: Boolean!
@@ -115,13 +117,15 @@ type VsphereVM {
   guestName: String!
   balloonedMemory: Int!
   ipAddress: String!
-  storageUsed: Int!
   numaNodeAffinity: [String!]
-  devices: [Device]
-  cpuAffinity: [Int!]!
+  storageUsed: Int!
+  snapshot: Int!
+  isTemplate: Boolean! 
   host(id: String!): String!
-  revisionAnalyzed: Int!
+  devices: [Device]
   disks: [Disk!]!
+  netRefs: [ID!]!
+  networks: [NetworkGroup!]!
   concerns: [Concern!]!
 }
 

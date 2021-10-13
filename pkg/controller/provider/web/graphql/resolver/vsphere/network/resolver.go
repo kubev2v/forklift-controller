@@ -71,6 +71,33 @@ func (t *Resolver) Get(id string, provider string) (graphmodel.NetworkGroup, err
 	return network, nil
 }
 
+//
+// Get all Network objects from a ID list.
+func (t *Resolver) GetByIDs(l []string, provider string) ([]graphmodel.NetworkGroup, error) {
+	var networks []graphmodel.NetworkGroup
+
+	db := *t.GetDB(provider)
+	networkList := []vspheremodel.Network{}
+
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", l)}
+	err := db.List(&networkList, listOptions)
+	if err != nil {
+		return nil, nil
+	}
+	for _, m := range networkList {
+		switch m.Variant {
+		case vspheremodel.NetStandard:
+			networks = append(networks, withNetwork(&m))
+		case vspheremodel.NetDvPortGroup:
+			networks = append(networks, withDvPortGroup(&m))
+		case vspheremodel.NetDvSwitch:
+			networks = append(networks, withDvSwitch(&m))
+		}
+	}
+
+	return networks, nil
+}
+
 func withNetwork(m *vspheremodel.Network) (h *graphmodel.Network) {
 	return &graphmodel.Network{
 		ID:   m.ID,
