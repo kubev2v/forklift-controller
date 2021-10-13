@@ -143,6 +143,14 @@ func with(m *vspheremodel.VM) (h *graphmodel.VsphereVM) {
 		networks = append(networks, n.ID)
 	}
 
+	var devices []*graphmodel.Device
+	for _, n := range m.Devices {
+		d := graphmodel.Device{
+			Kind: n.Kind,
+		}
+		devices = append(devices, &d)
+	}
+
 	return &graphmodel.VsphereVM{
 		ID:                    m.ID,
 		Name:                  m.Name,
@@ -166,8 +174,8 @@ func with(m *vspheremodel.VM) (h *graphmodel.VsphereVM) {
 		Disks:                 disks,
 		NumaNodeAffinity:      m.NumaNodeAffinity,
 		CPUAffinity:           cpuAffinity,
+		Devices:               devices,
 		HostID:                m.Host,
 		NetIDs:                networks,
-		// Devices:               m.Devices,
 	}
 }
