@@ -43,7 +43,8 @@ type VsphereHost {
   cpuSockets: Int!
   cpuCores: Int!
   vms: [VsphereVM!]!
-  datastores: [String!]!
+  datastoreIDs: [ID!]!
+  datastores: [VsphereDatastore!]!
 }
 
 type VsphereDatastore {

@@ -86,6 +86,10 @@ func (r *vsphereHostResolver) Vms(ctx context.Context, obj *graphmodel.VsphereHo
 	return r.Resolver.VM.GetByHost(obj.ID, obj.Provider)
 }
 
+func (r *vsphereHostResolver) Datastores(ctx context.Context, obj *graphmodel.VsphereHost) ([]*graphmodel.VsphereDatastore, error) {
+	return r.Resolver.Datastore.ListByIds(obj.DatastoreIDs, obj.Provider)
+}
+
 func (r *vsphereProviderResolver) Datacenters(ctx context.Context, obj *graphmodel.VsphereProvider) ([]*graphmodel.VsphereDatacenter, error) {
 	return r.Resolver.Datacenter.List(obj.ID)
 }

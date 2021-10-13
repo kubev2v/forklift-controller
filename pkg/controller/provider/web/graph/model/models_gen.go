@@ -102,16 +102,17 @@ type VsphereDatastore struct {
 }
 
 type VsphereHost struct {
-	ID             string       `json:"id"`
-	Provider       string       `json:"provider"`
-	Name           string       `json:"name"`
-	ProductName    string       `json:"productName"`
-	ProductVersion string       `json:"productVersion"`
-	InMaintenance  bool         `json:"inMaintenance"`
-	CPUSockets     int          `json:"cpuSockets"`
-	CPUCores       int          `json:"cpuCores"`
-	Vms            []*VsphereVM `json:"vms"`
-	Datastores     []string     `json:"datastores"`
+	ID             string              `json:"id"`
+	Provider       string              `json:"provider"`
+	Name           string              `json:"name"`
+	ProductName    string              `json:"productName"`
+	ProductVersion string              `json:"productVersion"`
+	InMaintenance  bool                `json:"inMaintenance"`
+	CPUSockets     int                 `json:"cpuSockets"`
+	CPUCores       int                 `json:"cpuCores"`
+	Vms            []*VsphereVM        `json:"vms"`
+	DatastoreIDs   []string            `json:"datastoreIDs"`
+	Datastores     []*VsphereDatastore `json:"datastores"`
 }
 
 type VsphereProvider struct {

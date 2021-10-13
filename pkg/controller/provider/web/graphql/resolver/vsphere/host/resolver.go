@@ -92,7 +92,7 @@ func contains(l []string, s string) bool {
 }
 
 //
-// Get al hosts for a specific datastore.
+// Get all hosts for a specific datastore.
 func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.VsphereHost, error) {
 	list, err := t.List(provider)
 	if err != nil {
@@ -101,7 +101,7 @@ func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.V
 
 	var hosts []*graphmodel.VsphereHost
 	for _, h := range list {
-		if contains(h.Datastores, datastoreId) {
+		if contains(h.DatastoreIDs, datastoreId) {
 			hosts = append(hosts, h)
 		}
 	}
@@ -122,6 +122,6 @@ func with(m *vspheremodel.Host) (h *graphmodel.VsphereHost) {
 		InMaintenance:  m.InMaintenanceMode,
 		CPUSockets:     int(m.CpuSockets),
 		CPUCores:       int(m.CpuCores),
-		Datastores:     datastores,
+		DatastoreIDs:   datastores,
 	}
 }

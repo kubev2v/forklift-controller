@@ -38,6 +38,29 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatastore, error)
 }
 
 //
+// List all datastores for specific IDs.
+func (t *Resolver) ListByIds(ids []string, provider string) ([]*graphmodel.VsphereDatastore, error) {
+	var datastores []*graphmodel.VsphereDatastore
+
+	db := *t.GetDB(provider)
+	list := []vspheremodel.Datastore{}
+
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", ids)}
+	err := db.List(&list, listOptions)
+	if err != nil {
+		return nil, nil
+	}
+
+	for _, m := range list {
+		c := with(&m)
+		c.Provider = provider
+		datastores = append(datastores, c)
+	}
+
+	return datastores, nil
+}
+
+//
 // Get a specific datastore.
 func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatastore, error) {
 	db := *t.GetDB(provider)

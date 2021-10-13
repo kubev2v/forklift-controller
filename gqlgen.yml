@@ -68,6 +68,8 @@ models:
         resolver: true
   VsphereHost:
     fields:
+      datastores:
+        resolver: true
       vms:
         resolver: true
   VsphereDatastore:
