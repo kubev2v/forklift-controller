@@ -115,10 +115,11 @@ type VsphereVM {
   storageUsed: Int!
   snapshot: Int!
   isTemplate: Boolean! 
-  host(id: String!): String!
+  hostID: ID!
+  host: VsphereHost!
   devices: [Device]
   disks: [Disk!]!
-  netRefs: [ID!]!
+  netIDs: [ID!]!
   networks: [NetworkGroup!]!
   concerns: [Concern!]!
 }

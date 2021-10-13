@@ -78,5 +78,7 @@ models:
         resolver: true
   VsphereVM:
     fields:
+      host:
+        resolver: true
       networks:
         resolver: true

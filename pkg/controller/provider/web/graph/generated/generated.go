@@ -188,14 +188,15 @@ type ComplexityRoot struct {
 		FaultToleranceEnabled func(childComplexity int) int
 		Firmware              func(childComplexity int) int
 		GuestName             func(childComplexity int) int
-		Host                  func(childComplexity int, id string) int
+		Host                  func(childComplexity int) int
+		HostID                func(childComplexity int) int
 		ID                    func(childComplexity int) int
 		IPAddress             func(childComplexity int) int
 		IsTemplate            func(childComplexity int) int
 		MemoryHotAddEnabled   func(childComplexity int) int
 		MemoryMb              func(childComplexity int) int
 		Name                  func(childComplexity int) int
-		NetRefs               func(childComplexity int) int
+		NetIDs                func(childComplexity int) int
 		Networks              func(childComplexity int) int
 		NumaNodeAffinity      func(childComplexity int) int
 		Path                  func(childComplexity int) int
@@ -242,6 +243,8 @@ type VsphereProviderResolver interface {
 	Datacenters(ctx context.Context, obj *model.VsphereProvider) ([]*model.VsphereDatacenter, error)
 }
 type VsphereVMResolver interface {
+	Host(ctx context.Context, obj *model.VsphereVM) (*model.VsphereHost, error)
+
 	Networks(ctx context.Context, obj *model.VsphereVM) ([]model.NetworkGroup, error)
 }
 
@@ -1002,12 +1005,14 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_VsphereVM_host_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
+		return e.complexity.VsphereVM.Host(childComplexity), true
+
+	case "VsphereVM.hostID":
+		if e.complexity.VsphereVM.HostID == nil {
+			break
 		}
 
-		return e.complexity.VsphereVM.Host(childComplexity, args["id"].(string)), true
+		return e.complexity.VsphereVM.HostID(childComplexity), true
 
 	case "VsphereVM.id":
 		if e.complexity.VsphereVM.ID == nil {
@@ -1051,12 +1056,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.VsphereVM.Name(childComplexity), true
 
-	case "VsphereVM.netRefs":
-		if e.complexity.VsphereVM.NetRefs == nil {
+	case "VsphereVM.netIDs":
+		if e.complexity.VsphereVM.NetIDs == nil {
 			break
 		}
 
-		return e.complexity.VsphereVM.NetRefs(childComplexity), true
+		return e.complexity.VsphereVM.NetIDs(childComplexity), true
 
 	case "VsphereVM.networks":
 		if e.complexity.VsphereVM.Networks == nil {
@@ -1295,10 +1300,11 @@ type VsphereVM {
   storageUsed: Int!
   snapshot: Int!
   isTemplate: Boolean! 
-  host(id: String!): String!
+  hostID: ID!
+  host: VsphereHost!
   devices: [Device]
   disks: [Disk!]!
-  netRefs: [ID!]!
+  netIDs: [ID!]!
   networks: [NetworkGroup!]!
   concerns: [Concern!]!
 }
@@ -1608,21 +1614,6 @@ func (ec *executionContext) field_Query_vsphereVMs_args(ctx context.Context, raw
 		}
 	}
 	args["provider"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_VsphereVM_host_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
 	return args, nil
 }
 
@@ -5603,7 +5594,7 @@ func (ec *executionContext) _VsphereVM_isTemplate(ctx context.Context, field gra
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _VsphereVM_host(ctx context.Context, field graphql.CollectedField, obj *model.VsphereVM) (ret graphql.Marshaler) {
+func (ec *executionContext) _VsphereVM_hostID(ctx context.Context, field graphql.CollectedField, obj *model.VsphereVM) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5619,16 +5610,9 @@ func (ec *executionContext) _VsphereVM_host(ctx context.Context, field graphql.C
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_VsphereVM_host_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Host, nil
+		return obj.HostID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5642,7 +5626,42 @@ func (ec *executionContext) _VsphereVM_host(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereVM_host(ctx context.Context, field graphql.CollectedField, obj *model.VsphereVM) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereVM",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.VsphereVM().Host(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.VsphereHost)
+	fc.Result = res
+	return ec.marshalNVsphereHost2ᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVsphereHost(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _VsphereVM_devices(ctx context.Context, field graphql.CollectedField, obj *model.VsphereVM) (ret graphql.Marshaler) {
@@ -5712,7 +5731,7 @@ func (ec *executionContext) _VsphereVM_disks(ctx context.Context, field graphql.
 	return ec.marshalNDisk2ᚕᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐDiskᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _VsphereVM_netRefs(ctx context.Context, field graphql.CollectedField, obj *model.VsphereVM) (ret graphql.Marshaler) {
+func (ec *executionContext) _VsphereVM_netIDs(ctx context.Context, field graphql.CollectedField, obj *model.VsphereVM) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5730,7 +5749,7 @@ func (ec *executionContext) _VsphereVM_netRefs(ctx context.Context, field graphq
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.NetRefs, nil
+		return obj.NetIDs, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8021,11 +8040,25 @@ func (ec *executionContext) _VsphereVM(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "host":
-			out.Values[i] = ec._VsphereVM_host(ctx, field, obj)
+		case "hostID":
+			out.Values[i] = ec._VsphereVM_hostID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "host":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._VsphereVM_host(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "devices":
 			out.Values[i] = ec._VsphereVM_devices(ctx, field, obj)
 		case "disks":
@@ -8033,8 +8066,8 @@ func (ec *executionContext) _VsphereVM(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "netRefs":
-			out.Values[i] = ec._VsphereVM_netRefs(ctx, field, obj)
+		case "netIDs":
+			out.Values[i] = ec._VsphereVM_netIDs(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}

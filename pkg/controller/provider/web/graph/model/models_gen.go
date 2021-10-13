@@ -146,10 +146,11 @@ type VsphereVM struct {
 	StorageUsed           int            `json:"storageUsed"`
 	Snapshot              int            `json:"snapshot"`
 	IsTemplate            bool           `json:"isTemplate"`
-	Host                  string         `json:"host"`
+	HostID                string         `json:"hostID"`
+	Host                  *VsphereHost   `json:"host"`
 	Devices               []*Device      `json:"devices"`
 	Disks                 []*Disk        `json:"disks"`
-	NetRefs               []string       `json:"netRefs"`
+	NetIDs                []string       `json:"netIDs"`
 	Networks              []NetworkGroup `json:"networks"`
 	Concerns              []*Concern     `json:"concerns"`
 }

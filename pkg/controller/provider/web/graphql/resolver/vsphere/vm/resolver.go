@@ -165,10 +165,9 @@ func with(m *vspheremodel.VM) (h *graphmodel.VsphereVM) {
 		Concerns:              concerns,
 		Disks:                 disks,
 		NumaNodeAffinity:      m.NumaNodeAffinity,
-		Host:                  m.Host,
 		CPUAffinity:           cpuAffinity,
-		NetRefs:               networks,
-		// Networks:              m.Networks,
-		// Devices: m.Devices,
+		HostID:                m.Host,
+		NetIDs:                networks,
+		// Devices:               m.Devices,
 	}
 }
