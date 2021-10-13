@@ -2,6 +2,7 @@ package network
 
 import (
 	"errors"
+	"fmt"
 
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
@@ -54,8 +55,9 @@ func (t *Resolver) Get(id string, provider string) (graphmodel.NetworkGroup, err
 
 	err := db.Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
-		t.Log.Info("Network not found")
-		return nil, nil
+		msg := fmt.Sprintf("network '%s' not found", id)
+		t.Log.Info(msg)
+		return nil, errors.New(msg)
 	}
 
 	var network graphmodel.NetworkGroup

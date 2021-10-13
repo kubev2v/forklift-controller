@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"errors"
+	"fmt"
 
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
@@ -48,8 +49,8 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereCluster, 
 
 	err := db.Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
-		t.Log.Info("Cluster not found")
-		return nil, nil
+		msg := fmt.Sprintf("cluster '%s' not found", id)
+		t.Log.Info(msg)
 	}
 
 	c := with(m)

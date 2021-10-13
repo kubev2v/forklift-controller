@@ -1,6 +1,8 @@
 package base
 
 import (
+	"fmt"
+
 	libcontainer "github.com/konveyor/controller/pkg/inventory/container"
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
 	"github.com/konveyor/controller/pkg/logging"
@@ -29,7 +31,8 @@ func (t *Resolver) GetDB(provider string) *libmodel.DB {
 	var found bool
 	var collector libcontainer.Collector
 	if collector, found = t.Container.Get(p); !found {
-		t.Log.Info("Provider not found")
+		msg := fmt.Sprintf("provider '%s' not found", provider)
+		t.Log.Info(msg)
 		return nil
 	}
 

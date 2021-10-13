@@ -2,6 +2,7 @@ package datacenter
 
 import (
 	"errors"
+	"fmt"
 
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
@@ -46,8 +47,9 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatacente
 
 	err := db.Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
-		t.Log.Info("Datacenter not found")
-		return nil, nil
+		msg := fmt.Sprintf("datacenter '%s' not found", id)
+		t.Log.Info(msg)
+		return nil, errors.New(msg)
 	}
 
 	dc := with(m)

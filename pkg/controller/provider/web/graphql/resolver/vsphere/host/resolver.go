@@ -2,6 +2,7 @@ package host
 
 import (
 	"errors"
+	"fmt"
 
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
@@ -48,8 +49,9 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereHost, err
 
 	err := db.Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
-		t.Log.Info("Host not found")
-		return nil, nil
+		msg := fmt.Sprintf("host '%s' not found", id)
+		t.Log.Info(msg)
+		return nil, errors.New(msg)
 	}
 
 	h := with(m)
