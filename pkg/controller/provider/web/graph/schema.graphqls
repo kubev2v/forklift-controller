@@ -64,7 +64,7 @@ type VsphereDatastore {
 
 type Network {
   id: ID!
-  kind: String!
+  variant: String!
   name: String!
   parent: Folder!
   tag: String!
@@ -73,7 +73,7 @@ type Network {
 
 type DvPortGroup {
   id: ID!
-  kind: String!
+  variant: String!
   name: String!
   parent: Folder!
   dvSwitch: ID!
@@ -83,7 +83,7 @@ type DvPortGroup {
 
 type DvSwitch {
   id: ID!
-  kind: String!
+  variant: String!
   name: String!
   parent: Folder!
   portgroups: [DvPortGroup!]!

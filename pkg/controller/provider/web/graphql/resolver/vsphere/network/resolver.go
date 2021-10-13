@@ -100,17 +100,17 @@ func (t *Resolver) GetByIDs(l []string, provider string) ([]graphmodel.NetworkGr
 
 func withNetwork(m *vspheremodel.Network) (h *graphmodel.Network) {
 	return &graphmodel.Network{
-		ID:   m.ID,
-		Kind: m.Variant,
-		Name: m.Name,
-		Tag:  m.Tag,
+		ID:      m.ID,
+		Variant: m.Variant,
+		Name:    m.Name,
+		Tag:     m.Tag,
 	}
 }
 
 func withDvPortGroup(m *vspheremodel.Network) (h *graphmodel.DvPortGroup) {
 	return &graphmodel.DvPortGroup{
 		ID:       m.ID,
-		Kind:     m.Variant,
+		Variant:  m.Variant,
 		Name:     m.Name,
 		DvSwitch: m.DVSwitch.ID,
 		// Host:  m.Host,
@@ -130,9 +130,9 @@ func withDvSwitch(m *vspheremodel.Network) (h *graphmodel.DvSwitch) {
 	}
 
 	return &graphmodel.DvSwitch{
-		ID:   m.ID,
-		Kind: m.Variant,
-		Name: m.Name,
-		Host: host,
+		ID:      m.ID,
+		Variant: m.Variant,
+		Name:    m.Name,
+		Host:    host,
 	}
 }

@@ -72,10 +72,10 @@ type ComplexityRoot struct {
 	DvPortGroup struct {
 		DvSwitch func(childComplexity int) int
 		ID       func(childComplexity int) int
-		Kind     func(childComplexity int) int
 		Name     func(childComplexity int) int
 		Parent   func(childComplexity int) int
 		Ports    func(childComplexity int) int
+		Variant  func(childComplexity int) int
 		Vms      func(childComplexity int) int
 	}
 
@@ -87,10 +87,10 @@ type ComplexityRoot struct {
 	DvSwitch struct {
 		Host       func(childComplexity int) int
 		ID         func(childComplexity int) int
-		Kind       func(childComplexity int) int
 		Name       func(childComplexity int) int
 		Parent     func(childComplexity int) int
 		Portgroups func(childComplexity int) int
+		Variant    func(childComplexity int) int
 	}
 
 	Folder struct {
@@ -102,12 +102,12 @@ type ComplexityRoot struct {
 	}
 
 	Network struct {
-		ID     func(childComplexity int) int
-		Kind   func(childComplexity int) int
-		Name   func(childComplexity int) int
-		Parent func(childComplexity int) int
-		Tag    func(childComplexity int) int
-		Vms    func(childComplexity int) int
+		ID      func(childComplexity int) int
+		Name    func(childComplexity int) int
+		Parent  func(childComplexity int) int
+		Tag     func(childComplexity int) int
+		Variant func(childComplexity int) int
+		Vms     func(childComplexity int) int
 	}
 
 	Query struct {
@@ -358,13 +358,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DvPortGroup.ID(childComplexity), true
 
-	case "DvPortGroup.kind":
-		if e.complexity.DvPortGroup.Kind == nil {
-			break
-		}
-
-		return e.complexity.DvPortGroup.Kind(childComplexity), true
-
 	case "DvPortGroup.name":
 		if e.complexity.DvPortGroup.Name == nil {
 			break
@@ -385,6 +378,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DvPortGroup.Ports(childComplexity), true
+
+	case "DvPortGroup.variant":
+		if e.complexity.DvPortGroup.Variant == nil {
+			break
+		}
+
+		return e.complexity.DvPortGroup.Variant(childComplexity), true
 
 	case "DvPortGroup.vms":
 		if e.complexity.DvPortGroup.Vms == nil {
@@ -421,13 +421,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DvSwitch.ID(childComplexity), true
 
-	case "DvSwitch.kind":
-		if e.complexity.DvSwitch.Kind == nil {
-			break
-		}
-
-		return e.complexity.DvSwitch.Kind(childComplexity), true
-
 	case "DvSwitch.name":
 		if e.complexity.DvSwitch.Name == nil {
 			break
@@ -448,6 +441,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DvSwitch.Portgroups(childComplexity), true
+
+	case "DvSwitch.variant":
+		if e.complexity.DvSwitch.Variant == nil {
+			break
+		}
+
+		return e.complexity.DvSwitch.Variant(childComplexity), true
 
 	case "Folder.children":
 		if e.complexity.Folder.Children == nil {
@@ -491,13 +491,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Network.ID(childComplexity), true
 
-	case "Network.kind":
-		if e.complexity.Network.Kind == nil {
-			break
-		}
-
-		return e.complexity.Network.Kind(childComplexity), true
-
 	case "Network.name":
 		if e.complexity.Network.Name == nil {
 			break
@@ -518,6 +511,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Network.Tag(childComplexity), true
+
+	case "Network.variant":
+		if e.complexity.Network.Variant == nil {
+			break
+		}
+
+		return e.complexity.Network.Variant(childComplexity), true
 
 	case "Network.vms":
 		if e.complexity.Network.Vms == nil {
@@ -1300,7 +1300,7 @@ type VsphereDatastore {
 
 type Network {
   id: ID!
-  kind: String!
+  variant: String!
   name: String!
   parent: Folder!
   tag: String!
@@ -1309,7 +1309,7 @@ type Network {
 
 type DvPortGroup {
   id: ID!
-  kind: String!
+  variant: String!
   name: String!
   parent: Folder!
   dvSwitch: ID!
@@ -1319,7 +1319,7 @@ type DvPortGroup {
 
 type DvSwitch {
   id: ID!
-  kind: String!
+  variant: String!
   name: String!
   parent: Folder!
   portgroups: [DvPortGroup!]!
@@ -2147,7 +2147,7 @@ func (ec *executionContext) _DvPortGroup_id(ctx context.Context, field graphql.C
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DvPortGroup_kind(ctx context.Context, field graphql.CollectedField, obj *model.DvPortGroup) (ret graphql.Marshaler) {
+func (ec *executionContext) _DvPortGroup_variant(ctx context.Context, field graphql.CollectedField, obj *model.DvPortGroup) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2165,7 +2165,7 @@ func (ec *executionContext) _DvPortGroup_kind(ctx context.Context, field graphql
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Kind, nil
+		return obj.Variant, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2462,7 +2462,7 @@ func (ec *executionContext) _DvSwitch_id(ctx context.Context, field graphql.Coll
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _DvSwitch_kind(ctx context.Context, field graphql.CollectedField, obj *model.DvSwitch) (ret graphql.Marshaler) {
+func (ec *executionContext) _DvSwitch_variant(ctx context.Context, field graphql.CollectedField, obj *model.DvSwitch) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2480,7 +2480,7 @@ func (ec *executionContext) _DvSwitch_kind(ctx context.Context, field graphql.Co
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Kind, nil
+		return obj.Variant, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2847,7 +2847,7 @@ func (ec *executionContext) _Network_id(ctx context.Context, field graphql.Colle
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Network_kind(ctx context.Context, field graphql.CollectedField, obj *model.Network) (ret graphql.Marshaler) {
+func (ec *executionContext) _Network_variant(ctx context.Context, field graphql.CollectedField, obj *model.Network) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2865,7 +2865,7 @@ func (ec *executionContext) _Network_kind(ctx context.Context, field graphql.Col
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Kind, nil
+		return obj.Variant, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7422,8 +7422,8 @@ func (ec *executionContext) _DvPortGroup(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "kind":
-			out.Values[i] = ec._DvPortGroup_kind(ctx, field, obj)
+		case "variant":
+			out.Values[i] = ec._DvPortGroup_variant(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -7511,8 +7511,8 @@ func (ec *executionContext) _DvSwitch(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "kind":
-			out.Values[i] = ec._DvSwitch_kind(ctx, field, obj)
+		case "variant":
+			out.Values[i] = ec._DvSwitch_variant(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -7610,8 +7610,8 @@ func (ec *executionContext) _Network(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "kind":
-			out.Values[i] = ec._Network_kind(ctx, field, obj)
+		case "variant":
+			out.Values[i] = ec._Network_variant(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

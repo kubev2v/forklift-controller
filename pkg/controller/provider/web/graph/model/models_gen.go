@@ -28,7 +28,7 @@ type Disk struct {
 
 type DvPortGroup struct {
 	ID       string       `json:"id"`
-	Kind     string       `json:"kind"`
+	Variant  string       `json:"variant"`
 	Name     string       `json:"name"`
 	Parent   *Folder      `json:"parent"`
 	DvSwitch string       `json:"dvSwitch"`
@@ -45,7 +45,7 @@ type DvSHost struct {
 
 type DvSwitch struct {
 	ID         string         `json:"id"`
-	Kind       string         `json:"kind"`
+	Variant    string         `json:"variant"`
 	Name       string         `json:"name"`
 	Parent     *Folder        `json:"parent"`
 	Portgroups []*DvPortGroup `json:"portgroups"`
@@ -63,12 +63,12 @@ type Folder struct {
 }
 
 type Network struct {
-	ID     string       `json:"id"`
-	Kind   string       `json:"kind"`
-	Name   string       `json:"name"`
-	Parent *Folder      `json:"parent"`
-	Tag    string       `json:"tag"`
-	Vms    []*VsphereVM `json:"vms"`
+	ID      string       `json:"id"`
+	Variant string       `json:"variant"`
+	Name    string       `json:"name"`
+	Parent  *Folder      `json:"parent"`
+	Tag     string       `json:"tag"`
+	Vms     []*VsphereVM `json:"vms"`
 }
 
 func (Network) IsNetworkGroup() {}
