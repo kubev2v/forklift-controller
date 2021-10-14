@@ -12,14 +12,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-type DB interface {
-	GetDB(provider string) (*libmodel.DB, error)
-}
-
 type Resolver struct {
 	Container *libcontainer.Container
 	Log       *logging.Logger
-	DB
 }
 
 func (t *Resolver) GetDB(provider string) (*libmodel.DB, error) {
