@@ -18,10 +18,13 @@ type Resolver struct {
 // List all datacenters.
 func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatacenter, error) {
 	var datacenters []*graphmodel.VsphereDatacenter
-	db := *t.GetDB(provider)
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
 	list := []vspheremodel.Datacenter{}
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	err := db.List(&list, listOptions)
+	err = (*db).List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}
@@ -38,14 +41,17 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatacenter, error
 //
 // Get a specific datacenter.
 func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatacenter, error) {
-	db := *t.GetDB(provider)
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
 	m := &vspheremodel.Datacenter{
 		Base: vspheremodel.Base{
 			ID: id,
 		},
 	}
 
-	err := db.Get(m)
+	err = (*db).Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
 		msg := fmt.Sprintf("datacenter '%s' not found", id)
 		t.Log.Info(msg)

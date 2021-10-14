@@ -19,11 +19,14 @@ type Resolver struct {
 func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatastore, error) {
 	var datastores []*graphmodel.VsphereDatastore
 
-	db := *t.GetDB(provider)
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
 	list := []vspheremodel.Datastore{}
 
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	err := db.List(&list, listOptions)
+	err = (*db).List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}
@@ -42,11 +45,14 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatastore, error)
 func (t *Resolver) ListByIds(ids []string, provider string) ([]*graphmodel.VsphereDatastore, error) {
 	var datastores []*graphmodel.VsphereDatastore
 
-	db := *t.GetDB(provider)
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
 	list := []vspheremodel.Datastore{}
 
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", ids)}
-	err := db.List(&list, listOptions)
+	err = (*db).List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}
@@ -63,14 +69,17 @@ func (t *Resolver) ListByIds(ids []string, provider string) ([]*graphmodel.Vsphe
 //
 // Get a specific datastore.
 func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatastore, error) {
-	db := *t.GetDB(provider)
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
 	m := &vspheremodel.Datastore{
 		Base: vspheremodel.Base{
 			ID: id,
 		},
 	}
 
-	err := db.Get(m)
+	err = (*db).Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
 		msg := fmt.Sprintf("datastore '%s' not found", id)
 		t.Log.Info(msg)

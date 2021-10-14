@@ -19,11 +19,14 @@ type Resolver struct {
 func (t *Resolver) List(provider string) ([]*graphmodel.VsphereHost, error) {
 	var hosts []*graphmodel.VsphereHost
 
-	db := *t.GetDB(provider)
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
 	list := []vspheremodel.Host{}
 
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	err := db.List(&list, listOptions)
+	err = (*db).List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}
@@ -39,15 +42,17 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereHost, error) {
 //
 // Get a specific host.
 func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereHost, error) {
-	db := *t.GetDB(provider)
-
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
 	m := &vspheremodel.Host{
 		Base: vspheremodel.Base{
 			ID: id,
 		},
 	}
 
-	err := db.Get(m)
+	err = (*db).Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
 		msg := fmt.Sprintf("host '%s' not found", id)
 		t.Log.Info(msg)
@@ -65,10 +70,14 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereHost, err
 func (t *Resolver) GetByCluster(clusterId, provider string) ([]*graphmodel.VsphereHost, error) {
 	var hosts []*graphmodel.VsphereHost
 
-	db := *t.GetDB(provider)
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
+
 	list := []vspheremodel.Host{}
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("cluster", clusterId)}
-	err := db.List(&list, listOptions)
+	err = (*db).List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}

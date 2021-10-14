@@ -1,6 +1,7 @@
 package base
 
 import (
+	"errors"
 	"fmt"
 
 	libcontainer "github.com/konveyor/controller/pkg/inventory/container"
@@ -12,7 +13,7 @@ import (
 )
 
 type DB interface {
-	GetDB(provider string) *libmodel.DB
+	GetDB(provider string) (*libmodel.DB, error)
 }
 
 type Resolver struct {
@@ -21,7 +22,7 @@ type Resolver struct {
 	DB
 }
 
-func (t *Resolver) GetDB(provider string) *libmodel.DB {
+func (t *Resolver) GetDB(provider string) (*libmodel.DB, error) {
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
 			UID: types.UID(provider),
@@ -33,9 +34,9 @@ func (t *Resolver) GetDB(provider string) *libmodel.DB {
 	if collector, found = t.Container.Get(p); !found {
 		msg := fmt.Sprintf("provider '%s' not found", provider)
 		t.Log.Info(msg)
-		return nil
+		return nil, errors.New(msg)
 	}
 
 	db := collector.DB()
-	return &db
+	return &db, nil
 }
