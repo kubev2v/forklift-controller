@@ -2,6 +2,7 @@ package graphql
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/konveyor/controller/pkg/inventory/container"
 	"github.com/konveyor/controller/pkg/logging"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph"
@@ -38,9 +39,9 @@ func (h *GraphHandler) AddRoutes(e *gin.Engine) {
 	e.GET(GraphqlRoot+"/playground", h.Get)
 }
 
-func newBaseResolver(h GraphHandler, name string) resolver.Resolver {
+func newBaseResolver(c *container.Container, name string) resolver.Resolver {
 	return resolver.Resolver{
-		Container: h.Container,
+		Container: c,
 		Log:       logging.WithName("graphql|" + name),
 	}
 }
@@ -48,35 +49,32 @@ func newBaseResolver(h GraphHandler, name string) resolver.Resolver {
 //
 // GraphQL Queries handler.
 func (h GraphHandler) Post(ctx *gin.Context) {
-	provider := provider.Resolver{
-		Resolver: newBaseResolver(h, "provider"),
+	config := generated.Config{
+		Resolvers: &graph.Resolver{
+			Provider: provider.Resolver{
+				Resolver: newBaseResolver(h.Container, "provider"),
+			},
+			Datacenter: datacenter.Resolver{
+				Resolver: newBaseResolver(h.Container, "datacenter"),
+			},
+			Cluster: cluster.Resolver{
+				Resolver: newBaseResolver(h.Container, "cluster"),
+			},
+			Host: host.Resolver{
+				Resolver: newBaseResolver(h.Container, "host"),
+			},
+			Datastore: datastore.Resolver{
+				Resolver: newBaseResolver(h.Container, "datastore"),
+			},
+			Network: network.Resolver{
+				Resolver: newBaseResolver(h.Container, "network"),
+			},
+			VM: vm.Resolver{
+				Resolver: newBaseResolver(h.Container, "vm"),
+			},
+		},
 	}
 
-	datacenter := datacenter.Resolver{
-		Resolver: newBaseResolver(h, "datacenter"),
-	}
-
-	cluster := cluster.Resolver{
-		Resolver: newBaseResolver(h, "cluster"),
-	}
-
-	host := host.Resolver{
-		Resolver: newBaseResolver(h, "host"),
-	}
-
-	network := network.Resolver{
-		Resolver: newBaseResolver(h, "network"),
-	}
-
-	datastore := datastore.Resolver{
-		Resolver: newBaseResolver(h, "datastore"),
-	}
-
-	vm := vm.Resolver{
-		Resolver: newBaseResolver(h, "vm"),
-	}
-
-	config := generated.Config{Resolvers: &graph.Resolver{Provider: provider, Datacenter: datacenter, Cluster: cluster, Host: host, Datastore: datastore, Network: network, VM: vm}}
 	handler := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 
 	handler.ServeHTTP(ctx.Writer, ctx.Request)
