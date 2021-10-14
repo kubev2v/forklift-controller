@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
@@ -100,7 +99,6 @@ func (r *vsphereVMResolver) Host(ctx context.Context, obj *graphmodel.VsphereVM)
 }
 
 func (r *vsphereVMResolver) Networks(ctx context.Context, obj *graphmodel.VsphereVM) ([]graphmodel.NetworkGroup, error) {
-	fmt.Printf("=================> %+v ", obj.Provider)
 	return r.Resolver.Network.GetByIDs(obj.NetIDs, obj.Provider)
 }
 
