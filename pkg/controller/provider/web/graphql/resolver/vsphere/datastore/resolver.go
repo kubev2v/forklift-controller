@@ -7,11 +7,11 @@ import (
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/base"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver"
 )
 
 type Resolver struct {
-	base.Resolver
+	resolver.Resolver
 }
 
 //

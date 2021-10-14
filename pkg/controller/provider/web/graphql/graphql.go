@@ -6,7 +6,7 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
-	baseresolver "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/base"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/cluster"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/datacenter"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/datastore"
@@ -38,56 +38,42 @@ func (h *GraphHandler) AddRoutes(e *gin.Engine) {
 	e.GET(GraphqlRoot+"/playground", h.Get)
 }
 
+func newBaseResolver(h GraphHandler, name string) resolver.Resolver {
+	return resolver.Resolver{
+		Container: h.Container,
+		Log:       logging.WithName("graphql|" + name),
+	}
+}
+
 //
 // GraphQL Queries handler.
 func (h GraphHandler) Post(ctx *gin.Context) {
 	provider := provider.Resolver{
-		Resolver: baseresolver.Resolver{
-			Container: h.Container,
-			Log:       logging.WithName("graphql|provider"),
-		},
+		Resolver: newBaseResolver(h, "provider"),
 	}
 
 	datacenter := datacenter.Resolver{
-		Resolver: baseresolver.Resolver{
-			Container: h.Container,
-			Log:       logging.WithName("graphql|datacenter"),
-		},
+		Resolver: newBaseResolver(h, "datacenter"),
 	}
 
 	cluster := cluster.Resolver{
-		Resolver: baseresolver.Resolver{
-			Container: h.Container,
-			Log:       logging.WithName("graphql|cluster"),
-		},
+		Resolver: newBaseResolver(h, "cluster"),
 	}
 
 	host := host.Resolver{
-		Resolver: baseresolver.Resolver{
-			Container: h.Container,
-			Log:       logging.WithName("graphql|host"),
-		},
+		Resolver: newBaseResolver(h, "host"),
 	}
 
 	network := network.Resolver{
-		Resolver: baseresolver.Resolver{
-			Container: h.Container,
-			Log:       logging.WithName("graphql|network"),
-		},
+		Resolver: newBaseResolver(h, "network"),
 	}
 
 	datastore := datastore.Resolver{
-		Resolver: baseresolver.Resolver{
-			Container: h.Container,
-			Log:       logging.WithName("graphql|datastore"),
-		},
+		Resolver: newBaseResolver(h, "datastore"),
 	}
 
 	vm := vm.Resolver{
-		Resolver: baseresolver.Resolver{
-			Container: h.Container,
-			Log:       logging.WithName("graphql|vm"),
-		},
+		Resolver: newBaseResolver(h, "vm"),
 	}
 
 	config := generated.Config{Resolvers: &graph.Resolver{Provider: provider, Datacenter: datacenter, Cluster: cluster, Host: host, Datastore: datastore, Network: network, VM: vm}}
