@@ -33,8 +33,7 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereVM, error) {
 	}
 
 	for _, m := range list {
-		vm := with(&m)
-		vm.Provider = provider
+		vm := with(&m, provider)
 		vms = append(vms, vm)
 	}
 
@@ -62,9 +61,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereVM, error
 		return nil, errors.New(msg)
 	}
 
-	vm := with(m)
-	vm.Provider = provider
-
+	vm := with(m, provider)
 	return vm, nil
 }
 
@@ -83,7 +80,7 @@ func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, 
 		return nil, nil
 	}
 	for _, m := range list {
-		vms = append(vms, with(&m))
+		vms = append(vms, with(&m, provider))
 	}
 
 	return vms, nil
@@ -133,7 +130,7 @@ func withConcern(m *vspheremodel.Concern) (c *graphmodel.Concern) {
 	}
 }
 
-func with(m *vspheremodel.VM) (h *graphmodel.VsphereVM) {
+func with(m *vspheremodel.VM, provider string) (h *graphmodel.VsphereVM) {
 	var cpuAffinity []int
 	for _, c := range m.CpuAffinity {
 		cpuAffinity = append(cpuAffinity, int(c))
@@ -164,6 +161,7 @@ func with(m *vspheremodel.VM) (h *graphmodel.VsphereVM) {
 
 	return &graphmodel.VsphereVM{
 		ID:                    m.ID,
+		Provider:              provider,
 		Name:                  m.Name,
 		Revision:              int(m.Revision),
 		RevisionValidated:     int(m.RevisionValidated),
