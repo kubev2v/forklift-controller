@@ -1,7 +1,6 @@
 package graphql
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/99designs/gqlgen/client"
@@ -14,9 +13,6 @@ import (
 
 func TestQueryVsphereHost(t *testing.T) {
 	c := libcontainer.New()
-	fmt.Println("+++++++++++++++++++++++++++++++++========================>")
-	fmt.Printf("%+v \n", c)
-	fmt.Println("+++++++++++++++++++++++++++++++++========================>")
 	config := generated.Config{
 		Resolvers: &graph.Resolver{
 			Host: host.Resolver{
