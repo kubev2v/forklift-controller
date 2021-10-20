@@ -24,6 +24,7 @@ const (
 	TLSCertificate = "API_TLS_CERTIFICATE"
 	TLSKey         = "API_TLS_KEY"
 	TLSCa          = "API_TLS_CA"
+	GrahpQLEnabled = "GRAPHQL_ENABLED"
 )
 
 //
@@ -57,6 +58,8 @@ type Inventory struct {
 		// CA path
 		CA string
 	}
+	// GraphQL feature activation flag
+	GrahpQLEnabled bool
 }
 
 //
@@ -109,6 +112,8 @@ func (r *Inventory) Load() error {
 			r.TLS.CA = ServiceCAFile
 		}
 	}
+	// GraphQL
+	r.GrahpQLEnabled = getEnvBool(GrahpQLEnabled, false)
 
 	return nil
 }

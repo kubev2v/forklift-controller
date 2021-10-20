@@ -8,6 +8,7 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/ocp"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/ovirt"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/vsphere"
+	"github.com/konveyor/forklift-controller/pkg/settings"
 )
 
 //
@@ -30,8 +31,10 @@ func All(container *container.Container) (all []libweb.RequestHandler) {
 	all = append(
 		all,
 		ovirt.Handlers(container)...)
-	all = append(
-		all,
-		graph.Handlers(container)...)
+	if settings.Settings.Inventory.GrahpQLEnabled {
+		all = append(
+			all,
+			graph.Handlers(container)...)
+	}
 	return
 }
