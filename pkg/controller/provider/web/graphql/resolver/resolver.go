@@ -18,7 +18,7 @@ type Resolver struct {
 	Log       *logging.Logger
 }
 
-func (t *Resolver) GetDB(provider string) (*libmodel.DB, error) {
+func (t *Resolver) GetDB(provider string) (libmodel.DB, error) {
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
 			UID: types.UID(provider),
@@ -34,17 +34,17 @@ func (t *Resolver) GetDB(provider string) (*libmodel.DB, error) {
 	}
 
 	db := collector.DB()
-	return &db, nil
+	return db, nil
 }
 
-func (t *Resolver) GetChildrenIDs(db *libmodel.DB, folderId, kind string) (list []string) {
+func (t *Resolver) GetChildrenIDs(db libmodel.DB, folderId, kind string) (list []string) {
 	folder := &vspheremodel.Folder{
 		Base: vspheremodel.Base{
 			ID: folderId,
 		},
 	}
 
-	err := (*db).Get(folder)
+	err := db.Get(folder)
 	if err != nil {
 		return nil
 	}

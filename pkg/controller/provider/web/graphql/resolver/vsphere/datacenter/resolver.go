@@ -24,7 +24,7 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatacenter, error
 	}
 	list := []vspheremodel.Datacenter{}
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	err = (*db).List(&list, listOptions)
+	err = db.List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}
@@ -51,7 +51,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatacente
 		},
 	}
 
-	err = (*db).Get(m)
+	err = db.Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
 		msg := fmt.Sprintf("datacenter '%s' not found", id)
 		t.Log.Info(msg)

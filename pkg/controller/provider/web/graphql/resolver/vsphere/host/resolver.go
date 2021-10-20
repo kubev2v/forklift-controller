@@ -26,7 +26,7 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereHost, error) {
 	list := []vspheremodel.Host{}
 
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	err = (*db).List(&list, listOptions)
+	err = db.List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}
@@ -52,7 +52,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereHost, err
 		},
 	}
 
-	err = (*db).Get(m)
+	err = db.Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
 		msg := fmt.Sprintf("host '%s' not found", id)
 		t.Log.Info(msg)
@@ -77,7 +77,7 @@ func (t *Resolver) GetByCluster(clusterId, provider string) ([]*graphmodel.Vsphe
 
 	list := []vspheremodel.Host{}
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("cluster", clusterId)}
-	err = (*db).List(&list, listOptions)
+	err = db.List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}

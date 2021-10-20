@@ -27,7 +27,7 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereVM, error) {
 	list := []vspheremodel.VM{}
 
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	err = (*db).List(&list, listOptions)
+	err = db.List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}
@@ -54,7 +54,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereVM, error
 		},
 	}
 
-	err = (*db).Get(m)
+	err = db.Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
 		msg := fmt.Sprintf("VM '%s' not found", id)
 		t.Log.Info(msg)
@@ -75,7 +75,7 @@ func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, 
 
 	list := []vspheremodel.VM{}
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("host", hostId)}
-	err = (*db).List(&list, listOptions)
+	err = db.List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}
@@ -116,7 +116,7 @@ func (t *Resolver) GetByDatacenter(folderID, provider string) ([]*graphmodel.Vsp
 
 	list := []vspheremodel.VM{}
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", cl)}
-	err = (*db).List(&list, listOptions)
+	err = db.List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}

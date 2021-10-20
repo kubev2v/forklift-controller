@@ -27,7 +27,7 @@ func (t *Resolver) List(provider string) ([]graphmodel.NetworkGroup, error) {
 	networkList := []vspheremodel.Network{}
 
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	err = (*db).List(&networkList, listOptions)
+	err = db.List(&networkList, listOptions)
 	if err != nil {
 		return nil, nil
 	}
@@ -60,7 +60,7 @@ func (t *Resolver) Get(id string, provider string) (graphmodel.NetworkGroup, err
 		},
 	}
 
-	err = (*db).Get(m)
+	err = db.Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
 		msg := fmt.Sprintf("network '%s' not found", id)
 		t.Log.Info(msg)
@@ -93,7 +93,7 @@ func (t *Resolver) GetByIDs(l []string, provider string) ([]graphmodel.NetworkGr
 	networkList := []vspheremodel.Network{}
 
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", l)}
-	err = (*db).List(&networkList, listOptions)
+	err = db.List(&networkList, listOptions)
 	if err != nil {
 		return nil, nil
 	}
@@ -124,7 +124,7 @@ func (t *Resolver) GetByDatacenter(folderID, provider string) ([]graphmodel.Netw
 
 	list := []vspheremodel.Network{}
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", nl)}
-	err = (*db).List(&list, listOptions)
+	err = db.List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}

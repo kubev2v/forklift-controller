@@ -26,7 +26,7 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatastore, error)
 	list := []vspheremodel.Datastore{}
 
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	err = (*db).List(&list, listOptions)
+	err = db.List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}
@@ -52,7 +52,7 @@ func (t *Resolver) ListByIds(ids []string, provider string) ([]*graphmodel.Vsphe
 	list := []vspheremodel.Datastore{}
 
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", ids)}
-	err = (*db).List(&list, listOptions)
+	err = db.List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}
@@ -79,7 +79,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatastore
 		},
 	}
 
-	err = (*db).Get(m)
+	err = db.Get(m)
 	if errors.Is(err, vspheremodel.NotFound) {
 		msg := fmt.Sprintf("datastore '%s' not found", id)
 		t.Log.Info(msg)
@@ -105,7 +105,7 @@ func (t *Resolver) GetByDatacenter(folderID, provider string) ([]*graphmodel.Vsp
 
 	list := []vspheremodel.Datastore{}
 	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", dl)}
-	err = (*db).List(&list, listOptions)
+	err = db.List(&list, listOptions)
 	if err != nil {
 		return nil, nil
 	}
