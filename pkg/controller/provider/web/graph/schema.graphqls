@@ -14,7 +14,6 @@ type VsphereFolder {
   id: ID!
   provider: ID!
   name: String!
-  kind: String!
   parent: ID!
   childrenIDs: [ID!]!
   children: [VsphereFolderGroup!]!
