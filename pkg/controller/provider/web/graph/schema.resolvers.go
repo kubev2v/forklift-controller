@@ -11,6 +11,14 @@ import (
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
 )
 
+func (r *queryResolver) Vspherefolders(ctx context.Context, provider string) ([]*graphmodel.VsphereFolder, error) {
+	return r.Resolver.Folder.List(provider)
+}
+
+func (r *queryResolver) Vspherefolder(ctx context.Context, id string, provider string) (*graphmodel.VsphereFolder, error) {
+	return r.Resolver.Folder.Get(id, provider)
+}
+
 func (r *queryResolver) VsphereProviders(ctx context.Context) ([]*graphmodel.VsphereProvider, error) {
 	return r.Resolver.Provider.List()
 }
@@ -111,6 +119,10 @@ func (r *vsphereDatastoreResolver) Vms(ctx context.Context, obj *graphmodel.Vsph
 	return r.Resolver.VM.GetbyDatastore(obj.ID, obj.Provider)
 }
 
+func (r *vsphereFolderResolver) Children(ctx context.Context, obj *graphmodel.VsphereFolder) ([]graphmodel.VsphereFolderGroup, error) {
+	return r.Resolver.Folder.GetByIDs(obj.ChildrenIDs, obj.Provider)
+}
+
 func (r *vsphereHostResolver) Vms(ctx context.Context, obj *graphmodel.VsphereHost) ([]*graphmodel.VsphereVM, error) {
 	return r.Resolver.VM.GetByHost(obj.ID, obj.Provider)
 }
@@ -153,6 +165,9 @@ func (r *Resolver) VsphereDatastore() generated.VsphereDatastoreResolver {
 	return &vsphereDatastoreResolver{r}
 }
 
+// VsphereFolder returns generated.VsphereFolderResolver implementation.
+func (r *Resolver) VsphereFolder() generated.VsphereFolderResolver { return &vsphereFolderResolver{r} }
+
 // VsphereHost returns generated.VsphereHostResolver implementation.
 func (r *Resolver) VsphereHost() generated.VsphereHostResolver { return &vsphereHostResolver{r} }
 
@@ -168,6 +183,7 @@ type queryResolver struct{ *Resolver }
 type vsphereClusterResolver struct{ *Resolver }
 type vsphereDatacenterResolver struct{ *Resolver }
 type vsphereDatastoreResolver struct{ *Resolver }
+type vsphereFolderResolver struct{ *Resolver }
 type vsphereHostResolver struct{ *Resolver }
 type vsphereProviderResolver struct{ *Resolver }
 type vsphereVMResolver struct{ *Resolver }

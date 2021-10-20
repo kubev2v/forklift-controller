@@ -10,6 +10,7 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/cluster"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/datacenter"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/datastore"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/folder"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/host"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/network"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/provider"
@@ -50,6 +51,9 @@ func newBaseResolver(c *container.Container, name string) resolverbase.Resolver 
 func (h GraphHandler) Post(ctx *gin.Context) {
 	config := generated.Config{
 		Resolvers: &Resolver{
+			Folder: folder.Resolver{
+				Resolver: newBaseResolver(h.Container, "folder"),
+			},
 			Provider: provider.Resolver{
 				Resolver: newBaseResolver(h.Container, "provider"),
 			},
