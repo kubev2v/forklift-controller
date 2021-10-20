@@ -1,13 +1,13 @@
 package graph
 
 import (
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/cluster"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/datacenter"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/datastore"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/host"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/network"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/provider"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/vm"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/cluster"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/datacenter"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/datastore"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/host"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/network"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/provider"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/vm"
 )
 
 // This file will not be regenerated automatically.

@@ -1,4 +1,4 @@
-package graphql
+package graph
 
 import (
 	"github.com/konveyor/controller/pkg/inventory/container"

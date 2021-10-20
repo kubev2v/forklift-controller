@@ -1,20 +1,19 @@
-package graphql
+package graph
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/konveyor/controller/pkg/inventory/container"
 	"github.com/konveyor/controller/pkg/logging"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/cluster"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/datacenter"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/datastore"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/host"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/network"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/provider"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graphql/resolver/vsphere/vm"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/cluster"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/datacenter"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/datastore"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/host"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/network"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/provider"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/vm"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -50,7 +49,7 @@ func newBaseResolver(c *container.Container, name string) resolver.Resolver {
 // GraphQL Queries handler.
 func (h GraphHandler) Post(ctx *gin.Context) {
 	config := generated.Config{
-		Resolvers: &graph.Resolver{
+		Resolvers: &Resolver{
 			Provider: provider.Resolver{
 				Resolver: newBaseResolver(h.Container, "provider"),
 			},
