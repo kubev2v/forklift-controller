@@ -41,8 +41,8 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatastore, error)
 }
 
 //
-// List all datastores for specific IDs.
-func (t *Resolver) ListByIds(ids []string, provider string) ([]*graphmodel.VsphereDatastore, error) {
+// Get datastores for specific IDs.
+func (t *Resolver) GetByIds(ids []string, provider string) ([]*graphmodel.VsphereDatastore, error) {
 	var datastores []*graphmodel.VsphereDatastore
 
 	db, err := t.GetDB(provider)

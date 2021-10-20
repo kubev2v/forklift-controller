@@ -3,7 +3,7 @@ union NetworkGroup = Network | DvPortGroup | DvSwitch
 type Folder {
   id: ID!
   name: String!
-  parent: String!
+  parent: ID!
   children: [Folder!]!
 }
 
@@ -11,6 +11,7 @@ type VsphereProvider {
   id: ID!
   name: String!
   type: String!
+  product: String!
   datacenters: [VsphereDatacenter!]!
 }
 
@@ -32,18 +33,25 @@ type VsphereCluster {
   id: ID!
   provider: ID!
   name: String!
+  datastoresIDs: [ID!]!
+  datastores: [VsphereDatastore!]!
+  networksIDs: [ID!]!
+  networks: [NetworkGroup!]!
   hosts: [VsphereHost!]!
   dasEnabled: Boolean!
-  dasVms: [String!]!
+  dasVmsIDs: [ID!]!
+  dasVms: [VsphereVM!]!
   drsEnabled: Boolean!
   drsBehavior: String!
-  drsVms: [String]!
+  drsVmsIDs: [ID!]!
+  drsVms: [VsphereVM!]!
 }
 
 type VsphereHost {
   id: ID!
   provider: ID!
   name: String!
+  cluster: ID!
   productName: String!
   productVersion: String!
   inMaintenance: Boolean!
@@ -52,6 +60,10 @@ type VsphereHost {
   vms: [VsphereVM!]!
   datastoreIDs: [ID!]!
   datastores: [VsphereDatastore!]!
+  networking: ConfigNetwork!
+  networksIDs: [ID!]!
+  networks: [NetworkGroup!]!
+  networkAdapters: [NetworkAdapter!]!
 }
 
 type VsphereDatastore {
@@ -96,6 +108,46 @@ type DvSwitch {
 type DvSHost {
 	host: String!
 	PNIC: [String!]!
+}
+
+type ConfigNetwork {
+  vNICs: [VNIC]!
+  pNICs: [PNIC]!
+  portGroups: [PortGroup]!
+  vSwitches: [VSwitch]!
+}
+
+type PortGroup {
+  key: String!
+  name: String!
+  vswitch: ID!
+}
+
+type VSwitch {
+  key: String!
+  name: String!
+  portGroups: [String!]!
+  pNICs: [String!]!
+}
+
+type PNIC {
+  key: String!
+  linkSpeed: Int!
+}
+
+type VNIC {
+  key: String!
+  portGroup: String!
+  dPortGroup: String!
+  ipAddress: String!
+  mtu: Int!
+}
+
+type NetworkAdapter {
+  name: String!
+  ipAddress: String!
+  linkSpeed: Int!
+  mtu: Int!
 }
 
 type VsphereVM {

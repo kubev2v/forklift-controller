@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
@@ -66,8 +67,24 @@ func (r *queryResolver) VsphereVM(ctx context.Context, id string, provider strin
 	return r.Resolver.VM.Get(id, provider)
 }
 
+func (r *vsphereClusterResolver) Datastores(ctx context.Context, obj *graphmodel.VsphereCluster) ([]*graphmodel.VsphereDatastore, error) {
+	return r.Resolver.Datastore.GetByIds(obj.DatastoresIDs, obj.Provider)
+}
+
+func (r *vsphereClusterResolver) Networks(ctx context.Context, obj *graphmodel.VsphereCluster) ([]graphmodel.NetworkGroup, error) {
+	return r.Resolver.Network.GetByIDs(obj.NetworksIDs, obj.Provider)
+}
+
 func (r *vsphereClusterResolver) Hosts(ctx context.Context, obj *graphmodel.VsphereCluster) ([]*graphmodel.VsphereHost, error) {
 	return r.Resolver.Host.GetByCluster(obj.ID, obj.Provider)
+}
+
+func (r *vsphereClusterResolver) DasVms(ctx context.Context, obj *graphmodel.VsphereCluster) ([]*graphmodel.VsphereVM, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *vsphereClusterResolver) DrsVms(ctx context.Context, obj *graphmodel.VsphereCluster) ([]*graphmodel.VsphereVM, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *vsphereDatacenterResolver) Clusters(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]*graphmodel.VsphereCluster, error) {
@@ -99,7 +116,11 @@ func (r *vsphereHostResolver) Vms(ctx context.Context, obj *graphmodel.VsphereHo
 }
 
 func (r *vsphereHostResolver) Datastores(ctx context.Context, obj *graphmodel.VsphereHost) ([]*graphmodel.VsphereDatastore, error) {
-	return r.Resolver.Datastore.ListByIds(obj.DatastoreIDs, obj.Provider)
+	return r.Resolver.Datastore.GetByIds(obj.DatastoreIDs, obj.Provider)
+}
+
+func (r *vsphereHostResolver) Networks(ctx context.Context, obj *graphmodel.VsphereHost) ([]graphmodel.NetworkGroup, error) {
+	return r.Resolver.Network.GetByIDs(obj.NetworksIDs, obj.Provider)
 }
 
 func (r *vsphereProviderResolver) Datacenters(ctx context.Context, obj *graphmodel.VsphereProvider) ([]*graphmodel.VsphereDatacenter, error) {

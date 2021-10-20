@@ -72,9 +72,19 @@ models:
     fields:
       hosts:
         resolver: true
+      datastores:
+        resolver: true
+      networks:
+        resolver: true
+      dasVms:
+        resolver: true
+      drsVms:
+        resolver: true
   VsphereHost:
     fields:
       datastores:
+        resolver: true
+      networks:
         resolver: true
       vms:
         resolver: true

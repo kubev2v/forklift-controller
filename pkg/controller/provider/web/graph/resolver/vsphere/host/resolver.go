@@ -123,14 +123,69 @@ func with(m *vspheremodel.Host) (h *graphmodel.VsphereHost) {
 	for _, d := range m.Datastores {
 		datastores = append(datastores, d.ID)
 	}
+
+	var networksIDs []string
+	for _, n := range m.Networks {
+		networksIDs = append(networksIDs, n.ID)
+	}
+
+	var pnics []*graphmodel.Pnic
+	for _, p := range m.Network.PNICs {
+		pnics = append(pnics, &graphmodel.Pnic{Key: p.Key, LinkSpeed: int(p.LinkSpeed)})
+	}
+
+	var vnics []*graphmodel.Vnic
+	for _, v := range m.Network.VNICs {
+		vnics = append(vnics, &graphmodel.Vnic{
+			Key:        v.Key,
+			PortGroup:  v.PortGroup,
+			DPortGroup: v.DPortGroup,
+			IPAddress:  v.IpAddress,
+			// SubnetMask ?
+			Mtu: int(v.MTU),
+		})
+	}
+
+	var portgroups []*graphmodel.PortGroup
+	for _, p := range m.Network.PortGroups {
+		portgroups = append(portgroups, &graphmodel.PortGroup{
+			Key:     p.Key,
+			Name:    p.Name,
+			Vswitch: p.Switch,
+		})
+	}
+
+	var vswitches []*graphmodel.VSwitch
+	for _, v := range m.Network.Switches {
+		vswitches = append(vswitches, &graphmodel.VSwitch{
+			Key:        v.Key,
+			Name:       v.Name,
+			PortGroups: v.PortGroups,
+			PNICs:      v.PNICs,
+		})
+	}
+
+	// TODO: needed for backward compatibility
+	// meanwhile can graphql replace this encapsulation ?
+	var networkAdapters []*graphmodel.NetworkAdapter
+
 	return &graphmodel.VsphereHost{
 		ID:             m.ID,
 		Name:           m.Name,
+		Cluster:        m.Cluster,
 		ProductName:    m.ProductName,
 		ProductVersion: m.ProductVersion,
 		InMaintenance:  m.InMaintenanceMode,
 		CPUSockets:     int(m.CpuSockets),
 		CPUCores:       int(m.CpuCores),
 		DatastoreIDs:   datastores,
+		NetworksIDs:    networksIDs,
+		Networking: &graphmodel.ConfigNetwork{
+			PNICs:      pnics,
+			VNICs:      vnics,
+			PortGroups: portgroups,
+			VSwitches:  vswitches,
+		},
+		NetworkAdapters: networkAdapters,
 	}
 }

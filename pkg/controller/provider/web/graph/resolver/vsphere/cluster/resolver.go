@@ -93,12 +93,35 @@ func (t *Resolver) GetByDatacenter(folderID, provider string) ([]*graphmodel.Vsp
 }
 
 func with(m *vspheremodel.Cluster) (h *graphmodel.VsphereCluster) {
+	var dasVmList []string
+	for _, dasVm := range m.DasVms {
+		dasVmList = append(dasVmList, dasVm.ID)
+	}
+
+	var drsVmList []string
+	for _, dasVm := range m.DasVms {
+		drsVmList = append(drsVmList, dasVm.ID)
+	}
+
+	var datastoresIDs []string
+	for _, ds := range m.Datastores {
+		datastoresIDs = append(datastoresIDs, ds.ID)
+	}
+
+	var networksIDs []string
+	for _, n := range m.Networks {
+		networksIDs = append(networksIDs, n.ID)
+	}
+
 	return &graphmodel.VsphereCluster{
-		ID:   m.ID,
-		Name: m.Name,
-		// DasVms:      m.DasVms,
-		DrsEnabled:  m.DrsEnabled,
-		DrsBehavior: m.DrsBehavior,
-		// DrsVms:      m.DrsVms,
+		ID:            m.ID,
+		Name:          m.Name,
+		DasEnabled:    m.DasEnabled,
+		DasVmsIDs:     dasVmList,
+		DrsEnabled:    m.DrsEnabled,
+		DrsBehavior:   m.DrsBehavior,
+		DrsVmsIDs:     drsVmList,
+		DatastoresIDs: datastoresIDs,
+		NetworksIDs:   networksIDs,
 	}
 }

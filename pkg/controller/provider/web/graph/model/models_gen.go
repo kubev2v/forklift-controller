@@ -12,6 +12,13 @@ type Concern struct {
 	Assessment string `json:"assessment"`
 }
 
+type ConfigNetwork struct {
+	VNICs      []*Vnic      `json:"vNICs"`
+	PNICs      []*Pnic      `json:"pNICs"`
+	PortGroups []*PortGroup `json:"portGroups"`
+	VSwitches  []*VSwitch   `json:"vSwitches"`
+}
+
 type Device struct {
 	Kind string `json:"Kind"`
 }
@@ -71,16 +78,55 @@ type Network struct {
 
 func (Network) IsNetworkGroup() {}
 
+type NetworkAdapter struct {
+	Name      string `json:"name"`
+	IPAddress string `json:"ipAddress"`
+	LinkSpeed int    `json:"linkSpeed"`
+	Mtu       int    `json:"mtu"`
+}
+
+type Pnic struct {
+	Key       string `json:"key"`
+	LinkSpeed int    `json:"linkSpeed"`
+}
+
+type PortGroup struct {
+	Key     string `json:"key"`
+	Name    string `json:"name"`
+	Vswitch string `json:"vswitch"`
+}
+
+type Vnic struct {
+	Key        string `json:"key"`
+	PortGroup  string `json:"portGroup"`
+	DPortGroup string `json:"dPortGroup"`
+	IPAddress  string `json:"ipAddress"`
+	Mtu        int    `json:"mtu"`
+}
+
+type VSwitch struct {
+	Key        string   `json:"key"`
+	Name       string   `json:"name"`
+	PortGroups []string `json:"portGroups"`
+	PNICs      []string `json:"pNICs"`
+}
+
 type VsphereCluster struct {
-	ID          string         `json:"id"`
-	Provider    string         `json:"provider"`
-	Name        string         `json:"name"`
-	Hosts       []*VsphereHost `json:"hosts"`
-	DasEnabled  bool           `json:"dasEnabled"`
-	DasVms      []string       `json:"dasVms"`
-	DrsEnabled  bool           `json:"drsEnabled"`
-	DrsBehavior string         `json:"drsBehavior"`
-	DrsVms      []*string      `json:"drsVms"`
+	ID            string              `json:"id"`
+	Provider      string              `json:"provider"`
+	Name          string              `json:"name"`
+	DatastoresIDs []string            `json:"datastoresIDs"`
+	Datastores    []*VsphereDatastore `json:"datastores"`
+	NetworksIDs   []string            `json:"networksIDs"`
+	Networks      []NetworkGroup      `json:"networks"`
+	Hosts         []*VsphereHost      `json:"hosts"`
+	DasEnabled    bool                `json:"dasEnabled"`
+	DasVmsIDs     []string            `json:"dasVmsIDs"`
+	DasVms        []*VsphereVM        `json:"dasVms"`
+	DrsEnabled    bool                `json:"drsEnabled"`
+	DrsBehavior   string              `json:"drsBehavior"`
+	DrsVmsIDs     []string            `json:"drsVmsIDs"`
+	DrsVms        []*VsphereVM        `json:"drsVms"`
 }
 
 type VsphereDatacenter struct {
@@ -109,23 +155,29 @@ type VsphereDatastore struct {
 }
 
 type VsphereHost struct {
-	ID             string              `json:"id"`
-	Provider       string              `json:"provider"`
-	Name           string              `json:"name"`
-	ProductName    string              `json:"productName"`
-	ProductVersion string              `json:"productVersion"`
-	InMaintenance  bool                `json:"inMaintenance"`
-	CPUSockets     int                 `json:"cpuSockets"`
-	CPUCores       int                 `json:"cpuCores"`
-	Vms            []*VsphereVM        `json:"vms"`
-	DatastoreIDs   []string            `json:"datastoreIDs"`
-	Datastores     []*VsphereDatastore `json:"datastores"`
+	ID              string              `json:"id"`
+	Provider        string              `json:"provider"`
+	Name            string              `json:"name"`
+	Cluster         string              `json:"cluster"`
+	ProductName     string              `json:"productName"`
+	ProductVersion  string              `json:"productVersion"`
+	InMaintenance   bool                `json:"inMaintenance"`
+	CPUSockets      int                 `json:"cpuSockets"`
+	CPUCores        int                 `json:"cpuCores"`
+	Vms             []*VsphereVM        `json:"vms"`
+	DatastoreIDs    []string            `json:"datastoreIDs"`
+	Datastores      []*VsphereDatastore `json:"datastores"`
+	Networking      *ConfigNetwork      `json:"networking"`
+	NetworksIDs     []string            `json:"networksIDs"`
+	Networks        []NetworkGroup      `json:"networks"`
+	NetworkAdapters []*NetworkAdapter   `json:"networkAdapters"`
 }
 
 type VsphereProvider struct {
 	ID          string               `json:"id"`
 	Name        string               `json:"name"`
 	Type        string               `json:"type"`
+	Product     string               `json:"product"`
 	Datacenters []*VsphereDatacenter `json:"datacenters"`
 }
 
