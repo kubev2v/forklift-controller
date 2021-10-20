@@ -6,7 +6,7 @@ import (
 	"github.com/konveyor/controller/pkg/logging"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/generated"
-	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver"
+	resolverbase "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/cluster"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/datacenter"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver/vsphere/datastore"
@@ -38,8 +38,8 @@ func (h *GraphHandler) AddRoutes(e *gin.Engine) {
 	e.GET(GraphqlRoot+"/playground", h.Get)
 }
 
-func newBaseResolver(c *container.Container, name string) resolver.Resolver {
-	return resolver.Resolver{
+func newBaseResolver(c *container.Container, name string) resolverbase.Resolver {
+	return resolverbase.Resolver{
 		Container: c,
 		Log:       logging.WithName("graphql|" + name),
 	}
@@ -75,7 +75,6 @@ func (h GraphHandler) Post(ctx *gin.Context) {
 	}
 
 	handler := handler.NewDefaultServer(generated.NewExecutableSchema(config))
-
 	handler.ServeHTTP(ctx.Writer, ctx.Request)
 }
 
