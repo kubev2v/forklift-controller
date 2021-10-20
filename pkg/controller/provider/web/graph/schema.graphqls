@@ -1,5 +1,5 @@
 union NetworkGroup = Network | DvPortGroup | DvSwitch
-
+union VsphereVMGroup = VsphereFolder | VsphereVM
 union VsphereFolderGroup =
       VsphereFolder
     | VsphereDatacenter
@@ -38,7 +38,7 @@ type VsphereDatacenter {
   networksID: ID!
   networks: [NetworkGroup!]!
   vmsID: ID!
-  vms: [VsphereVM!]!
+  vms: [VsphereVMGroup!]!
 }
 
 type VsphereCluster {

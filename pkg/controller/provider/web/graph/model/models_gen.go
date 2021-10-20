@@ -10,6 +10,10 @@ type VsphereFolderGroup interface {
 	IsVsphereFolderGroup()
 }
 
+type VsphereVMGroup interface {
+	IsVsphereVMGroup()
+}
+
 type Concern struct {
 	Label      string `json:"label"`
 	Category   string `json:"category"`
@@ -142,7 +146,7 @@ type VsphereDatacenter struct {
 	NetworksID   string              `json:"networksID"`
 	Networks     []NetworkGroup      `json:"networks"`
 	VmsID        string              `json:"vmsID"`
-	Vms          []*VsphereVM        `json:"vms"`
+	Vms          []VsphereVMGroup    `json:"vms"`
 }
 
 func (VsphereDatacenter) IsVsphereFolderGroup() {}
@@ -169,6 +173,7 @@ type VsphereFolder struct {
 	Children    []VsphereFolderGroup `json:"children"`
 }
 
+func (VsphereFolder) IsVsphereVMGroup()     {}
 func (VsphereFolder) IsVsphereFolderGroup() {}
 
 type VsphereHost struct {
@@ -232,4 +237,5 @@ type VsphereVM struct {
 	Concerns              []*Concern     `json:"concerns"`
 }
 
+func (VsphereVM) IsVsphereVMGroup()     {}
 func (VsphereVM) IsVsphereFolderGroup() {}

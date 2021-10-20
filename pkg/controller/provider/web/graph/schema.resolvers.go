@@ -107,7 +107,7 @@ func (r *vsphereDatacenterResolver) Networks(ctx context.Context, obj *graphmode
 	return r.Resolver.Network.GetByDatacenter(obj.NetworksID, obj.Provider)
 }
 
-func (r *vsphereDatacenterResolver) Vms(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]*graphmodel.VsphereVM, error) {
+func (r *vsphereDatacenterResolver) Vms(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]graphmodel.VsphereVMGroup, error) {
 	return r.Resolver.VM.GetByDatacenter(obj.VmsID, obj.Provider)
 }
 

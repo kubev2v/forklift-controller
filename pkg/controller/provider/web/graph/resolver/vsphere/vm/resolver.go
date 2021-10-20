@@ -104,8 +104,8 @@ func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.V
 
 //
 // Get all vms for a specific datacenter.
-func (t *Resolver) GetByDatacenter(folderID, provider string) ([]*graphmodel.VsphereVM, error) {
-	var vms []*graphmodel.VsphereVM
+func (t *Resolver) GetByDatacenter(folderID, provider string) ([]graphmodel.VsphereVMGroup, error) {
+	var vms []graphmodel.VsphereVMGroup
 	db, err := t.GetDB(provider)
 	if err != nil {
 		return nil, err
