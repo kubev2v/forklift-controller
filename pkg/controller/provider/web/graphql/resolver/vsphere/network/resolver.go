@@ -111,6 +111,37 @@ func (t *Resolver) GetByIDs(l []string, provider string) ([]graphmodel.NetworkGr
 	return networks, nil
 }
 
+//
+// Get all networks for a specific datacenter.
+func (t *Resolver) GetByDatacenter(folderID, provider string) ([]graphmodel.NetworkGroup, error) {
+	var networks []graphmodel.NetworkGroup
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
+
+	nl := t.GetChildrenIDs(db, folderID, "Network")
+
+	list := []vspheremodel.Network{}
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", nl)}
+	err = (*db).List(&list, listOptions)
+	if err != nil {
+		return nil, nil
+	}
+
+	for _, m := range list {
+		switch m.Variant {
+		case vspheremodel.NetStandard:
+			networks = append(networks, withNetwork(&m))
+		case vspheremodel.NetDvPortGroup:
+			networks = append(networks, withDvPortGroup(&m))
+		case vspheremodel.NetDvSwitch:
+			networks = append(networks, withDvSwitch(&m))
+		}
+	}
+	return networks, nil
+}
+
 func withNetwork(m *vspheremodel.Network) (h *graphmodel.Network) {
 	return &graphmodel.Network{
 		ID:      m.ID,

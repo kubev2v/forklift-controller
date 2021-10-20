@@ -71,7 +71,19 @@ func (r *vsphereClusterResolver) Hosts(ctx context.Context, obj *graphmodel.Vsph
 }
 
 func (r *vsphereDatacenterResolver) Clusters(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]*graphmodel.VsphereCluster, error) {
-	return r.Resolver.Cluster.GetByDatacenter(obj.ID, obj.Provider)
+	return r.Resolver.Cluster.GetByDatacenter(obj.ClustersID, obj.Provider)
+}
+
+func (r *vsphereDatacenterResolver) Datastores(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]*graphmodel.VsphereDatastore, error) {
+	return r.Resolver.Datastore.GetByDatacenter(obj.DatastoresID, obj.Provider)
+}
+
+func (r *vsphereDatacenterResolver) Networks(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]graphmodel.NetworkGroup, error) {
+	return r.Resolver.Network.GetByDatacenter(obj.NetworksID, obj.Provider)
+}
+
+func (r *vsphereDatacenterResolver) Vms(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]*graphmodel.VsphereVM, error) {
+	return r.Resolver.VM.GetByDatacenter(obj.VmsID, obj.Provider)
 }
 
 func (r *vsphereDatastoreResolver) Hosts(ctx context.Context, obj *graphmodel.VsphereDatastore) ([]*graphmodel.VsphereHost, error) {

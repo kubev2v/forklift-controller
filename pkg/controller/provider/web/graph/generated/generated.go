@@ -138,10 +138,17 @@ type ComplexityRoot struct {
 	}
 
 	VsphereDatacenter struct {
-		Clusters func(childComplexity int) int
-		ID       func(childComplexity int) int
-		Name     func(childComplexity int) int
-		Provider func(childComplexity int) int
+		Clusters     func(childComplexity int) int
+		ClustersID   func(childComplexity int) int
+		Datastores   func(childComplexity int) int
+		DatastoresID func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Name         func(childComplexity int) int
+		Networks     func(childComplexity int) int
+		NetworksID   func(childComplexity int) int
+		Provider     func(childComplexity int) int
+		Vms          func(childComplexity int) int
+		VmsID        func(childComplexity int) int
 	}
 
 	VsphereDatastore struct {
@@ -232,6 +239,12 @@ type VsphereClusterResolver interface {
 }
 type VsphereDatacenterResolver interface {
 	Clusters(ctx context.Context, obj *model.VsphereDatacenter) ([]*model.VsphereCluster, error)
+
+	Datastores(ctx context.Context, obj *model.VsphereDatacenter) ([]*model.VsphereDatastore, error)
+
+	Networks(ctx context.Context, obj *model.VsphereDatacenter) ([]model.NetworkGroup, error)
+
+	Vms(ctx context.Context, obj *model.VsphereDatacenter) ([]*model.VsphereVM, error)
 }
 type VsphereDatastoreResolver interface {
 	Hosts(ctx context.Context, obj *model.VsphereDatastore) ([]*model.VsphereHost, error)
@@ -744,6 +757,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.VsphereDatacenter.Clusters(childComplexity), true
 
+	case "VsphereDatacenter.clustersID":
+		if e.complexity.VsphereDatacenter.ClustersID == nil {
+			break
+		}
+
+		return e.complexity.VsphereDatacenter.ClustersID(childComplexity), true
+
+	case "VsphereDatacenter.datastores":
+		if e.complexity.VsphereDatacenter.Datastores == nil {
+			break
+		}
+
+		return e.complexity.VsphereDatacenter.Datastores(childComplexity), true
+
+	case "VsphereDatacenter.datastoresID":
+		if e.complexity.VsphereDatacenter.DatastoresID == nil {
+			break
+		}
+
+		return e.complexity.VsphereDatacenter.DatastoresID(childComplexity), true
+
 	case "VsphereDatacenter.id":
 		if e.complexity.VsphereDatacenter.ID == nil {
 			break
@@ -758,12 +792,40 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.VsphereDatacenter.Name(childComplexity), true
 
+	case "VsphereDatacenter.networks":
+		if e.complexity.VsphereDatacenter.Networks == nil {
+			break
+		}
+
+		return e.complexity.VsphereDatacenter.Networks(childComplexity), true
+
+	case "VsphereDatacenter.networksID":
+		if e.complexity.VsphereDatacenter.NetworksID == nil {
+			break
+		}
+
+		return e.complexity.VsphereDatacenter.NetworksID(childComplexity), true
+
 	case "VsphereDatacenter.provider":
 		if e.complexity.VsphereDatacenter.Provider == nil {
 			break
 		}
 
 		return e.complexity.VsphereDatacenter.Provider(childComplexity), true
+
+	case "VsphereDatacenter.vms":
+		if e.complexity.VsphereDatacenter.Vms == nil {
+			break
+		}
+
+		return e.complexity.VsphereDatacenter.Vms(childComplexity), true
+
+	case "VsphereDatacenter.vmsID":
+		if e.complexity.VsphereDatacenter.VmsID == nil {
+			break
+		}
+
+		return e.complexity.VsphereDatacenter.VmsID(childComplexity), true
 
 	case "VsphereDatastore.capacity":
 		if e.complexity.VsphereDatastore.Capacity == nil {
@@ -1213,7 +1275,14 @@ type VsphereDatacenter {
   id: ID!
   provider: ID!
   name: String!
+  clustersID: ID!
   clusters: [VsphereCluster!]!
+  datastoresID: ID!
+  datastores: [VsphereDatastore!]!
+  networksID: ID!
+  networks: [NetworkGroup!]!
+  vmsID: ID!
+  vms: [VsphereVM!]!
 }
 
 type VsphereCluster {
@@ -3963,6 +4032,41 @@ func (ec *executionContext) _VsphereDatacenter_name(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _VsphereDatacenter_clustersID(ctx context.Context, field graphql.CollectedField, obj *model.VsphereDatacenter) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereDatacenter",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClustersID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _VsphereDatacenter_clusters(ctx context.Context, field graphql.CollectedField, obj *model.VsphereDatacenter) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3996,6 +4100,216 @@ func (ec *executionContext) _VsphereDatacenter_clusters(ctx context.Context, fie
 	res := resTmp.([]*model.VsphereCluster)
 	fc.Result = res
 	return ec.marshalNVsphereCluster2ᚕᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVsphereClusterᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereDatacenter_datastoresID(ctx context.Context, field graphql.CollectedField, obj *model.VsphereDatacenter) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereDatacenter",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DatastoresID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereDatacenter_datastores(ctx context.Context, field graphql.CollectedField, obj *model.VsphereDatacenter) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereDatacenter",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.VsphereDatacenter().Datastores(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.VsphereDatastore)
+	fc.Result = res
+	return ec.marshalNVsphereDatastore2ᚕᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVsphereDatastoreᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereDatacenter_networksID(ctx context.Context, field graphql.CollectedField, obj *model.VsphereDatacenter) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereDatacenter",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NetworksID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereDatacenter_networks(ctx context.Context, field graphql.CollectedField, obj *model.VsphereDatacenter) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereDatacenter",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.VsphereDatacenter().Networks(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.NetworkGroup)
+	fc.Result = res
+	return ec.marshalNNetworkGroup2ᚕgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐNetworkGroupᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereDatacenter_vmsID(ctx context.Context, field graphql.CollectedField, obj *model.VsphereDatacenter) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereDatacenter",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.VmsID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VsphereDatacenter_vms(ctx context.Context, field graphql.CollectedField, obj *model.VsphereDatacenter) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereDatacenter",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.VsphereDatacenter().Vms(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.VsphereVM)
+	fc.Result = res
+	return ec.marshalNVsphereVM2ᚕᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVsphereVMᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _VsphereDatastore_id(ctx context.Context, field graphql.CollectedField, obj *model.VsphereDatastore) (ret graphql.Marshaler) {
@@ -7721,6 +8035,11 @@ func (ec *executionContext) _VsphereDatacenter(ctx context.Context, sel ast.Sele
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "clustersID":
+			out.Values[i] = ec._VsphereDatacenter_clustersID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "clusters":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -7730,6 +8049,63 @@ func (ec *executionContext) _VsphereDatacenter(ctx context.Context, sel ast.Sele
 					}
 				}()
 				res = ec._VsphereDatacenter_clusters(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "datastoresID":
+			out.Values[i] = ec._VsphereDatacenter_datastoresID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "datastores":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._VsphereDatacenter_datastores(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "networksID":
+			out.Values[i] = ec._VsphereDatacenter_networksID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "networks":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._VsphereDatacenter_networks(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "vmsID":
+			out.Values[i] = ec._VsphereDatacenter_vmsID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "vms":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._VsphereDatacenter_vms(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

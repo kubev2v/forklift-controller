@@ -92,6 +92,32 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatastore
 	return c, nil
 }
 
+//
+// Get all datastores for a specific datacenter.
+func (t *Resolver) GetByDatacenter(folderID, provider string) ([]*graphmodel.VsphereDatastore, error) {
+	var datastores []*graphmodel.VsphereDatastore
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
+
+	dl := t.GetChildrenIDs(db, folderID, "Datastore")
+
+	list := []vspheremodel.Datastore{}
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", dl)}
+	err = (*db).List(&list, listOptions)
+	if err != nil {
+		return nil, nil
+	}
+
+	for _, m := range list {
+		c := with(&m)
+		c.Provider = provider
+		datastores = append(datastores, c)
+	}
+	return datastores, nil
+}
+
 func with(m *vspheremodel.Datastore) (h *graphmodel.VsphereDatastore) {
 	return &graphmodel.VsphereDatastore{
 		ID:          m.ID,

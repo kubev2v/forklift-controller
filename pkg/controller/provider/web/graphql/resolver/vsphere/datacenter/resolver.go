@@ -66,7 +66,11 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatacente
 
 func with(m *vspheremodel.Datacenter) (h *graphmodel.VsphereDatacenter) {
 	return &graphmodel.VsphereDatacenter{
-		ID:   m.ID,
-		Name: m.Name,
+		ID:           m.ID,
+		Name:         m.Name,
+		ClustersID:   m.Clusters.ID,
+		DatastoresID: m.Datastores.ID,
+		NetworksID:   m.Networks.ID,
+		VmsID:        m.Vms.ID,
 	}
 }

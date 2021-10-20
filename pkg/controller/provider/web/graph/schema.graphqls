@@ -18,7 +18,14 @@ type VsphereDatacenter {
   id: ID!
   provider: ID!
   name: String!
+  clustersID: ID!
   clusters: [VsphereCluster!]!
+  datastoresID: ID!
+  datastores: [VsphereDatastore!]!
+  networksID: ID!
+  networks: [NetworkGroup!]!
+  vmsID: ID!
+  vms: [VsphereVM!]!
 }
 
 type VsphereCluster {

@@ -86,15 +86,6 @@ func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, 
 	return vms, nil
 }
 
-func contains(l []*graphmodel.Disk, s string) bool {
-	for _, d := range l {
-		if d.Datastore == s {
-			return true
-		}
-	}
-	return false
-}
-
 func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.VsphereVM, error) {
 	list, err := t.List(provider)
 	if err != nil {
@@ -109,6 +100,42 @@ func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.V
 	}
 
 	return vms, nil
+}
+
+//
+// Get all vms for a specific datacenter.
+func (t *Resolver) GetByDatacenter(folderID, provider string) ([]*graphmodel.VsphereVM, error) {
+	var vms []*graphmodel.VsphereVM
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+
+	}
+
+	cl := t.GetChildrenIDs(db, folderID, "VM")
+
+	list := []vspheremodel.VM{}
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", cl)}
+	err = (*db).List(&list, listOptions)
+	if err != nil {
+		return nil, nil
+	}
+
+	for _, m := range list {
+		c := with(&m, provider)
+		vms = append(vms, c)
+	}
+
+	return vms, nil
+}
+
+func contains(l []*graphmodel.Disk, s string) bool {
+	for _, d := range l {
+		if d.Datastore == s {
+			return true
+		}
+	}
+	return false
 }
 
 func withDisk(m *vspheremodel.Disk) (h *graphmodel.Disk) {

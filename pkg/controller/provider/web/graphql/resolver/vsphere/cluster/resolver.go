@@ -67,30 +67,17 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereCluster, 
 
 //
 // Get all clusters for a specific datacenter.
-func (t *Resolver) GetByDatacenter(datacenterId, provider string) ([]*graphmodel.VsphereCluster, error) {
+func (t *Resolver) GetByDatacenter(folderID, provider string) ([]*graphmodel.VsphereCluster, error) {
 	var clusters []*graphmodel.VsphereCluster
 	db, err := t.GetDB(provider)
 	if err != nil {
 		return nil, err
 	}
-	folderList := []vspheremodel.Folder{}
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.And(libmodel.Eq("datacenter", datacenterId), libmodel.Eq("name", "host"))}
-	err = (*db).List(&folderList, listOptions)
-	if err != nil {
-		return nil, nil
-	}
 
-	var cl []string
-	for _, f := range folderList {
-		for _, c := range f.Children {
-			if c.Kind == "Cluster" {
-				cl = append(cl, c.ID)
-			}
-		}
-	}
+	cl := t.GetChildrenIDs(db, folderID, "Cluster")
 
 	list := []vspheremodel.Cluster{}
-	listOptions = libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", cl)}
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", cl)}
 	err = (*db).List(&list, listOptions)
 	if err != nil {
 		return nil, nil

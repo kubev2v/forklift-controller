@@ -84,10 +84,17 @@ type VsphereCluster struct {
 }
 
 type VsphereDatacenter struct {
-	ID       string            `json:"id"`
-	Provider string            `json:"provider"`
-	Name     string            `json:"name"`
-	Clusters []*VsphereCluster `json:"clusters"`
+	ID           string              `json:"id"`
+	Provider     string              `json:"provider"`
+	Name         string              `json:"name"`
+	ClustersID   string              `json:"clustersID"`
+	Clusters     []*VsphereCluster   `json:"clusters"`
+	DatastoresID string              `json:"datastoresID"`
+	Datastores   []*VsphereDatastore `json:"datastores"`
+	NetworksID   string              `json:"networksID"`
+	Networks     []NetworkGroup      `json:"networks"`
+	VmsID        string              `json:"vmsID"`
+	Vms          []*VsphereVM        `json:"vms"`
 }
 
 type VsphereDatastore struct {

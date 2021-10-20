@@ -62,6 +62,12 @@ models:
     fields:
       clusters:
         resolver: true 
+      datastores:
+        resolver: true 
+      networks:
+        resolver: true 
+      vms:
+        resolver: true 
   VsphereCluster:
     fields:
       hosts:
