@@ -79,6 +79,8 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereVM, error
 	return vm, nil
 }
 
+//
+// Get a specific vm.
 func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, error) {
 	var vms []*graphmodel.VsphereVM
 
@@ -100,6 +102,8 @@ func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, 
 	return vms, nil
 }
 
+//
+// Get all VMs for a specific datastore/
 func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.VsphereVM, error) {
 	list, err := t.List(&provider, nil)
 	if err != nil {

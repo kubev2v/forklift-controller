@@ -15,24 +15,7 @@ type Resolver struct {
 }
 
 //
-// Get a specific provider.
-func (t *Resolver) Get(id string) (*graphmodel.VsphereProvider, error) {
-	p := &api.Provider{
-		ObjectMeta: meta.ObjectMeta{
-			UID: types.UID(id),
-		},
-	}
-
-	// TODO Check all details are provided
-	m := &model.Provider{}
-	m.With(p)
-	r := vsphere.Provider{}
-	r.With(m)
-
-	provider := &graphmodel.VsphereProvider{ID: r.UID, Name: r.Name, Type: r.Type}
-	return provider, nil
-}
-
+// List all providers.
 func (t *Resolver) List() ([]*graphmodel.VsphereProvider, error) {
 	var providers []*graphmodel.VsphereProvider
 
@@ -52,4 +35,23 @@ func (t *Resolver) List() ([]*graphmodel.VsphereProvider, error) {
 	}
 
 	return providers, nil
+}
+
+//
+// Get a specific provider.
+func (t *Resolver) Get(id string) (*graphmodel.VsphereProvider, error) {
+	p := &api.Provider{
+		ObjectMeta: meta.ObjectMeta{
+			UID: types.UID(id),
+		},
+	}
+
+	// TODO Check all details are provided
+	m := &model.Provider{}
+	m.With(p)
+	r := vsphere.Provider{}
+	r.With(m)
+
+	provider := &graphmodel.VsphereProvider{ID: r.UID, Name: r.Name, Type: r.Type}
+	return provider, nil
 }
