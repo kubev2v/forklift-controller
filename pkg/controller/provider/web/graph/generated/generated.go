@@ -146,7 +146,7 @@ type ComplexityRoot struct {
 		VsphereVM          func(childComplexity int, id string, provider string) int
 		VsphereVMs         func(childComplexity int, filter *model.VMFilter) int
 		Vspherefolder      func(childComplexity int, id string, provider string) int
-		Vspherefolders     func(childComplexity int, provider string) int
+		Vspherefolders     func(childComplexity int, provider *string) int
 	}
 
 	Vnic struct {
@@ -279,7 +279,7 @@ type ComplexityRoot struct {
 }
 
 type QueryResolver interface {
-	Vspherefolders(ctx context.Context, provider string) ([]*model.VsphereFolder, error)
+	Vspherefolders(ctx context.Context, provider *string) ([]*model.VsphereFolder, error)
 	Vspherefolder(ctx context.Context, id string, provider string) (*model.VsphereFolder, error)
 	VsphereProviders(ctx context.Context) ([]*model.VsphereProvider, error)
 	VsphereProvider(ctx context.Context, id string) (*model.VsphereProvider, error)
@@ -867,7 +867,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Vspherefolders(childComplexity, args["provider"].(string)), true
+		return e.complexity.Query.Vspherefolders(childComplexity, args["provider"].(*string)), true
 
 	case "VNIC.dPortGroup":
 		if e.complexity.Vnic.DPortGroup == nil {
@@ -1855,7 +1855,7 @@ input VMFilter {
 }
 
 type Query {
-  vspherefolders(provider: ID!): [VsphereFolder!]!
+  vspherefolders(provider: ID): [VsphereFolder!]!
   vspherefolder(id: ID!, provider: ID!): VsphereFolder!
   vsphereProviders: [VsphereProvider!]!
   vsphereProvider(id: ID!): VsphereProvider!
@@ -2172,10 +2172,10 @@ func (ec *executionContext) field_Query_vspherefolder_args(ctx context.Context, 
 func (ec *executionContext) field_Query_vspherefolders_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 *string
 	if tmp, ok := rawArgs["provider"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("provider"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3892,7 +3892,7 @@ func (ec *executionContext) _Query_vspherefolders(ctx context.Context, field gra
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Vspherefolders(rctx, args["provider"].(string))
+		return ec.resolvers.Query().Vspherefolders(rctx, args["provider"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

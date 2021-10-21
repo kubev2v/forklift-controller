@@ -16,24 +16,23 @@ type Resolver struct {
 
 //
 // List all folders.
-func (t *Resolver) List(provider string) ([]*graphmodel.VsphereFolder, error) {
+func (t *Resolver) List(provider *string) ([]*graphmodel.VsphereFolder, error) {
 	var folders []*graphmodel.VsphereFolder
 
-	db, err := t.GetDB(provider)
-	if err != nil {
-		return nil, err
-	}
-	list := []vspheremodel.Folder{}
+	providers := t.ListDBs(provider)
+	for provider, db := range providers {
+		list := []vspheremodel.Folder{}
+		listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
+		err := db.List(&list, listOptions)
+		if err != nil {
+			return nil, nil
+		}
 
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	err = db.List(&list, listOptions)
-	if err != nil {
-		return nil, nil
-	}
-	for _, m := range list {
-		f := with(&m)
-		f.Provider = provider
-		folders = append(folders, f)
+		for _, m := range list {
+			f := with(&m)
+			f.Provider = provider
+			folders = append(folders, f)
+		}
 	}
 
 	return folders, nil

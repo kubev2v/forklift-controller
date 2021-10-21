@@ -11,7 +11,7 @@ import (
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
 )
 
-func (r *queryResolver) Vspherefolders(ctx context.Context, provider string) ([]*graphmodel.VsphereFolder, error) {
+func (r *queryResolver) Vspherefolders(ctx context.Context, provider *string) ([]*graphmodel.VsphereFolder, error) {
 	return r.Resolver.Folder.List(provider)
 }
 

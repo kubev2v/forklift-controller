@@ -227,7 +227,7 @@ input VMFilter {
 }
 
 type Query {
-  vspherefolders(provider: ID!): [VsphereFolder!]!
+  vspherefolders(provider: ID): [VsphereFolder!]!
   vspherefolder(id: ID!, provider: ID!): VsphereFolder!
   vsphereProviders: [VsphereProvider!]!
   vsphereProvider(id: ID!): VsphereProvider!
