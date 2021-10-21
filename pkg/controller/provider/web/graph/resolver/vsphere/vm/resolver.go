@@ -16,16 +16,11 @@ type Resolver struct {
 
 //
 // List all vms.
-func (t *Resolver) List(filter *graphmodel.VMFilter) ([]*graphmodel.VsphereVM, error) {
+func (t *Resolver) List(provider *string, filter *graphmodel.VMFilter) ([]*graphmodel.VsphereVM, error) {
 	var vms []*graphmodel.VsphereVM
-	var provider *string
 	var listOptions = libmodel.ListOptions{Detail: libmodel.MaxDetail}
 
 	if filter != nil {
-		if filter.Provider != nil {
-			provider = filter.Provider
-		}
-
 		var predicates = libmodel.And()
 		if filter.CPUHotAddEnabled != nil {
 			predicates.Predicates = append(predicates.Predicates, libmodel.Eq("CpuHotAddEnabled", filter.CPUHotAddEnabled))
@@ -43,7 +38,7 @@ func (t *Resolver) List(filter *graphmodel.VMFilter) ([]*graphmodel.VsphereVM, e
 	}
 
 	providers := t.ListDBs(provider)
-	for provider, db := range providers {
+	for p, db := range providers {
 		list := []vspheremodel.VM{}
 		err := db.List(&list, listOptions)
 		if err != nil {
@@ -51,7 +46,7 @@ func (t *Resolver) List(filter *graphmodel.VMFilter) ([]*graphmodel.VsphereVM, e
 		}
 
 		for _, m := range list {
-			vm := with(&m, provider)
+			vm := with(&m, p)
 			vms = append(vms, vm)
 		}
 	}
@@ -106,7 +101,7 @@ func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, 
 }
 
 func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.VsphereVM, error) {
-	list, err := t.List(&graphmodel.VMFilter{Provider: &provider})
+	list, err := t.List(&provider, nil)
 	if err != nil {
 		return nil, nil
 	}

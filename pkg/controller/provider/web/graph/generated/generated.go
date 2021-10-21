@@ -144,7 +144,7 @@ type ComplexityRoot struct {
 		VsphereProvider    func(childComplexity int, id string) int
 		VsphereProviders   func(childComplexity int) int
 		VsphereVM          func(childComplexity int, id string, provider string) int
-		VsphereVMs         func(childComplexity int, filter *model.VMFilter) int
+		VsphereVMs         func(childComplexity int, provider *string, filter *model.VMFilter) int
 		Vspherefolder      func(childComplexity int, id string, provider string) int
 		Vspherefolders     func(childComplexity int, provider *string) int
 	}
@@ -293,7 +293,7 @@ type QueryResolver interface {
 	VsphereDatastore(ctx context.Context, id string, provider string) (*model.VsphereDatastore, error)
 	VsphereNetworks(ctx context.Context, provider *string) ([]model.NetworkGroup, error)
 	VsphereNetwork(ctx context.Context, id string, provider string) (model.NetworkGroup, error)
-	VsphereVMs(ctx context.Context, filter *model.VMFilter) ([]*model.VsphereVM, error)
+	VsphereVMs(ctx context.Context, provider *string, filter *model.VMFilter) ([]*model.VsphereVM, error)
 	VsphereVM(ctx context.Context, id string, provider string) (*model.VsphereVM, error)
 }
 type VsphereClusterResolver interface {
@@ -843,7 +843,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.VsphereVMs(childComplexity, args["filter"].(*model.VMFilter)), true
+		return e.complexity.Query.VsphereVMs(childComplexity, args["provider"].(*string), args["filter"].(*model.VMFilter)), true
 
 	case "Query.vspherefolder":
 		if e.complexity.Query.Vspherefolder == nil {
@@ -1847,7 +1847,6 @@ type Concern {
 }  
 
 input VMFilter {
-  provider: ID
   cpuHotAddEnabled: Boolean
   ipAddress: String
   powerState: String
@@ -1869,7 +1868,7 @@ type Query {
   vsphereDatastore(id: ID!, provider: ID!): VsphereDatastore!
   vsphereNetworks(provider: ID): [NetworkGroup!]!
   vsphereNetwork(id: ID!, provider: ID!): NetworkGroup!
-  vsphereVMs(filter: VMFilter): [VsphereVM!]!
+  vsphereVMs(provider: ID, filter: VMFilter): [VsphereVM!]!
   vsphereVM(id: ID!, provider: ID!): VsphereVM!
 }
 
@@ -2133,15 +2132,24 @@ func (ec *executionContext) field_Query_vsphereVM_args(ctx context.Context, rawA
 func (ec *executionContext) field_Query_vsphereVMs_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.VMFilter
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOVMFilter2ᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVMFilter(ctx, tmp)
+	var arg0 *string
+	if tmp, ok := rawArgs["provider"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("provider"))
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["filter"] = arg0
+	args["provider"] = arg0
+	var arg1 *model.VMFilter
+	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+		arg1, err = ec.unmarshalOVMFilter2ᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVMFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg1
 	return args, nil
 }
 
@@ -4473,7 +4481,7 @@ func (ec *executionContext) _Query_vsphereVMs(ctx context.Context, field graphql
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().VsphereVMs(rctx, args["filter"].(*model.VMFilter))
+		return ec.resolvers.Query().VsphereVMs(rctx, args["provider"].(*string), args["filter"].(*model.VMFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9263,14 +9271,6 @@ func (ec *executionContext) unmarshalInputVMFilter(ctx context.Context, obj inte
 
 	for k, v := range asMap {
 		switch k {
-		case "provider":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("provider"))
-			it.Provider, err = ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "cpuHotAddEnabled":
 			var err error
 
