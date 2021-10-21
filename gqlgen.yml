@@ -54,11 +54,7 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
-  VsphereFolder:
-    fields:
-      children:
-        resolver: true
-  VsphereProvider:
+  Provider:
     fields:
       datacenters:
         resolver: true
@@ -72,6 +68,10 @@ models:
         resolver: true 
       vms:
         resolver: true 
+  VsphereFolder:
+    fields:
+      children:
+        resolver: true
   VsphereCluster:
     fields:
       hosts:

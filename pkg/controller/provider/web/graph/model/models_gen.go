@@ -92,6 +92,13 @@ type NetworkAdapter struct {
 	Mtu       int    `json:"mtu"`
 }
 
+type OvirtDatacenter struct {
+	ID       string `json:"id"`
+	Provider string `json:"provider"`
+	Name     string `json:"name"`
+	Revision string `json:"revision"`
+}
+
 type Pnic struct {
 	Key       string `json:"key"`
 	LinkSpeed int    `json:"linkSpeed"`
@@ -101,6 +108,14 @@ type PortGroup struct {
 	Key     string `json:"key"`
 	Name    string `json:"name"`
 	Vswitch string `json:"vswitch"`
+}
+
+type Provider struct {
+	ID          string               `json:"id"`
+	Name        string               `json:"name"`
+	Type        string               `json:"type"`
+	Product     string               `json:"product"`
+	Datacenters []*VsphereDatacenter `json:"datacenters"`
 }
 
 type VMFilter struct {
@@ -203,14 +218,6 @@ type VsphereHost struct {
 	NetworksIDs     []string            `json:"networksIDs"`
 	Networks        []NetworkGroup      `json:"networks"`
 	NetworkAdapters []*NetworkAdapter   `json:"networkAdapters"`
-}
-
-type VsphereProvider struct {
-	ID          string               `json:"id"`
-	Name        string               `json:"name"`
-	Type        string               `json:"type"`
-	Product     string               `json:"product"`
-	Datacenters []*VsphereDatacenter `json:"datacenters"`
 }
 
 type VsphereVM struct {

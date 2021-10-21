@@ -54,7 +54,7 @@ func (h GraphHandler) Post(ctx *gin.Context) {
 			Folder: folder.Resolver{
 				Resolver: newBaseResolver(h.Container, "folder"),
 			},
-			Provider: provider.Resolver{
+			Providers: provider.Resolver{
 				Resolver: newBaseResolver(h.Container, "provider"),
 			},
 			Datacenter: datacenter.Resolver{

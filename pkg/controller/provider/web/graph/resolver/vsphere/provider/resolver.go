@@ -16,20 +16,17 @@ type Resolver struct {
 
 //
 // List all providers.
-func (t *Resolver) List() ([]*graphmodel.VsphereProvider, error) {
-	var providers []*graphmodel.VsphereProvider
+func (t *Resolver) List() ([]*graphmodel.Provider, error) {
+	var providers []*graphmodel.Provider
 
 	list := t.Container.List()
 
 	for _, collector := range list {
 		if p, cast := collector.Owner().(*api.Provider); cast {
-			if p.Type() != api.VSphere {
-				continue
-			}
 			m := &model.Provider{}
 			m.With(p)
 
-			provider := &graphmodel.VsphereProvider{ID: m.UID, Name: m.Name, Type: m.Type}
+			provider := &graphmodel.Provider{ID: m.UID, Name: m.Name, Type: m.Type}
 			providers = append(providers, provider)
 		}
 	}
@@ -39,7 +36,7 @@ func (t *Resolver) List() ([]*graphmodel.VsphereProvider, error) {
 
 //
 // Get a specific provider.
-func (t *Resolver) Get(id string) (*graphmodel.VsphereProvider, error) {
+func (t *Resolver) Get(id string) (*graphmodel.Provider, error) {
 	p := &api.Provider{
 		ObjectMeta: meta.ObjectMeta{
 			UID: types.UID(id),
@@ -52,6 +49,6 @@ func (t *Resolver) Get(id string) (*graphmodel.VsphereProvider, error) {
 	r := vsphere.Provider{}
 	r.With(m)
 
-	provider := &graphmodel.VsphereProvider{ID: r.UID, Name: r.Name, Type: r.Type}
+	provider := &graphmodel.Provider{ID: r.UID, Name: r.Name, Type: r.Type}
 	return provider, nil
 }

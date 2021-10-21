@@ -11,20 +11,24 @@ import (
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
 )
 
+func (r *providerResolver) Datacenters(ctx context.Context, obj *graphmodel.Provider) ([]*graphmodel.VsphereDatacenter, error) {
+	return r.Resolver.Datacenter.List(&obj.ID)
+}
+
+func (r *queryResolver) Providers(ctx context.Context) ([]*graphmodel.Provider, error) {
+	return r.Resolver.Providers.List()
+}
+
+func (r *queryResolver) Provider(ctx context.Context, id string) (*graphmodel.Provider, error) {
+	return r.Resolver.Providers.Get(id)
+}
+
 func (r *queryResolver) Vspherefolders(ctx context.Context, provider *string) ([]*graphmodel.VsphereFolder, error) {
 	return r.Resolver.Folder.List(provider)
 }
 
 func (r *queryResolver) Vspherefolder(ctx context.Context, id string, provider string) (*graphmodel.VsphereFolder, error) {
 	return r.Resolver.Folder.Get(id, provider)
-}
-
-func (r *queryResolver) VsphereProviders(ctx context.Context) ([]*graphmodel.VsphereProvider, error) {
-	return r.Resolver.Provider.List()
-}
-
-func (r *queryResolver) VsphereProvider(ctx context.Context, id string) (*graphmodel.VsphereProvider, error) {
-	return r.Resolver.Provider.Get(id)
 }
 
 func (r *queryResolver) VsphereDatacenters(ctx context.Context, provider *string) ([]*graphmodel.VsphereDatacenter, error) {
@@ -135,10 +139,6 @@ func (r *vsphereHostResolver) Networks(ctx context.Context, obj *graphmodel.Vsph
 	return r.Resolver.Network.GetByIDs(obj.NetworksIDs, obj.Provider)
 }
 
-func (r *vsphereProviderResolver) Datacenters(ctx context.Context, obj *graphmodel.VsphereProvider) ([]*graphmodel.VsphereDatacenter, error) {
-	return r.Resolver.Datacenter.List(&obj.ID)
-}
-
 func (r *vsphereVMResolver) Host(ctx context.Context, obj *graphmodel.VsphereVM) (*graphmodel.VsphereHost, error) {
 	return r.Resolver.Host.Get(obj.HostID, obj.Provider)
 }
@@ -146,6 +146,9 @@ func (r *vsphereVMResolver) Host(ctx context.Context, obj *graphmodel.VsphereVM)
 func (r *vsphereVMResolver) Networks(ctx context.Context, obj *graphmodel.VsphereVM) ([]graphmodel.NetworkGroup, error) {
 	return r.Resolver.Network.GetByIDs(obj.NetIDs, obj.Provider)
 }
+
+// Provider returns generated.ProviderResolver implementation.
+func (r *Resolver) Provider() generated.ProviderResolver { return &providerResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
@@ -171,19 +174,14 @@ func (r *Resolver) VsphereFolder() generated.VsphereFolderResolver { return &vsp
 // VsphereHost returns generated.VsphereHostResolver implementation.
 func (r *Resolver) VsphereHost() generated.VsphereHostResolver { return &vsphereHostResolver{r} }
 
-// VsphereProvider returns generated.VsphereProviderResolver implementation.
-func (r *Resolver) VsphereProvider() generated.VsphereProviderResolver {
-	return &vsphereProviderResolver{r}
-}
-
 // VsphereVM returns generated.VsphereVMResolver implementation.
 func (r *Resolver) VsphereVM() generated.VsphereVMResolver { return &vsphereVMResolver{r} }
 
+type providerResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type vsphereClusterResolver struct{ *Resolver }
 type vsphereDatacenterResolver struct{ *Resolver }
 type vsphereDatastoreResolver struct{ *Resolver }
 type vsphereFolderResolver struct{ *Resolver }
 type vsphereHostResolver struct{ *Resolver }
-type vsphereProviderResolver struct{ *Resolver }
 type vsphereVMResolver struct{ *Resolver }

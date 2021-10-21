@@ -17,7 +17,7 @@ import (
 
 type Resolver struct {
 	Folder     folder.Resolver
-	Provider   provider.Resolver
+	Providers  provider.Resolver
 	Datacenter datacenter.Resolver
 	Cluster    cluster.Resolver
 	Network    network.Resolver

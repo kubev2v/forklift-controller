@@ -19,7 +19,7 @@ type VsphereFolder {
   children: [VsphereFolderGroup!]!
 }
 
-type VsphereProvider {
+type Provider {
   id: ID!
   name: String!
   type: String!
@@ -226,10 +226,10 @@ input VMFilter {
 }
 
 type Query {
+  providers: [Provider!]!
+  provider(id: ID!): Provider!
   vspherefolders(provider: ID): [VsphereFolder!]!
   vspherefolder(id: ID!, provider: ID!): VsphereFolder!
-  vsphereProviders: [VsphereProvider!]!
-  vsphereProvider(id: ID!): VsphereProvider!
   vsphereDatacenters(provider: ID): [VsphereDatacenter!]!
   vsphereDatacenter(id: ID!, provider: ID!): VsphereDatacenter!
   vsphereClusters(provider: ID): [VsphereCluster!]!
