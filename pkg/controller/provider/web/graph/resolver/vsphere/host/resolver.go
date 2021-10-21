@@ -16,24 +16,23 @@ type Resolver struct {
 
 //
 // List all hosts.
-func (t *Resolver) List(provider string) ([]*graphmodel.VsphereHost, error) {
+func (t *Resolver) List(provider *string) ([]*graphmodel.VsphereHost, error) {
 	var hosts []*graphmodel.VsphereHost
 
-	db, err := t.GetDB(provider)
-	if err != nil {
-		return nil, err
-	}
-	list := []vspheremodel.Host{}
+	providers := t.ListDBs(provider)
+	for provider, db := range providers {
+		list := []vspheremodel.Host{}
+		listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
+		err := db.List(&list, listOptions)
+		if err != nil {
+			return nil, nil
+		}
 
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	err = db.List(&list, listOptions)
-	if err != nil {
-		return nil, nil
-	}
-	for _, m := range list {
-		h := with(&m)
-		h.Provider = provider
-		hosts = append(hosts, h)
+		for _, m := range list {
+			h := with(&m)
+			h.Provider = provider
+			hosts = append(hosts, h)
+		}
 	}
 
 	return hosts, nil
@@ -103,7 +102,7 @@ func contains(l []string, s string) bool {
 //
 // Get all hosts for a specific datastore.
 func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.VsphereHost, error) {
-	list, err := t.List(provider)
+	list, err := t.List(&provider)
 	if err != nil {
 		return nil, nil
 	}

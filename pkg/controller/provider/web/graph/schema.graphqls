@@ -232,7 +232,7 @@ type Query {
   vsphereDatacenter(id: ID!, provider: ID!): VsphereDatacenter!
   vsphereClusters(provider: ID): [VsphereCluster!]!
   vsphereCluster(id: ID!, provider: ID!): VsphereCluster!
-  vsphereHosts(provider: ID!): [VsphereHost!]!
+  vsphereHosts(provider: ID): [VsphereHost!]!
   vsphereHost(id: ID!, provider: ID!): VsphereHost!
   vsphereDatastore(id: ID!, provider: ID!): VsphereDatastore!
   vsphereDatastores(provider: ID!): [VsphereDatastore!]!

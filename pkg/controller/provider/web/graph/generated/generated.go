@@ -135,7 +135,7 @@ type ComplexityRoot struct {
 		VsphereDatastore   func(childComplexity int, id string, provider string) int
 		VsphereDatastores  func(childComplexity int, provider string) int
 		VsphereHost        func(childComplexity int, id string, provider string) int
-		VsphereHosts       func(childComplexity int, provider string) int
+		VsphereHosts       func(childComplexity int, provider *string) int
 		VsphereNetwork     func(childComplexity int, id string, provider string) int
 		VsphereNetworks    func(childComplexity int, provider string) int
 		VsphereProvider    func(childComplexity int, id string) int
@@ -284,7 +284,7 @@ type QueryResolver interface {
 	VsphereDatacenter(ctx context.Context, id string, provider string) (*model.VsphereDatacenter, error)
 	VsphereClusters(ctx context.Context, provider *string) ([]*model.VsphereCluster, error)
 	VsphereCluster(ctx context.Context, id string, provider string) (*model.VsphereCluster, error)
-	VsphereHosts(ctx context.Context, provider string) ([]*model.VsphereHost, error)
+	VsphereHosts(ctx context.Context, provider *string) ([]*model.VsphereHost, error)
 	VsphereHost(ctx context.Context, id string, provider string) (*model.VsphereHost, error)
 	VsphereDatastore(ctx context.Context, id string, provider string) (*model.VsphereDatastore, error)
 	VsphereDatastores(ctx context.Context, provider string) ([]*model.VsphereDatastore, error)
@@ -752,7 +752,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.VsphereHosts(childComplexity, args["provider"].(string)), true
+		return e.complexity.Query.VsphereHosts(childComplexity, args["provider"].(*string)), true
 
 	case "Query.vsphereNetwork":
 		if e.complexity.Query.VsphereNetwork == nil {
@@ -1836,7 +1836,7 @@ type Query {
   vsphereDatacenter(id: ID!, provider: ID!): VsphereDatacenter!
   vsphereClusters(provider: ID): [VsphereCluster!]!
   vsphereCluster(id: ID!, provider: ID!): VsphereCluster!
-  vsphereHosts(provider: ID!): [VsphereHost!]!
+  vsphereHosts(provider: ID): [VsphereHost!]!
   vsphereHost(id: ID!, provider: ID!): VsphereHost!
   vsphereDatastore(id: ID!, provider: ID!): VsphereDatastore!
   vsphereDatastores(provider: ID!): [VsphereDatastore!]!
@@ -2013,10 +2013,10 @@ func (ec *executionContext) field_Query_vsphereHost_args(ctx context.Context, ra
 func (ec *executionContext) field_Query_vsphereHosts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 *string
 	if tmp, ok := rawArgs["provider"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("provider"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4089,7 +4089,7 @@ func (ec *executionContext) _Query_vsphereHosts(ctx context.Context, field graph
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().VsphereHosts(rctx, args["provider"].(string))
+		return ec.resolvers.Query().VsphereHosts(rctx, args["provider"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
