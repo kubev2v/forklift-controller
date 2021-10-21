@@ -59,12 +59,12 @@ func (r *queryResolver) VsphereDatastore(ctx context.Context, id string, provide
 	return r.Resolver.Datastore.Get(id, provider)
 }
 
-func (r *queryResolver) VsphereNetwork(ctx context.Context, id string, provider string) (graphmodel.NetworkGroup, error) {
-	return r.Resolver.Network.Get(id, provider)
+func (r *queryResolver) VsphereNetworks(ctx context.Context, provider *string) ([]graphmodel.NetworkGroup, error) {
+	return r.Resolver.Network.List(provider)
 }
 
-func (r *queryResolver) VsphereNetworks(ctx context.Context, provider string) ([]graphmodel.NetworkGroup, error) {
-	return r.Resolver.Network.List(provider)
+func (r *queryResolver) VsphereNetwork(ctx context.Context, id string, provider string) (graphmodel.NetworkGroup, error) {
+	return r.Resolver.Network.Get(id, provider)
 }
 
 func (r *queryResolver) VsphereVMs(ctx context.Context, filter *graphmodel.VMFilter) ([]*graphmodel.VsphereVM, error) {

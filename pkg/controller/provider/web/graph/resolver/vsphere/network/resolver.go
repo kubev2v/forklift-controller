@@ -16,30 +16,27 @@ type Resolver struct {
 
 //
 // List all Network objects.
-func (t *Resolver) List(provider string) ([]graphmodel.NetworkGroup, error) {
+func (t *Resolver) List(provider *string) ([]graphmodel.NetworkGroup, error) {
 	var networks []graphmodel.NetworkGroup
 
-	db, err := t.GetDB(provider)
-	if err != nil {
-		return nil, err
-	}
+	providers := t.ListDBs(provider)
+	for provider, db := range providers {
+		list := []vspheremodel.Network{}
+		listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
+		err := db.List(&list, listOptions)
+		if err != nil {
+			return nil, nil
+		}
 
-	networkList := []vspheremodel.Network{}
-
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	err = db.List(&networkList, listOptions)
-	if err != nil {
-		return nil, nil
-	}
-
-	for _, m := range networkList {
-		switch m.Variant {
-		case vspheremodel.NetStandard:
-			networks = append(networks, withNetwork(&m))
-		case vspheremodel.NetDvPortGroup:
-			networks = append(networks, withDvPortGroup(&m))
-		case vspheremodel.NetDvSwitch:
-			networks = append(networks, withDvSwitch(&m))
+		for _, m := range list {
+			switch m.Variant {
+			case vspheremodel.NetStandard:
+				networks = append(networks, withNetwork(&m, provider))
+			case vspheremodel.NetDvPortGroup:
+				networks = append(networks, withDvPortGroup(&m, provider))
+			case vspheremodel.NetDvSwitch:
+				networks = append(networks, withDvSwitch(&m, provider))
+			}
 		}
 	}
 
@@ -70,11 +67,11 @@ func (t *Resolver) Get(id string, provider string) (graphmodel.NetworkGroup, err
 	var network graphmodel.NetworkGroup
 	switch m.Variant {
 	case vspheremodel.NetStandard:
-		network = withNetwork(m)
+		network = withNetwork(m, provider)
 	case vspheremodel.NetDvPortGroup:
-		network = withDvPortGroup(m)
+		network = withDvPortGroup(m, provider)
 	case vspheremodel.NetDvSwitch:
-		network = withDvSwitch(m)
+		network = withDvSwitch(m, provider)
 	}
 
 	return network, nil
@@ -100,11 +97,11 @@ func (t *Resolver) GetByIDs(ids []string, provider string) ([]graphmodel.Network
 	for _, m := range networkList {
 		switch m.Variant {
 		case vspheremodel.NetStandard:
-			networks = append(networks, withNetwork(&m))
+			networks = append(networks, withNetwork(&m, provider))
 		case vspheremodel.NetDvPortGroup:
-			networks = append(networks, withDvPortGroup(&m))
+			networks = append(networks, withDvPortGroup(&m, provider))
 		case vspheremodel.NetDvSwitch:
-			networks = append(networks, withDvSwitch(&m))
+			networks = append(networks, withDvSwitch(&m, provider))
 		}
 	}
 
@@ -132,37 +129,39 @@ func (t *Resolver) GetByDatacenter(folderID, provider string) ([]graphmodel.Netw
 	for _, m := range list {
 		switch m.Variant {
 		case vspheremodel.NetStandard:
-			networks = append(networks, withNetwork(&m))
+			networks = append(networks, withNetwork(&m, provider))
 		case vspheremodel.NetDvPortGroup:
-			networks = append(networks, withDvPortGroup(&m))
+			networks = append(networks, withDvPortGroup(&m, provider))
 		case vspheremodel.NetDvSwitch:
-			networks = append(networks, withDvSwitch(&m))
+			networks = append(networks, withDvSwitch(&m, provider))
 		}
 	}
 	return networks, nil
 }
 
-func withNetwork(m *vspheremodel.Network) (h *graphmodel.Network) {
+func withNetwork(m *vspheremodel.Network, provider string) (h *graphmodel.Network) {
 	return &graphmodel.Network{
-		ID:      m.ID,
-		Variant: m.Variant,
-		Name:    m.Name,
-		Tag:     m.Tag,
+		ID:       m.ID,
+		Variant:  m.Variant,
+		Name:     m.Name,
+		Provider: provider,
+		Tag:      m.Tag,
 	}
 }
 
-func withDvPortGroup(m *vspheremodel.Network) (h *graphmodel.DvPortGroup) {
+func withDvPortGroup(m *vspheremodel.Network, provider string) (h *graphmodel.DvPortGroup) {
 	return &graphmodel.DvPortGroup{
 		ID:       m.ID,
 		Variant:  m.Variant,
 		Name:     m.Name,
+		Provider: provider,
 		DvSwitch: m.DVSwitch.ID,
 		// Host:  m.Host,
 		// Ports: m.Ports,
 	}
 }
 
-func withDvSwitch(m *vspheremodel.Network) (h *graphmodel.DvSwitch) {
+func withDvSwitch(m *vspheremodel.Network, provider string) (h *graphmodel.DvSwitch) {
 	var host []*graphmodel.DvSHost
 
 	for _, h := range m.Host {
@@ -174,9 +173,10 @@ func withDvSwitch(m *vspheremodel.Network) (h *graphmodel.DvSwitch) {
 	}
 
 	return &graphmodel.DvSwitch{
-		ID:      m.ID,
-		Variant: m.Variant,
-		Name:    m.Name,
-		Host:    host,
+		ID:       m.ID,
+		Variant:  m.Variant,
+		Name:     m.Name,
+		Provider: provider,
+		Host:     host,
 	}
 }

@@ -44,6 +44,7 @@ type DvPortGroup struct {
 	ID       string         `json:"id"`
 	Variant  string         `json:"variant"`
 	Name     string         `json:"name"`
+	Provider string         `json:"provider"`
 	Parent   *VsphereFolder `json:"parent"`
 	DvSwitch string         `json:"dvSwitch"`
 	Ports    []string       `json:"ports"`
@@ -62,6 +63,7 @@ type DvSwitch struct {
 	ID         string         `json:"id"`
 	Variant    string         `json:"variant"`
 	Name       string         `json:"name"`
+	Provider   string         `json:"provider"`
 	Parent     *VsphereFolder `json:"parent"`
 	Portgroups []*DvPortGroup `json:"portgroups"`
 	Host       []*DvSHost     `json:"host"`
@@ -71,12 +73,13 @@ func (DvSwitch) IsNetworkGroup()       {}
 func (DvSwitch) IsVsphereFolderGroup() {}
 
 type Network struct {
-	ID      string         `json:"id"`
-	Variant string         `json:"variant"`
-	Name    string         `json:"name"`
-	Parent  *VsphereFolder `json:"parent"`
-	Tag     string         `json:"tag"`
-	Vms     []*VsphereVM   `json:"vms"`
+	ID       string         `json:"id"`
+	Variant  string         `json:"variant"`
+	Name     string         `json:"name"`
+	Provider string         `json:"provider"`
+	Parent   *VsphereFolder `json:"parent"`
+	Tag      string         `json:"tag"`
+	Vms      []*VsphereVM   `json:"vms"`
 }
 
 func (Network) IsNetworkGroup()       {}

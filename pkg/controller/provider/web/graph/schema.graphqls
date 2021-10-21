@@ -93,6 +93,7 @@ type Network {
   id: ID!
   variant: String!
   name: String!
+  provider: ID!
   parent: VsphereFolder!
   tag: String!
   vms: [VsphereVM!]!
@@ -102,6 +103,7 @@ type DvPortGroup {
   id: ID!
   variant: String!
   name: String!
+  provider: ID!
   parent: VsphereFolder!
   dvSwitch: ID!
   ports: [String!]!
@@ -112,6 +114,7 @@ type DvSwitch {
   id: ID!
   variant: String!
   name: String!
+  provider: ID!
   parent: VsphereFolder!
   portgroups: [DvPortGroup!]!
   host: [DvSHost]! 
@@ -236,8 +239,8 @@ type Query {
   vsphereHost(id: ID!, provider: ID!): VsphereHost!
   vsphereDatastores(provider: ID): [VsphereDatastore!]!
   vsphereDatastore(id: ID!, provider: ID!): VsphereDatastore!
+  vsphereNetworks(provider: ID): [NetworkGroup!]!
   vsphereNetwork(id: ID!, provider: ID!): NetworkGroup!
-  vsphereNetworks(provider: ID!): [NetworkGroup!]!
   vsphereVMs(filter: VMFilter): [VsphereVM!]!
   vsphereVM(id: ID!, provider: ID!): VsphereVM!
 }
