@@ -16,25 +16,23 @@ type Resolver struct {
 
 //
 // List all clusters.
-func (t *Resolver) List(provider string) ([]*graphmodel.VsphereCluster, error) {
+func (t *Resolver) List(provider *string) ([]*graphmodel.VsphereCluster, error) {
 	var clusters []*graphmodel.VsphereCluster
 
-	db, err := t.GetDB(provider)
-	if err != nil {
-		return nil, err
-	}
-	list := []vspheremodel.Cluster{}
+	providers := t.ListDBs(provider)
+	for provider, db := range providers {
+		list := []vspheremodel.Cluster{}
+		listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
+		err := db.List(&list, listOptions)
+		if err != nil {
+			return nil, nil
+		}
 
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	err = db.List(&list, listOptions)
-	if err != nil {
-		return nil, nil
-	}
-
-	for _, m := range list {
-		c := with(&m)
-		c.Provider = provider
-		clusters = append(clusters, c)
+		for _, m := range list {
+			c := with(&m)
+			c.Provider = provider
+			clusters = append(clusters, c)
+		}
 	}
 
 	return clusters, nil

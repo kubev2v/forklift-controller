@@ -35,7 +35,7 @@ func (r *queryResolver) VsphereDatacenter(ctx context.Context, id string, provid
 	return r.Resolver.Datacenter.Get(id, provider)
 }
 
-func (r *queryResolver) VsphereClusters(ctx context.Context, provider string) ([]*graphmodel.VsphereCluster, error) {
+func (r *queryResolver) VsphereClusters(ctx context.Context, provider *string) ([]*graphmodel.VsphereCluster, error) {
 	return r.Resolver.Cluster.List(provider)
 }
 
