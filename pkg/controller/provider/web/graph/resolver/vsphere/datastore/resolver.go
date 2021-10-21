@@ -16,25 +16,23 @@ type Resolver struct {
 
 //
 // List all datastores.
-func (t *Resolver) List(provider string) ([]*graphmodel.VsphereDatastore, error) {
+func (t *Resolver) List(provider *string) ([]*graphmodel.VsphereDatastore, error) {
 	var datastores []*graphmodel.VsphereDatastore
 
-	db, err := t.GetDB(provider)
-	if err != nil {
-		return nil, err
-	}
-	list := []vspheremodel.Datastore{}
+	providers := t.ListDBs(provider)
+	for provider, db := range providers {
+		list := []vspheremodel.Datastore{}
+		listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
+		err := db.List(&list, listOptions)
+		if err != nil {
+			return nil, nil
+		}
 
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	err = db.List(&list, listOptions)
-	if err != nil {
-		return nil, nil
-	}
-
-	for _, m := range list {
-		c := with(&m)
-		c.Provider = provider
-		datastores = append(datastores, c)
+		for _, m := range list {
+			d := with(&m)
+			d.Provider = provider
+			datastores = append(datastores, d)
+		}
 	}
 
 	return datastores, nil

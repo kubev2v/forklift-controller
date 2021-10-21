@@ -234,8 +234,8 @@ type Query {
   vsphereCluster(id: ID!, provider: ID!): VsphereCluster!
   vsphereHosts(provider: ID): [VsphereHost!]!
   vsphereHost(id: ID!, provider: ID!): VsphereHost!
+  vsphereDatastores(provider: ID): [VsphereDatastore!]!
   vsphereDatastore(id: ID!, provider: ID!): VsphereDatastore!
-  vsphereDatastores(provider: ID!): [VsphereDatastore!]!
   vsphereNetwork(id: ID!, provider: ID!): NetworkGroup!
   vsphereNetworks(provider: ID!): [NetworkGroup!]!
   vsphereVMs(filter: VMFilter): [VsphereVM!]!

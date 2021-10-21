@@ -51,12 +51,12 @@ func (r *queryResolver) VsphereHost(ctx context.Context, id string, provider str
 	return r.Resolver.Host.Get(id, provider)
 }
 
-func (r *queryResolver) VsphereDatastore(ctx context.Context, id string, provider string) (*graphmodel.VsphereDatastore, error) {
-	return r.Resolver.Datastore.Get(id, provider)
+func (r *queryResolver) VsphereDatastores(ctx context.Context, provider *string) ([]*graphmodel.VsphereDatastore, error) {
+	return r.Resolver.Datastore.List(provider)
 }
 
-func (r *queryResolver) VsphereDatastores(ctx context.Context, provider string) ([]*graphmodel.VsphereDatastore, error) {
-	return r.Resolver.Datastore.List(provider)
+func (r *queryResolver) VsphereDatastore(ctx context.Context, id string, provider string) (*graphmodel.VsphereDatastore, error) {
+	return r.Resolver.Datastore.Get(id, provider)
 }
 
 func (r *queryResolver) VsphereNetwork(ctx context.Context, id string, provider string) (graphmodel.NetworkGroup, error) {
