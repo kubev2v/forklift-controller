@@ -228,7 +228,7 @@ type Query {
   vspherefolder(id: ID!, provider: ID!): VsphereFolder!
   vsphereProviders: [VsphereProvider!]!
   vsphereProvider(id: ID!): VsphereProvider!
-  vsphereDatacenters(provider: ID!): [VsphereDatacenter!]!
+  vsphereDatacenters(provider: ID): [VsphereDatacenter!]!
   vsphereDatacenter(id: ID!, provider: ID!): VsphereDatacenter!
   vsphereClusters(provider: ID!): [VsphereCluster!]!
   vsphereCluster(id: ID!, provider: ID!): VsphereCluster!

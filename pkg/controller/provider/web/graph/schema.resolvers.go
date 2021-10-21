@@ -27,7 +27,7 @@ func (r *queryResolver) VsphereProvider(ctx context.Context, id string) (*graphm
 	return r.Resolver.Provider.Get(id)
 }
 
-func (r *queryResolver) VsphereDatacenters(ctx context.Context, provider string) ([]*graphmodel.VsphereDatacenter, error) {
+func (r *queryResolver) VsphereDatacenters(ctx context.Context, provider *string) ([]*graphmodel.VsphereDatacenter, error) {
 	return r.Resolver.Datacenter.List(provider)
 }
 
@@ -136,7 +136,7 @@ func (r *vsphereHostResolver) Networks(ctx context.Context, obj *graphmodel.Vsph
 }
 
 func (r *vsphereProviderResolver) Datacenters(ctx context.Context, obj *graphmodel.VsphereProvider) ([]*graphmodel.VsphereDatacenter, error) {
-	return r.Resolver.Datacenter.List(obj.ID)
+	return r.Resolver.Datacenter.List(&obj.ID)
 }
 
 func (r *vsphereVMResolver) Host(ctx context.Context, obj *graphmodel.VsphereVM) (*graphmodel.VsphereHost, error) {

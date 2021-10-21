@@ -18,25 +18,14 @@ type Resolver struct {
 // List all vms.
 func (t *Resolver) List(filter *graphmodel.VMFilter) ([]*graphmodel.VsphereVM, error) {
 	var vms []*graphmodel.VsphereVM
-
-	var providers = map[string]libmodel.DB{}
-	if filter == nil || filter.Provider == nil {
-		var err error
-		providers, err = t.GetDBs()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		db, err := t.GetDB(*filter.Provider)
-		if err != nil {
-			return nil, err
-		}
-		providers[*filter.Provider] = db
-	}
-
+	var provider *string
 	var listOptions = libmodel.ListOptions{Detail: libmodel.MaxDetail}
 
 	if filter != nil {
+		if filter.Provider != nil {
+			provider = filter.Provider
+		}
+
 		var predicates = libmodel.And()
 		if filter.CPUHotAddEnabled != nil {
 			predicates.Predicates = append(predicates.Predicates, libmodel.Eq("CpuHotAddEnabled", filter.CPUHotAddEnabled))
@@ -53,6 +42,7 @@ func (t *Resolver) List(filter *graphmodel.VMFilter) ([]*graphmodel.VsphereVM, e
 		listOptions.Predicate = predicates
 	}
 
+	providers := t.ListDBs(provider)
 	for provider, db := range providers {
 		list := []vspheremodel.VM{}
 		err := db.List(&list, listOptions)

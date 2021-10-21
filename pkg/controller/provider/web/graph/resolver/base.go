@@ -86,3 +86,24 @@ func (t *Resolver) GetDBs() (map[string]libmodel.DB, error) {
 
 	return providers, nil
 }
+
+//
+// Map providers DBs
+func (t *Resolver) ListDBs(provider *string) map[string]libmodel.DB {
+	var providers = map[string]libmodel.DB{}
+	if provider == nil {
+		var err error
+		providers, err = t.GetDBs()
+		if err != nil {
+			return nil
+		}
+	} else {
+		db, err := t.GetDB(*provider)
+		if err != nil {
+			return nil
+		}
+		providers[*provider] = db
+	}
+
+	return providers
+}
