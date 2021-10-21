@@ -8,6 +8,7 @@ import (
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
 	"github.com/konveyor/controller/pkg/logging"
 	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
+	model "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ocp"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -59,4 +60,29 @@ func (t *Resolver) GetChildrenIDs(db libmodel.DB, folderId, kind string) (list [
 	}
 
 	return list
+}
+
+//
+// Get DB for all providers.
+func (t *Resolver) GetDBs() (map[string]libmodel.DB, error) {
+	var providers = map[string]libmodel.DB{}
+
+	list := t.Container.List()
+
+	for _, collector := range list {
+		if p, cast := collector.Owner().(*api.Provider); cast {
+			if p.Type() == api.VSphere {
+				m := &model.Provider{}
+				m.With(p)
+
+				db, err := t.GetDB(m.UID)
+				if err != nil {
+					return nil, err
+				}
+				providers[m.UID] = db
+			}
+		}
+	}
+
+	return providers, nil
 }

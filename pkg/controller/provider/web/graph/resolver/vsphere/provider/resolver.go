@@ -33,8 +33,6 @@ func (t *Resolver) Get(id string) (*graphmodel.VsphereProvider, error) {
 	return provider, nil
 }
 
-//
-// List all providers.
 func (t *Resolver) List() ([]*graphmodel.VsphereProvider, error) {
 	var providers []*graphmodel.VsphereProvider
 

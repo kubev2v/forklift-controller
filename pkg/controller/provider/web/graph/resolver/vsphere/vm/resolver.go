@@ -16,12 +16,22 @@ type Resolver struct {
 
 //
 // List all vms.
-func (t *Resolver) List(provider string, filter *graphmodel.VMFilter) ([]*graphmodel.VsphereVM, error) {
+func (t *Resolver) List(filter *graphmodel.VMFilter) ([]*graphmodel.VsphereVM, error) {
 	var vms []*graphmodel.VsphereVM
 
-	db, err := t.GetDB(provider)
-	if err != nil {
-		return nil, err
+	var providers = map[string]libmodel.DB{}
+	if filter == nil || filter.Provider == nil {
+		var err error
+		providers, err = t.GetDBs()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		db, err := t.GetDB(*filter.Provider)
+		if err != nil {
+			return nil, err
+		}
+		providers[*filter.Provider] = db
 	}
 
 	var listOptions = libmodel.ListOptions{Detail: libmodel.MaxDetail}
@@ -43,15 +53,17 @@ func (t *Resolver) List(provider string, filter *graphmodel.VMFilter) ([]*graphm
 		listOptions.Predicate = predicates
 	}
 
-	list := []vspheremodel.VM{}
-	err = db.List(&list, listOptions)
-	if err != nil {
-		return nil, nil
-	}
+	for provider, db := range providers {
+		list := []vspheremodel.VM{}
+		err := db.List(&list, listOptions)
+		if err != nil {
+			return nil, nil
+		}
 
-	for _, m := range list {
-		vm := with(&m, provider)
-		vms = append(vms, vm)
+		for _, m := range list {
+			vm := with(&m, provider)
+			vms = append(vms, vm)
+		}
 	}
 
 	return vms, nil
@@ -104,7 +116,7 @@ func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, 
 }
 
 func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.VsphereVM, error) {
-	list, err := t.List(provider, nil)
+	list, err := t.List(&graphmodel.VMFilter{Provider: &provider})
 	if err != nil {
 		return nil, nil
 	}

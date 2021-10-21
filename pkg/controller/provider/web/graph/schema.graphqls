@@ -216,7 +216,7 @@ type Concern {
 }  
 
 input VMFilter {
-  id: String
+  provider: ID
   cpuHotAddEnabled: Boolean
   ipAddress: String
   powerState: String
@@ -238,7 +238,7 @@ type Query {
   vsphereDatastores(provider: ID!): [VsphereDatastore!]!
   vsphereNetwork(id: ID!, provider: ID!): NetworkGroup!
   vsphereNetworks(provider: ID!): [NetworkGroup!]!
-  vsphereVMs(provider: ID!, filter: VMFilter): [VsphereVM!]!
+  vsphereVMs(filter: VMFilter): [VsphereVM!]!
   vsphereVM(id: ID!, provider: ID!): VsphereVM!
 }
 

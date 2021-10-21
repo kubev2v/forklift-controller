@@ -101,7 +101,7 @@ type PortGroup struct {
 }
 
 type VMFilter struct {
-	ID               *string `json:"id"`
+	Provider         *string `json:"provider"`
 	CPUHotAddEnabled *bool   `json:"cpuHotAddEnabled"`
 	IPAddress        *string `json:"ipAddress"`
 	PowerState       *string `json:"powerState"`
