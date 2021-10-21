@@ -100,6 +100,14 @@ type PortGroup struct {
 	Vswitch string `json:"vswitch"`
 }
 
+type VMFilter struct {
+	ID               *string `json:"id"`
+	CPUHotAddEnabled *bool   `json:"cpuHotAddEnabled"`
+	IPAddress        *string `json:"ipAddress"`
+	PowerState       *string `json:"powerState"`
+	MemoryMb         *int    `json:"memoryMB"`
+}
+
 type Vnic struct {
 	Key        string `json:"key"`
 	PortGroup  string `json:"portGroup"`
@@ -212,6 +220,7 @@ type VsphereVM struct {
 	RevisionValidated     int            `json:"revisionValidated"`
 	UUID                  string         `json:"uuid"`
 	Firmware              string         `json:"firmware"`
+	IPAddress             string         `json:"ipAddress"`
 	PowerState            string         `json:"powerState"`
 	CPUAffinity           []int          `json:"cpuAffinity"`
 	CPUHotAddEnabled      bool           `json:"cpuHotAddEnabled"`
@@ -223,7 +232,6 @@ type VsphereVM struct {
 	MemoryMb              int            `json:"memoryMB"`
 	GuestName             string         `json:"guestName"`
 	BalloonedMemory       int            `json:"balloonedMemory"`
-	IPAddress             string         `json:"ipAddress"`
 	NumaNodeAffinity      []string       `json:"numaNodeAffinity"`
 	StorageUsed           int            `json:"storageUsed"`
 	Snapshot              int            `json:"snapshot"`

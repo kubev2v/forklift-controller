@@ -141,7 +141,7 @@ type ComplexityRoot struct {
 		VsphereProvider    func(childComplexity int, id string) int
 		VsphereProviders   func(childComplexity int) int
 		VsphereVM          func(childComplexity int, id string, provider string) int
-		VsphereVMs         func(childComplexity int, provider string) int
+		VsphereVMs         func(childComplexity int, provider string, filter *model.VMFilter) int
 		Vspherefolder      func(childComplexity int, id string, provider string) int
 		Vspherefolders     func(childComplexity int, provider string) int
 	}
@@ -290,7 +290,7 @@ type QueryResolver interface {
 	VsphereDatastores(ctx context.Context, provider string) ([]*model.VsphereDatastore, error)
 	VsphereNetwork(ctx context.Context, id string, provider string) (model.NetworkGroup, error)
 	VsphereNetworks(ctx context.Context, provider string) ([]model.NetworkGroup, error)
-	VsphereVMs(ctx context.Context, provider string) ([]*model.VsphereVM, error)
+	VsphereVMs(ctx context.Context, provider string, filter *model.VMFilter) ([]*model.VsphereVM, error)
 	VsphereVM(ctx context.Context, id string, provider string) (*model.VsphereVM, error)
 }
 type VsphereClusterResolver interface {
@@ -819,7 +819,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.VsphereVMs(childComplexity, args["provider"].(string)), true
+		return e.complexity.Query.VsphereVMs(childComplexity, args["provider"].(string), args["filter"].(*model.VMFilter)), true
 
 	case "Query.vspherefolder":
 		if e.complexity.Query.Vspherefolder == nil {
@@ -1775,6 +1775,7 @@ type VsphereVM {
   revisionValidated: Int!
   uuid: String!
   firmware: String!
+  ipAddress: String!
   powerState: String!
   cpuAffinity: [Int!]!
   cpuHotAddEnabled: Boolean!
@@ -1786,7 +1787,6 @@ type VsphereVM {
   memoryMB: Int!
   guestName: String!
   balloonedMemory: Int!
-  ipAddress: String!
   numaNodeAffinity: [String!]
   storageUsed: Int!
   snapshot: Int!
@@ -1817,6 +1817,14 @@ type Concern {
   label: String!
   category: String!
   assessment: String!
+}  
+
+input VMFilter {
+  id: String
+  cpuHotAddEnabled: Boolean
+  ipAddress: String
+  powerState: String
+  memoryMB: Int
 }
 
 type Query {
@@ -1834,7 +1842,7 @@ type Query {
   vsphereDatastores(provider: ID!): [VsphereDatastore!]!
   vsphereNetwork(id: ID!, provider: ID!): NetworkGroup!
   vsphereNetworks(provider: ID!): [NetworkGroup!]!
-  vsphereVMs(provider: ID!): [VsphereVM!]!
+  vsphereVMs(provider: ID!, filter: VMFilter): [VsphereVM!]!
   vsphereVM(id: ID!, provider: ID!): VsphereVM!
 }
 
@@ -2107,6 +2115,15 @@ func (ec *executionContext) field_Query_vsphereVMs_args(ctx context.Context, raw
 		}
 	}
 	args["provider"] = arg0
+	var arg1 *model.VMFilter
+	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+		arg1, err = ec.unmarshalOVMFilter2ᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVMFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg1
 	return args, nil
 }
 
@@ -4333,7 +4350,7 @@ func (ec *executionContext) _Query_vsphereVMs(ctx context.Context, field graphql
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().VsphereVMs(rctx, args["provider"].(string))
+		return ec.resolvers.Query().VsphereVMs(rctx, args["provider"].(string), args["filter"].(*model.VMFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7193,6 +7210,41 @@ func (ec *executionContext) _VsphereVM_firmware(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _VsphereVM_ipAddress(ctx context.Context, field graphql.CollectedField, obj *model.VsphereVM) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "VsphereVM",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IPAddress, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _VsphereVM_powerState(ctx context.Context, field graphql.CollectedField, obj *model.VsphereVM) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7576,41 +7628,6 @@ func (ec *executionContext) _VsphereVM_balloonedMemory(ctx context.Context, fiel
 	res := resTmp.(int)
 	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _VsphereVM_ipAddress(ctx context.Context, field graphql.CollectedField, obj *model.VsphereVM) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "VsphereVM",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.IPAddress, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _VsphereVM_numaNodeAffinity(ctx context.Context, field graphql.CollectedField, obj *model.VsphereVM) (ret graphql.Marshaler) {
@@ -9113,6 +9130,61 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
+
+func (ec *executionContext) unmarshalInputVMFilter(ctx context.Context, obj interface{}) (model.VMFilter, error) {
+	var it model.VMFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "cpuHotAddEnabled":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cpuHotAddEnabled"))
+			it.CPUHotAddEnabled, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "ipAddress":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ipAddress"))
+			it.IPAddress, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "powerState":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("powerState"))
+			it.PowerState, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "memoryMB":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memoryMB"))
+			it.MemoryMb, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
 
 // endregion **************************** input.gotpl *****************************
 
@@ -10677,6 +10749,11 @@ func (ec *executionContext) _VsphereVM(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "ipAddress":
+			out.Values[i] = ec._VsphereVM_ipAddress(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "powerState":
 			out.Values[i] = ec._VsphereVM_powerState(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -10729,11 +10806,6 @@ func (ec *executionContext) _VsphereVM(ctx context.Context, sel ast.SelectionSet
 			}
 		case "balloonedMemory":
 			out.Values[i] = ec._VsphereVM_balloonedMemory(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "ipAddress":
-			out.Values[i] = ec._VsphereVM_ipAddress(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -12553,6 +12625,21 @@ func (ec *executionContext) marshalODvSHost2ᚖgithubᚗcomᚋkonveyorᚋforklif
 	return ec._DvSHost(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalInt(*v)
+}
+
 func (ec *executionContext) marshalOPNIC2ᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐPnic(ctx context.Context, sel ast.SelectionSet, v *model.Pnic) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -12631,6 +12718,14 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return graphql.MarshalString(*v)
+}
+
+func (ec *executionContext) unmarshalOVMFilter2ᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVMFilter(ctx context.Context, v interface{}) (*model.VMFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputVMFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOVNIC2ᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐVnic(ctx context.Context, sel ast.SelectionSet, v *model.Vnic) graphql.Marshaler {

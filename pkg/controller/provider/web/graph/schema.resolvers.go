@@ -67,8 +67,8 @@ func (r *queryResolver) VsphereNetworks(ctx context.Context, provider string) ([
 	return r.Resolver.Network.List(provider)
 }
 
-func (r *queryResolver) VsphereVMs(ctx context.Context, provider string) ([]*graphmodel.VsphereVM, error) {
-	return r.Resolver.VM.List(provider)
+func (r *queryResolver) VsphereVMs(ctx context.Context, provider string, filter *graphmodel.VMFilter) ([]*graphmodel.VsphereVM, error) {
+	return r.Resolver.VM.List(provider, filter)
 }
 
 func (r *queryResolver) VsphereVM(ctx context.Context, id string, provider string) (*graphmodel.VsphereVM, error) {

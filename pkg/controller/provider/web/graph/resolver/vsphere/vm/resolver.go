@@ -16,7 +16,7 @@ type Resolver struct {
 
 //
 // List all vms.
-func (t *Resolver) List(provider string) ([]*graphmodel.VsphereVM, error) {
+func (t *Resolver) List(provider string, filter *graphmodel.VMFilter) ([]*graphmodel.VsphereVM, error) {
 	var vms []*graphmodel.VsphereVM
 
 	db, err := t.GetDB(provider)
@@ -24,9 +24,26 @@ func (t *Resolver) List(provider string) ([]*graphmodel.VsphereVM, error) {
 		return nil, err
 	}
 
-	list := []vspheremodel.VM{}
+	var listOptions = libmodel.ListOptions{Detail: libmodel.MaxDetail}
 
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
+	if filter != nil {
+		var predicates = libmodel.And()
+		if filter.CPUHotAddEnabled != nil {
+			predicates.Predicates = append(predicates.Predicates, libmodel.Eq("CpuHotAddEnabled", filter.CPUHotAddEnabled))
+		}
+		if filter.IPAddress != nil {
+			predicates.Predicates = append(predicates.Predicates, libmodel.Eq("IPAddress", filter.IPAddress))
+		}
+		if filter.PowerState != nil {
+			predicates.Predicates = append(predicates.Predicates, libmodel.Eq("PowerState", filter.PowerState))
+		}
+		if filter.MemoryMb != nil {
+			predicates.Predicates = append(predicates.Predicates, libmodel.Eq("MemoryMb", filter.MemoryMb))
+		}
+		listOptions.Predicate = predicates
+	}
+
+	list := []vspheremodel.VM{}
 	err = db.List(&list, listOptions)
 	if err != nil {
 		return nil, nil
@@ -87,7 +104,7 @@ func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, 
 }
 
 func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.VsphereVM, error) {
-	list, err := t.List(provider)
+	list, err := t.List(provider, nil)
 	if err != nil {
 		return nil, nil
 	}
@@ -192,6 +209,7 @@ func with(m *vspheremodel.VM, provider string) (h *graphmodel.VsphereVM) {
 		Name:                  m.Name,
 		Revision:              int(m.Revision),
 		RevisionValidated:     int(m.RevisionValidated),
+		IPAddress:             m.IpAddress,
 		UUID:                  m.UUID,
 		Firmware:              m.Firmware,
 		PowerState:            m.PowerState,
@@ -204,7 +222,6 @@ func with(m *vspheremodel.VM, provider string) (h *graphmodel.VsphereVM) {
 		MemoryMb:              int(m.MemoryMB),
 		GuestName:             m.GuestName,
 		BalloonedMemory:       int(m.BalloonedMemory),
-		IPAddress:             m.IpAddress,
 		StorageUsed:           int(m.StorageUsed),
 		Concerns:              concerns,
 		Disks:                 disks,

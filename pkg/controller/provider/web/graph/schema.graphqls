@@ -171,6 +171,7 @@ type VsphereVM {
   revisionValidated: Int!
   uuid: String!
   firmware: String!
+  ipAddress: String!
   powerState: String!
   cpuAffinity: [Int!]!
   cpuHotAddEnabled: Boolean!
@@ -182,7 +183,6 @@ type VsphereVM {
   memoryMB: Int!
   guestName: String!
   balloonedMemory: Int!
-  ipAddress: String!
   numaNodeAffinity: [String!]
   storageUsed: Int!
   snapshot: Int!
@@ -213,6 +213,14 @@ type Concern {
   label: String!
   category: String!
   assessment: String!
+}  
+
+input VMFilter {
+  id: String
+  cpuHotAddEnabled: Boolean
+  ipAddress: String
+  powerState: String
+  memoryMB: Int
 }
 
 type Query {
@@ -230,7 +238,7 @@ type Query {
   vsphereDatastores(provider: ID!): [VsphereDatastore!]!
   vsphereNetwork(id: ID!, provider: ID!): NetworkGroup!
   vsphereNetworks(provider: ID!): [NetworkGroup!]!
-  vsphereVMs(provider: ID!): [VsphereVM!]!
+  vsphereVMs(provider: ID!, filter: VMFilter): [VsphereVM!]!
   vsphereVM(id: ID!, provider: ID!): VsphereVM!
 }
 
