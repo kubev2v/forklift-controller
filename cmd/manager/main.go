@@ -30,6 +30,7 @@ import (
 	template "github.com/openshift/api/template/v1"
 	"github.com/pkg/profile"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	cnv "kubevirt.io/client-go/api/v1"
 	cdi "kubevirt.io/containerized-data-importer/pkg/apis/core/v1beta1"
@@ -104,6 +105,10 @@ func main() {
 	}
 	if err := cdi.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "unable to add kubevirt CDI APIs to scheme")
+		os.Exit(1)
+	}
+	if err := apiextensions.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "unable to add apiextensions APIs to scheme")
 		os.Exit(1)
 	}
 	if err := template.Install(mgr.GetScheme()); err != nil {

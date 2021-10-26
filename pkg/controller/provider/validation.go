@@ -9,7 +9,9 @@ import (
 	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/container"
 	core "k8s.io/api/core/v1"
+	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"net/url"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -25,6 +27,7 @@ const (
 	ConnectionTestFailed    = "ConnectionTestFailed"
 	InventoryCreated        = "InventoryCreated"
 	LoadInventory           = "LoadInventory"
+	MissingDependencies     = "MissingDependencies"
 )
 
 //
@@ -58,6 +61,13 @@ const (
 )
 
 //
+// Required CRDs
+const (
+	KubevirtCrd = "kubevirts.kubevirt.io"
+	CDICrd      = "cdis.cdi.kubevirt.io"
+)
+
+//
 // Validate the provider resource.
 func (r *Reconciler) validate(provider *api.Provider) error {
 	err := r.validateType(provider)
@@ -76,6 +86,10 @@ func (r *Reconciler) validate(provider *api.Provider) error {
 	if err != nil {
 		return liberr.Wrap(err)
 	}
+	err = r.validateDependencies(provider, secret)
+	if err != nil {
+		return liberr.Wrap(err)
+	}
 	err = r.inventoryCreated(provider)
 	if err != nil {
 		return liberr.Wrap(err)
@@ -89,6 +103,44 @@ func (r *Reconciler) validate(provider *api.Provider) error {
 				Category: Advisory,
 				Message:  "Validation has been completed.",
 			})
+	}
+
+	return nil
+}
+
+//
+// Validate that required APIs are present on an OpenShift provider.
+func (r *Reconciler) validateDependencies(provider *api.Provider, secret *core.Secret) error {
+	if provider.Type() != api.OpenShift {
+		return nil
+	}
+	c, err := provider.Client(secret)
+	if err != nil {
+		return liberr.Wrap(err)
+	}
+
+	missingDependencies := libcnd.Condition{
+		Type:     MissingDependencies,
+		Status:   True,
+		Reason:   NotFound,
+		Category: Critical,
+		Message:  "Required APIs are not present.",
+		Items:    []string{},
+	}
+
+	for _, crdName := range []string{KubevirtCrd, CDICrd} {
+		crd := &apiextensions.CustomResourceDefinition{}
+		err = c.Get(context.TODO(), types.NamespacedName{Name: crdName}, crd)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				missingDependencies.Items = append(missingDependencies.Items, crdName)
+			}
+			return liberr.Wrap(err)
+		}
+	}
+
+	if len(missingDependencies.Items) > 0 {
+		provider.Status.SetCondition(missingDependencies)
 	}
 
 	return nil
