@@ -91,6 +91,7 @@ type VsphereHost {
 type VsphereDatastore {
   id: ID!
   provider: ID!
+  kind: String!
   name: String!
   capacity: Int!
   free: Int!
@@ -101,9 +102,10 @@ type VsphereDatastore {
 
 type VsphereNetwork {
   id: ID!
+  provider: ID!
+  kind: String!
   variant: String!
   name: String!
-  provider: ID!
   parent: VsphereFolder!
   tag: String!
   vms: [VsphereVM!]!
@@ -234,7 +236,9 @@ type OvirtDatacenter {
   provider: ID!
   kind: String!
   name: String!
-  storagedomain: String!
+  clusters: [OvirtCluster!]!
+  storages: [OvirtStorageDomain!]!
+  networks: [OvirtNetwork!]!
 }
 
 type OvirtCluster {
@@ -242,37 +246,89 @@ type OvirtCluster {
   provider: ID!
   kind: String!
   name: String!
+  dataCenter: ID!
+  haReservation: Boolean!
+  ksmEnabled: Boolean!
+  biosType: String!
+  hosts: [OvirtHost!]
+  vms: [OvirtVM!]
 }
 
 type OvirtHost {
   id: ID!
-  kind: String!
   provider: ID!
+  kind: String!
   name: String!
   cluster: ID!
+  status: String!
+	productName: String!
+	productVersion: String!
+	inMaintenance: Boolean!
+	cpuSockets: Int!
+	cpuCores: Int!
+	networkAttachments: [NetworkAttachment!]!
+	nics: [HostNIC!]! 
+  vms: [OvirtVM!]
+}
+
+type NetworkAttachment {
+	id: String!
+	network: String!
+}
+
+type HostNIC {
+	id: String!
+	name: String!
+	linkSpeed: Int!
+	mtu: Int! 
+	vLan: String!
 }
 
 type OvirtStorageDomain {
   id: ID!
   provider: ID!
+  kind: String!
   name: String!
   description: String!
 	dataCenter: String! 
 	type: String!
-	storage: Storage!
-	Available: Int!
-	Used: Int!
+	storageType: String!
+	available: Int!
+	used: Int!
 }
 
 type OvirtNetwork {
   id: ID!
   provider: ID!
+  kind: String!
   name: String!
   description: String!
 	dataCenter: ID! 
 	vLan: String!
-	usages:     [String!]!
-	profiles:   [String!]!
+	usages: [String!]!
+	profiles: [String!]!
+}
+
+type OvirtNICProfile {
+  id: ID!
+  provider: ID!
+  name: String!
+  description: String!
+	network: String!
+	portMirroring: Boolean!
+  networkFilter: String!
+	qos: String!
+	properties: [Property!]!
+	passThrough: Boolean!
+}
+
+type DiskProfile {
+  id: ID!
+  provider: ID!
+  name: String!
+  description: String!
+	storageDomain: OvirtStorageDomain!
+	qos: String!
 }
 
 type OvirtVM {

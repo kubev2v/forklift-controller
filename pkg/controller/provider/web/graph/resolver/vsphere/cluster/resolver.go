@@ -79,8 +79,8 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereCluster, 
 }
 
 //
-// Get all clusters for a specific datacenter.
-func (t *Resolver) GetByDatacenter(folderID, provider string) ([]*graphmodel.VsphereCluster, error) {
+// Get all clusters for a specific vsphere datacenter.
+func (t *Resolver) GetByVsphereDatacenter(folderID, provider string) ([]*graphmodel.VsphereCluster, error) {
 	var clusters []*graphmodel.VsphereCluster
 	db, err := t.GetDB(provider)
 	if err != nil {
@@ -98,6 +98,31 @@ func (t *Resolver) GetByDatacenter(folderID, provider string) ([]*graphmodel.Vsp
 
 	for _, m := range list {
 		c := withVsphere(&m, provider)
+		clusters = append(clusters, c)
+	}
+
+	return clusters, nil
+}
+
+//
+// Get all clusters for a specific ovirt datacenter.
+func (t *Resolver) GetByOvirtDatacenter(datacenterId, provider string) ([]*graphmodel.OvirtCluster, error) {
+	var clusters []*graphmodel.OvirtCluster
+
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
+
+	list := []ovirtmodel.Cluster{}
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("datacenter", datacenterId)}
+	err = db.List(&list, listOptions)
+	if err != nil {
+		return nil, nil
+	}
+
+	for _, m := range list {
+		c := withOvirt(&m, provider)
 		clusters = append(clusters, c)
 	}
 
@@ -142,9 +167,13 @@ func withVsphere(m *vspheremodel.Cluster, provider string) (h *graphmodel.Vspher
 
 func withOvirt(m *ovirtmodel.Cluster, provider string) (h *graphmodel.OvirtCluster) {
 	return &graphmodel.OvirtCluster{
-		ID:       m.ID,
-		Name:     m.Name,
-		Provider: provider,
-		Kind:     "OvirtCluster",
+		ID:            m.ID,
+		Name:          m.Name,
+		Provider:      provider,
+		Kind:          "OvirtCluster",
+		DataCenter:    m.DataCenter,
+		HaReservation: m.HaReservation,
+		KsmEnabled:    m.KsmEnabled,
+		BiosType:      m.BiosType,
 	}
 }

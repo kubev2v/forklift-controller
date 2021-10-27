@@ -107,8 +107,8 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatastore
 }
 
 //
-// Get all datastores for a specific datacenter.
-func (t *Resolver) GetByDatacenter(folderID, provider string) ([]*graphmodel.VsphereDatastore, error) {
+// Get all datastores for a specific vsphere datacenter.
+func (t *Resolver) GetByVsphereDatacenter(folderID, provider string) ([]*graphmodel.VsphereDatastore, error) {
 	var datastores []*graphmodel.VsphereDatastore
 	db, err := t.GetDB(provider)
 	if err != nil {
@@ -131,9 +131,35 @@ func (t *Resolver) GetByDatacenter(folderID, provider string) ([]*graphmodel.Vsp
 	return datastores, nil
 }
 
+//
+// Get all storagedomains for a specific ovirt datacenter.
+func (t *Resolver) GetByOvirtDatacenter(datacenterId, provider string) ([]*graphmodel.OvirtStorageDomain, error) {
+	var clusters []*graphmodel.OvirtStorageDomain
+
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
+
+	list := []ovirtmodel.StorageDomain{}
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("datacenter", datacenterId)}
+	err = db.List(&list, listOptions)
+	if err != nil {
+		return nil, nil
+	}
+
+	for _, m := range list {
+		c := withOvirt(&m, provider)
+		clusters = append(clusters, c)
+	}
+
+	return clusters, nil
+}
+
 func withVsphere(m *vspheremodel.Datastore, provider string) (h *graphmodel.VsphereDatastore) {
 	return &graphmodel.VsphereDatastore{
 		ID:          m.ID,
+		Kind:        "VsphereDatastore",
 		Name:        m.Name,
 		Provider:    provider,
 		Capacity:    int(m.Capacity),
@@ -145,6 +171,7 @@ func withVsphere(m *vspheremodel.Datastore, provider string) (h *graphmodel.Vsph
 func withOvirt(m *ovirtmodel.StorageDomain, provider string) (h *graphmodel.OvirtStorageDomain) {
 	return &graphmodel.OvirtStorageDomain{
 		ID:       m.ID,
+		Kind:     "OvirtStorageDomain",
 		Name:     m.Name,
 		Provider: provider,
 	}

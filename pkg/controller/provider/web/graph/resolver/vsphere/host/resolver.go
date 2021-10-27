@@ -105,6 +105,31 @@ func (t *Resolver) GetByCluster(clusterId, provider string) ([]*graphmodel.Vsphe
 	return hosts, nil
 }
 
+//
+// Get all host for a specific cluster.
+func (t *Resolver) GetByOvirtCluster(clusterId, provider string) ([]*graphmodel.OvirtHost, error) {
+	var hosts []*graphmodel.OvirtHost
+
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
+
+	list := []ovirtmodel.Host{}
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("cluster", clusterId)}
+	err = db.List(&list, listOptions)
+	if err != nil {
+		return nil, nil
+	}
+
+	for _, m := range list {
+		h := withOvirt(&m, provider)
+		hosts = append(hosts, h)
+	}
+
+	return hosts, nil
+}
+
 func contains(l []string, s string) bool {
 	for _, i := range l {
 		if i == s {
@@ -231,10 +256,17 @@ func withVsphere(m *vspheremodel.Host, provider string) (h *graphmodel.VsphereHo
 
 func withOvirt(m *ovirtmodel.Host, provider string) (h *graphmodel.OvirtHost) {
 	return &graphmodel.OvirtHost{
-		ID:       m.ID,
-		Name:     m.Name,
-		Kind:     "OvirtHost",
-		Provider: provider,
-		Cluster:  m.Cluster,
+		ID:             m.ID,
+		Name:           m.Name,
+		Kind:           "OvirtHost",
+		Provider:       provider,
+		Status:         m.Status,
+		ProductName:    m.ProductName,
+		ProductVersion: m.ProductVersion,
+		InMaintenance:  m.InMaintenance,
+		CPUSockets:     int(m.CpuSockets),
+		CPUCores:       int(m.CpuCores),
+		// networkAttachments: [NetworkAttachment!]!,
+		// nics: [HostNIC!]!,
 	}
 }

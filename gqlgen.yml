@@ -104,3 +104,29 @@ models:
         resolver: true
       networks:
         resolver: true
+  OvirtDatacenter:
+    fields:
+      clusters:
+        resolver: true
+      storages:
+        resolver: true
+      networks:
+        resolver: true
+  OvirtCluster:
+    fields:
+      hosts:
+        resolver: true
+      vms:
+        resolver: true
+  OvirtHost:
+    fields:
+      vms:
+        resolver: true
+  OvirtStorageDomain:
+    fields:
+      diskProfiles:
+        resolver: true
+  OvirtNetwork:
+    fields:
+      nicProfiles:
+        resolver: true

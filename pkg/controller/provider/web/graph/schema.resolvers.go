@@ -11,6 +11,30 @@ import (
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
 )
 
+func (r *ovirtClusterResolver) Hosts(ctx context.Context, obj *graphmodel.OvirtCluster) ([]*graphmodel.OvirtHost, error) {
+	return r.Resolver.Host.GetByOvirtCluster(obj.ID, obj.Provider)
+}
+
+func (r *ovirtClusterResolver) Vms(ctx context.Context, obj *graphmodel.OvirtCluster) ([]*graphmodel.OvirtVM, error) {
+	return r.Resolver.VM.GetByOvirtCluster(obj.ID, obj.Provider)
+}
+
+func (r *ovirtDatacenterResolver) Clusters(ctx context.Context, obj *graphmodel.OvirtDatacenter) ([]*graphmodel.OvirtCluster, error) {
+	return r.Resolver.Cluster.GetByOvirtDatacenter(obj.ID, obj.Provider)
+}
+
+func (r *ovirtDatacenterResolver) Storages(ctx context.Context, obj *graphmodel.OvirtDatacenter) ([]*graphmodel.OvirtStorageDomain, error) {
+	return r.Resolver.Storage.GetByOvirtDatacenter(obj.ID, obj.Provider)
+}
+
+func (r *ovirtDatacenterResolver) Networks(ctx context.Context, obj *graphmodel.OvirtDatacenter) ([]*graphmodel.OvirtNetwork, error) {
+	return r.Resolver.Network.GetByOvirtDatacenter(obj.ID, obj.Provider)
+}
+
+func (r *ovirtHostResolver) Vms(ctx context.Context, obj *graphmodel.OvirtHost) ([]*graphmodel.OvirtVM, error) {
+	return r.Resolver.VM.GetByOvirtHost(obj.ID, obj.Provider)
+}
+
 func (r *providerResolver) Datacenters(ctx context.Context, obj *graphmodel.Provider) ([]graphmodel.Datacenter, error) {
 	return r.Resolver.Datacenter.List(&obj.ID)
 }
@@ -100,19 +124,19 @@ func (r *vsphereClusterResolver) DrsVms(ctx context.Context, obj *graphmodel.Vsp
 }
 
 func (r *vsphereDatacenterResolver) Clusters(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]*graphmodel.VsphereCluster, error) {
-	return r.Resolver.Cluster.GetByDatacenter(obj.ClustersID, obj.Provider)
+	return r.Resolver.Cluster.GetByVsphereDatacenter(obj.ClustersID, obj.Provider)
 }
 
 func (r *vsphereDatacenterResolver) Datastores(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]*graphmodel.VsphereDatastore, error) {
-	return r.Resolver.Storage.GetByDatacenter(obj.DatastoresID, obj.Provider)
+	return r.Resolver.Storage.GetByVsphereDatacenter(obj.DatastoresID, obj.Provider)
 }
 
 func (r *vsphereDatacenterResolver) Networks(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]graphmodel.VsphereNetworkGroup, error) {
-	return r.Resolver.Network.GetByDatacenter(obj.NetworksID, obj.Provider)
+	return r.Resolver.Network.GetByVsphereDatacenter(obj.NetworksID, obj.Provider)
 }
 
 func (r *vsphereDatacenterResolver) Vms(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]graphmodel.VsphereVMGroup, error) {
-	return r.Resolver.VM.GetByDatacenter(obj.VmsID, obj.Provider)
+	return r.Resolver.VM.GetByVsphereDatacenter(obj.VmsID, obj.Provider)
 }
 
 func (r *vsphereDatastoreResolver) Hosts(ctx context.Context, obj *graphmodel.VsphereDatastore) ([]*graphmodel.VsphereHost, error) {
@@ -147,6 +171,17 @@ func (r *vsphereVMResolver) Networks(ctx context.Context, obj *graphmodel.Vspher
 	return r.Resolver.Network.GetByIDs(obj.NetIDs, obj.Provider)
 }
 
+// OvirtCluster returns generated.OvirtClusterResolver implementation.
+func (r *Resolver) OvirtCluster() generated.OvirtClusterResolver { return &ovirtClusterResolver{r} }
+
+// OvirtDatacenter returns generated.OvirtDatacenterResolver implementation.
+func (r *Resolver) OvirtDatacenter() generated.OvirtDatacenterResolver {
+	return &ovirtDatacenterResolver{r}
+}
+
+// OvirtHost returns generated.OvirtHostResolver implementation.
+func (r *Resolver) OvirtHost() generated.OvirtHostResolver { return &ovirtHostResolver{r} }
+
 // Provider returns generated.ProviderResolver implementation.
 func (r *Resolver) Provider() generated.ProviderResolver { return &providerResolver{r} }
 
@@ -177,6 +212,9 @@ func (r *Resolver) VsphereHost() generated.VsphereHostResolver { return &vsphere
 // VsphereVM returns generated.VsphereVMResolver implementation.
 func (r *Resolver) VsphereVM() generated.VsphereVMResolver { return &vsphereVMResolver{r} }
 
+type ovirtClusterResolver struct{ *Resolver }
+type ovirtDatacenterResolver struct{ *Resolver }
+type ovirtHostResolver struct{ *Resolver }
 type providerResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type vsphereClusterResolver struct{ *Resolver }

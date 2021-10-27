@@ -81,6 +81,15 @@ type DiskAttachment struct {
 	Disk            string `json:"disk"`
 }
 
+type DiskProfile struct {
+	ID            string              `json:"id"`
+	Provider      string              `json:"provider"`
+	Name          string              `json:"name"`
+	Description   string              `json:"description"`
+	StorageDomain *OvirtStorageDomain `json:"storageDomain"`
+	Qos           string              `json:"qos"`
+}
+
 type DvPortGroup struct {
 	ID       string         `json:"id"`
 	Variant  string         `json:"variant"`
@@ -126,6 +135,14 @@ type HostDevice struct {
 	Vendor     string `json:"vendor"`
 }
 
+type HostNic struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	LinkSpeed int    `json:"linkSpeed"`
+	Mtu       int    `json:"mtu"`
+	VLan      string `json:"vLan"`
+}
+
 type NetworkAdapter struct {
 	Name      string `json:"name"`
 	IPAddress string `json:"ipAddress"`
@@ -133,38 +150,74 @@ type NetworkAdapter struct {
 	Mtu       int    `json:"mtu"`
 }
 
+type NetworkAttachment struct {
+	ID      string `json:"id"`
+	Network string `json:"network"`
+}
+
 type OvirtCluster struct {
-	ID       string `json:"id"`
-	Provider string `json:"provider"`
-	Kind     string `json:"kind"`
-	Name     string `json:"name"`
+	ID            string       `json:"id"`
+	Provider      string       `json:"provider"`
+	Kind          string       `json:"kind"`
+	Name          string       `json:"name"`
+	DataCenter    string       `json:"dataCenter"`
+	HaReservation bool         `json:"haReservation"`
+	KsmEnabled    bool         `json:"ksmEnabled"`
+	BiosType      string       `json:"biosType"`
+	Hosts         []*OvirtHost `json:"hosts"`
+	Vms           []*OvirtVM   `json:"vms"`
 }
 
 func (OvirtCluster) IsCluster() {}
 
 type OvirtDatacenter struct {
-	ID            string `json:"id"`
-	Provider      string `json:"provider"`
-	Kind          string `json:"kind"`
-	Name          string `json:"name"`
-	Storagedomain string `json:"storagedomain"`
+	ID       string                `json:"id"`
+	Provider string                `json:"provider"`
+	Kind     string                `json:"kind"`
+	Name     string                `json:"name"`
+	Clusters []*OvirtCluster       `json:"clusters"`
+	Storages []*OvirtStorageDomain `json:"storages"`
+	Networks []*OvirtNetwork       `json:"networks"`
 }
 
 func (OvirtDatacenter) IsDatacenter() {}
 
 type OvirtHost struct {
-	ID       string `json:"id"`
-	Kind     string `json:"kind"`
-	Provider string `json:"provider"`
-	Name     string `json:"name"`
-	Cluster  string `json:"cluster"`
+	ID                 string               `json:"id"`
+	Provider           string               `json:"provider"`
+	Kind               string               `json:"kind"`
+	Name               string               `json:"name"`
+	Cluster            string               `json:"cluster"`
+	Status             string               `json:"status"`
+	ProductName        string               `json:"productName"`
+	ProductVersion     string               `json:"productVersion"`
+	InMaintenance      bool                 `json:"inMaintenance"`
+	CPUSockets         int                  `json:"cpuSockets"`
+	CPUCores           int                  `json:"cpuCores"`
+	NetworkAttachments []*NetworkAttachment `json:"networkAttachments"`
+	Nics               []*HostNic           `json:"nics"`
+	Vms                []*OvirtVM           `json:"vms"`
 }
 
 func (OvirtHost) IsHost() {}
 
+type OvirtNICProfile struct {
+	ID            string      `json:"id"`
+	Provider      string      `json:"provider"`
+	Name          string      `json:"name"`
+	Description   string      `json:"description"`
+	Network       string      `json:"network"`
+	PortMirroring bool        `json:"portMirroring"`
+	NetworkFilter string      `json:"networkFilter"`
+	Qos           string      `json:"qos"`
+	Properties    []*Property `json:"properties"`
+	PassThrough   bool        `json:"passThrough"`
+}
+
 type OvirtNetwork struct {
 	ID          string   `json:"id"`
 	Provider    string   `json:"provider"`
+	Kind        string   `json:"kind"`
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
 	DataCenter  string   `json:"dataCenter"`
@@ -176,15 +229,16 @@ type OvirtNetwork struct {
 func (OvirtNetwork) IsNetwork() {}
 
 type OvirtStorageDomain struct {
-	ID          string  `json:"id"`
-	Provider    string  `json:"provider"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	DataCenter  string  `json:"dataCenter"`
-	Type        string  `json:"type"`
-	Storage     Storage `json:"storage"`
-	Available   int     `json:"Available"`
-	Used        int     `json:"Used"`
+	ID          string `json:"id"`
+	Provider    string `json:"provider"`
+	Kind        string `json:"kind"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	DataCenter  string `json:"dataCenter"`
+	Type        string `json:"type"`
+	StorageType string `json:"storageType"`
+	Available   int    `json:"available"`
+	Used        int    `json:"used"`
 }
 
 func (OvirtStorageDomain) IsStorage() {}
@@ -332,6 +386,7 @@ func (VsphereDatacenter) IsVsphereFolderGroup() {}
 type VsphereDatastore struct {
 	ID          string         `json:"id"`
 	Provider    string         `json:"provider"`
+	Kind        string         `json:"kind"`
 	Name        string         `json:"name"`
 	Capacity    int            `json:"capacity"`
 	Free        int            `json:"free"`
@@ -380,9 +435,10 @@ func (VsphereHost) IsHost() {}
 
 type VsphereNetwork struct {
 	ID       string         `json:"id"`
+	Provider string         `json:"provider"`
+	Kind     string         `json:"kind"`
 	Variant  string         `json:"variant"`
 	Name     string         `json:"name"`
-	Provider string         `json:"provider"`
 	Parent   *VsphereFolder `json:"parent"`
 	Tag      string         `json:"tag"`
 	Vms      []*VsphereVM   `json:"vms"`

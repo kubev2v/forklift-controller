@@ -123,8 +123,8 @@ func (t *Resolver) GetByIDs(ids []string, provider string) ([]graphmodel.Vsphere
 }
 
 //
-// Get all networks for a specific datacenter.
-func (t *Resolver) GetByDatacenter(folderID, provider string) ([]graphmodel.VsphereNetworkGroup, error) {
+// Get all networks for a specific vsphere datacenter.
+func (t *Resolver) GetByVsphereDatacenter(folderID, provider string) ([]graphmodel.VsphereNetworkGroup, error) {
 	var networks []graphmodel.VsphereNetworkGroup
 	db, err := t.GetDB(provider)
 	if err != nil {
@@ -153,12 +153,37 @@ func (t *Resolver) GetByDatacenter(folderID, provider string) ([]graphmodel.Vsph
 	return networks, nil
 }
 
+// Get all networks for a specific ovirt datacenter.
+func (t *Resolver) GetByOvirtDatacenter(datacenterId, provider string) ([]*graphmodel.OvirtNetwork, error) {
+	var clusters []*graphmodel.OvirtNetwork
+
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
+
+	list := []ovirtmodel.Network{}
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("datacenter", datacenterId)}
+	err = db.List(&list, listOptions)
+	if err != nil {
+		return nil, nil
+	}
+
+	for _, m := range list {
+		c := withOvirtNetwork(&m, provider)
+		clusters = append(clusters, c)
+	}
+
+	return clusters, nil
+}
+
 func withVsphereNetwork(m *vspheremodel.Network, provider string) (h *graphmodel.VsphereNetwork) {
 	return &graphmodel.VsphereNetwork{
 		ID:       m.ID,
+		Provider: provider,
+		Kind:     "VsphereNetwork",
 		Variant:  m.Variant,
 		Name:     m.Name,
-		Provider: provider,
 		Tag:      m.Tag,
 	}
 }
@@ -198,7 +223,8 @@ func withDvSwitch(m *vspheremodel.Network, provider string) (h *graphmodel.DvSwi
 func withOvirtNetwork(m *ovirtmodel.Network, provider string) (h *graphmodel.OvirtNetwork) {
 	return &graphmodel.OvirtNetwork{
 		ID:       m.ID,
-		Name:     m.Name,
 		Provider: provider,
+		Kind:     "OvirtNetwork",
+		Name:     m.Name,
 	}
 }

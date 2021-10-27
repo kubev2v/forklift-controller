@@ -140,8 +140,8 @@ func (t *Resolver) GetByDatastore(datastoreId, provider string) ([]*graphmodel.V
 }
 
 //
-// Get all vms for a specific datacenter.
-func (t *Resolver) GetByDatacenter(folderID, provider string) ([]graphmodel.VsphereVMGroup, error) {
+// Get all vms for a specific vsphere datacenter.
+func (t *Resolver) GetByVsphereDatacenter(folderID, provider string) ([]graphmodel.VsphereVMGroup, error) {
 	var vms []graphmodel.VsphereVMGroup
 	db, err := t.GetDB(provider)
 	if err != nil {
@@ -161,6 +161,56 @@ func (t *Resolver) GetByDatacenter(folderID, provider string) ([]graphmodel.Vsph
 	for _, m := range list {
 		c := withVsphere(&m, provider)
 		vms = append(vms, c)
+	}
+
+	return vms, nil
+}
+
+//
+// Get all VMs for a specific ovirt cluster.
+func (t *Resolver) GetByOvirtCluster(clusterId, provider string) ([]*graphmodel.OvirtVM, error) {
+	var vms []*graphmodel.OvirtVM
+
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
+
+	list := []ovirtmodel.VM{}
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("cluster", clusterId)}
+	err = db.List(&list, listOptions)
+	if err != nil {
+		return nil, nil
+	}
+
+	for _, m := range list {
+		h := withOvirt(&m, provider)
+		vms = append(vms, h)
+	}
+
+	return vms, nil
+}
+
+//
+// Get all VMs for a specific ovirt host.
+func (t *Resolver) GetByOvirtHost(clusterId, provider string) ([]*graphmodel.OvirtVM, error) {
+	var vms []*graphmodel.OvirtVM
+
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, err
+	}
+
+	list := []ovirtmodel.VM{}
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("host", clusterId)}
+	err = db.List(&list, listOptions)
+	if err != nil {
+		return nil, nil
+	}
+
+	for _, m := range list {
+		h := withOvirt(&m, provider)
+		vms = append(vms, h)
 	}
 
 	return vms, nil
