@@ -119,26 +119,39 @@ func contains(l []string, s string) bool {
 func (t *Resolver) GetByDatastore(datastoreId, providerId string) ([]*graphmodel.VsphereHost, error) {
 	var hosts []*graphmodel.VsphereHost
 
-	provider, err := t.GetDBs(&providerId)
+	list, err := t.listVsphere(providerId)
 	if err != nil {
 		return nil, nil
 	}
 
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
-	for provider, db := range provider[api.VSphere] {
-		list := []vspheremodel.Host{}
-		err := db.List(&list, listOptions)
-		if err != nil {
-			return nil, nil
-		}
-
-		for _, h := range list {
-			vh := withVsphere(&h, provider)
-			if contains(vh.DatastoreIDs, datastoreId) {
-				hosts = append(hosts, vh)
-			}
+	for _, vh := range list {
+		if contains(vh.DatastoreIDs, datastoreId) {
+			hosts = append(hosts, vh)
 		}
 	}
+	return hosts, nil
+}
+
+func (t *Resolver) listVsphere(provider string) ([]*graphmodel.VsphereHost, error) {
+	var hosts []*graphmodel.VsphereHost
+
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, nil
+	}
+
+	list := []vspheremodel.Host{}
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
+	err = db.List(&list, listOptions)
+	if err != nil {
+		return nil, nil
+	}
+
+	for _, m := range list {
+		h := withVsphere(&m, provider)
+		hosts = append(hosts, h)
+	}
+
 	return hosts, nil
 }
 
