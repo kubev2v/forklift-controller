@@ -2,16 +2,45 @@
 
 package model
 
-type NetworkGroup interface {
-	IsNetworkGroup()
+type Cluster interface {
+	IsCluster()
+}
+
+type Datacenter interface {
+	IsDatacenter()
+}
+
+type Host interface {
+	IsHost()
+}
+
+type Network interface {
+	IsNetwork()
+}
+
+type Storage interface {
+	IsStorage()
+}
+
+type VM interface {
+	IsVM()
 }
 
 type VsphereFolderGroup interface {
 	IsVsphereFolderGroup()
 }
 
+type VsphereNetworkGroup interface {
+	IsVsphereNetworkGroup()
+}
+
 type VsphereVMGroup interface {
 	IsVsphereVMGroup()
+}
+
+type Cdrom struct {
+	ID   string `json:"id"`
+	File string `json:"file"`
 }
 
 type Concern struct {
@@ -27,6 +56,11 @@ type ConfigNetwork struct {
 	VSwitches  []*VSwitch   `json:"vSwitches"`
 }
 
+type CPUPinning struct {
+	Set int `json:"set"`
+	CPU int `json:"cpu"`
+}
+
 type Device struct {
 	Kind string `json:"Kind"`
 }
@@ -40,6 +74,13 @@ type Disk struct {
 	Rdm       bool   `json:"rdm"`
 }
 
+type DiskAttachment struct {
+	ID              string `json:"id"`
+	Interface       string `json:"interface"`
+	ScsiReservation bool   `json:"scsiReservation"`
+	Disk            string `json:"disk"`
+}
+
 type DvPortGroup struct {
 	ID       string         `json:"id"`
 	Variant  string         `json:"variant"`
@@ -51,8 +92,9 @@ type DvPortGroup struct {
 	Vms      []*VsphereVM   `json:"vms"`
 }
 
-func (DvPortGroup) IsNetworkGroup()       {}
-func (DvPortGroup) IsVsphereFolderGroup() {}
+func (DvPortGroup) IsNetwork()             {}
+func (DvPortGroup) IsVsphereNetworkGroup() {}
+func (DvPortGroup) IsVsphereFolderGroup()  {}
 
 type DvSHost struct {
 	Host string   `json:"host"`
@@ -69,21 +111,20 @@ type DvSwitch struct {
 	Host       []*DvSHost     `json:"host"`
 }
 
-func (DvSwitch) IsNetworkGroup()       {}
-func (DvSwitch) IsVsphereFolderGroup() {}
+func (DvSwitch) IsNetwork()             {}
+func (DvSwitch) IsVsphereNetworkGroup() {}
+func (DvSwitch) IsVsphereFolderGroup()  {}
 
-type Network struct {
-	ID       string         `json:"id"`
-	Variant  string         `json:"variant"`
-	Name     string         `json:"name"`
-	Provider string         `json:"provider"`
-	Parent   *VsphereFolder `json:"parent"`
-	Tag      string         `json:"tag"`
-	Vms      []*VsphereVM   `json:"vms"`
+type Guest struct {
+	Distribution string `json:"distribution"`
+	FullVersion  string `json:"fullVersion"`
 }
 
-func (Network) IsNetworkGroup()       {}
-func (Network) IsVsphereFolderGroup() {}
+type HostDevice struct {
+	Capability string `json:"capability"`
+	Product    string `json:"product"`
+	Vendor     string `json:"vendor"`
+}
 
 type NetworkAdapter struct {
 	Name      string `json:"name"`
@@ -92,12 +133,108 @@ type NetworkAdapter struct {
 	Mtu       int    `json:"mtu"`
 }
 
-type OvirtDatacenter struct {
+type OvirtCluster struct {
 	ID       string `json:"id"`
 	Provider string `json:"provider"`
+	Kind     string `json:"kind"`
 	Name     string `json:"name"`
-	Revision string `json:"revision"`
 }
+
+func (OvirtCluster) IsCluster() {}
+
+type OvirtDatacenter struct {
+	ID            string `json:"id"`
+	Provider      string `json:"provider"`
+	Kind          string `json:"kind"`
+	Name          string `json:"name"`
+	Storagedomain string `json:"storagedomain"`
+}
+
+func (OvirtDatacenter) IsDatacenter() {}
+
+type OvirtHost struct {
+	ID       string `json:"id"`
+	Kind     string `json:"kind"`
+	Provider string `json:"provider"`
+	Name     string `json:"name"`
+	Cluster  string `json:"cluster"`
+}
+
+func (OvirtHost) IsHost() {}
+
+type OvirtNetwork struct {
+	ID          string   `json:"id"`
+	Provider    string   `json:"provider"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	DataCenter  string   `json:"dataCenter"`
+	VLan        string   `json:"vLan"`
+	Usages      []string `json:"usages"`
+	Profiles    []string `json:"profiles"`
+}
+
+func (OvirtNetwork) IsNetwork() {}
+
+type OvirtStorageDomain struct {
+	ID          string  `json:"id"`
+	Provider    string  `json:"provider"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	DataCenter  string  `json:"dataCenter"`
+	Type        string  `json:"type"`
+	Storage     Storage `json:"storage"`
+	Available   int     `json:"Available"`
+	Used        int     `json:"Used"`
+}
+
+func (OvirtStorageDomain) IsStorage() {}
+
+type OvirtVM struct {
+	ID                          string            `json:"id"`
+	Kind                        string            `json:"kind"`
+	Provider                    string            `json:"provider"`
+	Name                        string            `json:"name"`
+	Description                 string            `json:"description"`
+	Cluster                     string            `json:"cluster"`
+	Host                        string            `json:"host"`
+	RevisionValidated           int               `json:"revisionValidated"`
+	PolicyVersion               int               `json:"policyVersion"`
+	GuestName                   string            `json:"guestName"`
+	CPUSockets                  int               `json:"cpuSockets"`
+	CPUCores                    int               `json:"cpuCores"`
+	CPUThreads                  int               `json:"cpuThreads"`
+	CPUAffinity                 []*CPUPinning     `json:"cpuAffinity"`
+	CPUShares                   int               `json:"cpuShares"`
+	Memory                      int               `json:"memory"`
+	BalloonedMemory             bool              `json:"balloonedMemory"`
+	Bios                        string            `json:"bios"`
+	Display                     string            `json:"display"`
+	IOThreads                   int               `json:"iOThreads"`
+	StorageErrorResumeBehaviour string            `json:"storageErrorResumeBehaviour"`
+	HaEnabled                   bool              `json:"haEnabled"`
+	UsbEnabled                  bool              `json:"usbEnabled"`
+	BootMenuEnabled             bool              `json:"bootMenuEnabled"`
+	PlacementPolicyAffinity     string            `json:"placementPolicyAffinity"`
+	Timezone                    string            `json:"timezone"`
+	Status                      string            `json:"status"`
+	Stateless                   string            `json:"stateless"`
+	SerialNumber                string            `json:"serialNumber"`
+	HasIllegalImages            bool              `json:"hasIllegalImages"`
+	NumaNodeAffinity            []string          `json:"numaNodeAffinity"`
+	LeaseStorageDomain          string            `json:"leaseStorageDomain"`
+	DiskAttachments             []*DiskAttachment `json:"diskAttachments"`
+	Nics                        []string          `json:"nics"`
+	HostDevices                 []*HostDevice     `json:"hostDevices"`
+	Cdroms                      []*Cdrom          `json:"cdroms"`
+	WatchDogs                   []*WatchDog       `json:"watchDogs"`
+	Properties                  []*Property       `json:"properties"`
+	Snapshots                   []*Snapshot       `json:"snapshots"`
+	Concerns                    []*Concern        `json:"concerns"`
+	Guest                       *Guest            `json:"guest"`
+	OsType                      string            `json:"osType"`
+}
+
+func (OvirtVM) IsVM() {}
 
 type Pnic struct {
 	Key       string `json:"key"`
@@ -110,12 +247,24 @@ type PortGroup struct {
 	Vswitch string `json:"vswitch"`
 }
 
+type Property struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
 type Provider struct {
-	ID          string               `json:"id"`
-	Name        string               `json:"name"`
-	Type        string               `json:"type"`
-	Product     string               `json:"product"`
-	Datacenters []*VsphereDatacenter `json:"datacenters"`
+	ID          string       `json:"id"`
+	Name        string       `json:"name"`
+	Type        string       `json:"type"`
+	Product     string       `json:"product"`
+	Datacenters []Datacenter `json:"datacenters"`
+}
+
+type Snapshot struct {
+	ID            string `json:"id"`
+	Description   string `json:"description"`
+	Type          string `json:"type"`
+	PersistMemory bool   `json:"persistMemory"`
 }
 
 type VMFilter struct {
@@ -141,39 +290,43 @@ type VSwitch struct {
 }
 
 type VsphereCluster struct {
-	ID            string              `json:"id"`
-	Provider      string              `json:"provider"`
-	Name          string              `json:"name"`
-	DatastoresIDs []string            `json:"datastoresIDs"`
-	Datastores    []*VsphereDatastore `json:"datastores"`
-	NetworksIDs   []string            `json:"networksIDs"`
-	Networks      []NetworkGroup      `json:"networks"`
-	Hosts         []*VsphereHost      `json:"hosts"`
-	DasEnabled    bool                `json:"dasEnabled"`
-	DasVmsIDs     []string            `json:"dasVmsIDs"`
-	DasVms        []*VsphereVM        `json:"dasVms"`
-	DrsEnabled    bool                `json:"drsEnabled"`
-	DrsBehavior   string              `json:"drsBehavior"`
-	DrsVmsIDs     []string            `json:"drsVmsIDs"`
-	DrsVms        []*VsphereVM        `json:"drsVms"`
+	ID            string                `json:"id"`
+	Provider      string                `json:"provider"`
+	Kind          string                `json:"kind"`
+	Name          string                `json:"name"`
+	DatastoresIDs []string              `json:"datastoresIDs"`
+	Datastores    []*VsphereDatastore   `json:"datastores"`
+	NetworksIDs   []string              `json:"networksIDs"`
+	Networks      []VsphereNetworkGroup `json:"networks"`
+	Hosts         []*VsphereHost        `json:"hosts"`
+	DasEnabled    bool                  `json:"dasEnabled"`
+	DasVmsIDs     []string              `json:"dasVmsIDs"`
+	DasVms        []*VsphereVM          `json:"dasVms"`
+	DrsEnabled    bool                  `json:"drsEnabled"`
+	DrsBehavior   string                `json:"drsBehavior"`
+	DrsVmsIDs     []string              `json:"drsVmsIDs"`
+	DrsVms        []*VsphereVM          `json:"drsVms"`
 }
 
+func (VsphereCluster) IsCluster()            {}
 func (VsphereCluster) IsVsphereFolderGroup() {}
 
 type VsphereDatacenter struct {
-	ID           string              `json:"id"`
-	Provider     string              `json:"provider"`
-	Name         string              `json:"name"`
-	ClustersID   string              `json:"clustersID"`
-	Clusters     []*VsphereCluster   `json:"clusters"`
-	DatastoresID string              `json:"datastoresID"`
-	Datastores   []*VsphereDatastore `json:"datastores"`
-	NetworksID   string              `json:"networksID"`
-	Networks     []NetworkGroup      `json:"networks"`
-	VmsID        string              `json:"vmsID"`
-	Vms          []VsphereVMGroup    `json:"vms"`
+	ID           string                `json:"id"`
+	Provider     string                `json:"provider"`
+	Kind         string                `json:"kind"`
+	Name         string                `json:"name"`
+	ClustersID   string                `json:"clustersID"`
+	Clusters     []*VsphereCluster     `json:"clusters"`
+	DatastoresID string                `json:"datastoresID"`
+	Datastores   []*VsphereDatastore   `json:"datastores"`
+	NetworksID   string                `json:"networksID"`
+	Networks     []VsphereNetworkGroup `json:"networks"`
+	VmsID        string                `json:"vmsID"`
+	Vms          []VsphereVMGroup      `json:"vms"`
 }
 
+func (VsphereDatacenter) IsDatacenter()         {}
 func (VsphereDatacenter) IsVsphereFolderGroup() {}
 
 type VsphereDatastore struct {
@@ -187,6 +340,7 @@ type VsphereDatastore struct {
 	Vms         []*VsphereVM   `json:"vms"`
 }
 
+func (VsphereDatastore) IsStorage()            {}
 func (VsphereDatastore) IsVsphereFolderGroup() {}
 
 type VsphereFolder struct {
@@ -198,61 +352,87 @@ type VsphereFolder struct {
 	Children    []VsphereFolderGroup `json:"children"`
 }
 
+func (VsphereFolder) IsVM()                 {}
 func (VsphereFolder) IsVsphereVMGroup()     {}
 func (VsphereFolder) IsVsphereFolderGroup() {}
 
 type VsphereHost struct {
-	ID              string              `json:"id"`
-	Provider        string              `json:"provider"`
-	Name            string              `json:"name"`
-	Cluster         string              `json:"cluster"`
-	ProductName     string              `json:"productName"`
-	ProductVersion  string              `json:"productVersion"`
-	InMaintenance   bool                `json:"inMaintenance"`
-	CPUSockets      int                 `json:"cpuSockets"`
-	CPUCores        int                 `json:"cpuCores"`
-	Vms             []*VsphereVM        `json:"vms"`
-	DatastoreIDs    []string            `json:"datastoreIDs"`
-	Datastores      []*VsphereDatastore `json:"datastores"`
-	Networking      *ConfigNetwork      `json:"networking"`
-	NetworksIDs     []string            `json:"networksIDs"`
-	Networks        []NetworkGroup      `json:"networks"`
-	NetworkAdapters []*NetworkAdapter   `json:"networkAdapters"`
+	ID              string                `json:"id"`
+	Provider        string                `json:"provider"`
+	Kind            string                `json:"kind"`
+	Name            string                `json:"name"`
+	Cluster         string                `json:"cluster"`
+	ProductName     string                `json:"productName"`
+	ProductVersion  string                `json:"productVersion"`
+	InMaintenance   bool                  `json:"inMaintenance"`
+	CPUSockets      int                   `json:"cpuSockets"`
+	CPUCores        int                   `json:"cpuCores"`
+	Vms             []*VsphereVM          `json:"vms"`
+	DatastoreIDs    []string              `json:"datastoreIDs"`
+	Datastores      []*VsphereDatastore   `json:"datastores"`
+	Networking      *ConfigNetwork        `json:"networking"`
+	NetworksIDs     []string              `json:"networksIDs"`
+	Networks        []VsphereNetworkGroup `json:"networks"`
+	NetworkAdapters []*NetworkAdapter     `json:"networkAdapters"`
 }
+
+func (VsphereHost) IsHost() {}
+
+type VsphereNetwork struct {
+	ID       string         `json:"id"`
+	Variant  string         `json:"variant"`
+	Name     string         `json:"name"`
+	Provider string         `json:"provider"`
+	Parent   *VsphereFolder `json:"parent"`
+	Tag      string         `json:"tag"`
+	Vms      []*VsphereVM   `json:"vms"`
+}
+
+func (VsphereNetwork) IsNetwork()             {}
+func (VsphereNetwork) IsVsphereNetworkGroup() {}
+func (VsphereNetwork) IsVsphereFolderGroup()  {}
 
 type VsphereVM struct {
-	ID                    string         `json:"id"`
-	Provider              string         `json:"provider"`
-	Name                  string         `json:"name"`
-	Path                  string         `json:"path"`
-	Revision              int            `json:"revision"`
-	RevisionValidated     int            `json:"revisionValidated"`
-	UUID                  string         `json:"uuid"`
-	Firmware              string         `json:"firmware"`
-	IPAddress             string         `json:"ipAddress"`
-	PowerState            string         `json:"powerState"`
-	CPUAffinity           []int          `json:"cpuAffinity"`
-	CPUHotAddEnabled      bool           `json:"cpuHotAddEnabled"`
-	CPUHotRemoveEnabled   bool           `json:"cpuHotRemoveEnabled"`
-	MemoryHotAddEnabled   bool           `json:"memoryHotAddEnabled"`
-	FaultToleranceEnabled bool           `json:"faultToleranceEnabled"`
-	CPUCount              int            `json:"cpuCount"`
-	CoresPerSocket        int            `json:"coresPerSocket"`
-	MemoryMb              int            `json:"memoryMB"`
-	GuestName             string         `json:"guestName"`
-	BalloonedMemory       int            `json:"balloonedMemory"`
-	NumaNodeAffinity      []string       `json:"numaNodeAffinity"`
-	StorageUsed           int            `json:"storageUsed"`
-	Snapshot              int            `json:"snapshot"`
-	IsTemplate            bool           `json:"isTemplate"`
-	HostID                string         `json:"hostID"`
-	Host                  *VsphereHost   `json:"host"`
-	Devices               []*Device      `json:"devices"`
-	Disks                 []*Disk        `json:"disks"`
-	NetIDs                []string       `json:"netIDs"`
-	Networks              []NetworkGroup `json:"networks"`
-	Concerns              []*Concern     `json:"concerns"`
+	ID                    string                `json:"id"`
+	Kind                  string                `json:"kind"`
+	Provider              string                `json:"provider"`
+	Name                  string                `json:"name"`
+	Path                  string                `json:"path"`
+	Revision              int                   `json:"revision"`
+	RevisionValidated     int                   `json:"revisionValidated"`
+	UUID                  string                `json:"uuid"`
+	Firmware              string                `json:"firmware"`
+	IPAddress             string                `json:"ipAddress"`
+	PowerState            string                `json:"powerState"`
+	CPUAffinity           []int                 `json:"cpuAffinity"`
+	CPUHotAddEnabled      bool                  `json:"cpuHotAddEnabled"`
+	CPUHotRemoveEnabled   bool                  `json:"cpuHotRemoveEnabled"`
+	MemoryHotAddEnabled   bool                  `json:"memoryHotAddEnabled"`
+	FaultToleranceEnabled bool                  `json:"faultToleranceEnabled"`
+	CPUCount              int                   `json:"cpuCount"`
+	CoresPerSocket        int                   `json:"coresPerSocket"`
+	MemoryMb              int                   `json:"memoryMB"`
+	GuestName             string                `json:"guestName"`
+	BalloonedMemory       int                   `json:"balloonedMemory"`
+	NumaNodeAffinity      []string              `json:"numaNodeAffinity"`
+	StorageUsed           int                   `json:"storageUsed"`
+	Snapshot              int                   `json:"snapshot"`
+	IsTemplate            bool                  `json:"isTemplate"`
+	HostID                string                `json:"hostID"`
+	Host                  *VsphereHost          `json:"host"`
+	Devices               []*Device             `json:"devices"`
+	Disks                 []*Disk               `json:"disks"`
+	NetIDs                []string              `json:"netIDs"`
+	Networks              []VsphereNetworkGroup `json:"networks"`
+	Concerns              []*Concern            `json:"concerns"`
 }
 
+func (VsphereVM) IsVM()                 {}
 func (VsphereVM) IsVsphereVMGroup()     {}
 func (VsphereVM) IsVsphereFolderGroup() {}
+
+type WatchDog struct {
+	ID     string `json:"id"`
+	Action string `json:"action"`
+	Model  string `json:"model"`
+}

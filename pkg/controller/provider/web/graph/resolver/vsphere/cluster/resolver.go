@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
+	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
+	ovirtmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ovirt"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
 	base "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver"
@@ -16,25 +18,40 @@ type Resolver struct {
 
 //
 // List all clusters.
-func (t *Resolver) List(provider *string) ([]*graphmodel.VsphereCluster, error) {
-	var clusters []*graphmodel.VsphereCluster
+func (t *Resolver) List(provider *string) ([]graphmodel.Cluster, error) {
+	var clusters []graphmodel.Cluster
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
 
-	providers := t.ListDBs(provider)
-	for provider, db := range providers {
+	allDBs, err := t.GetDBs(provider)
+	if err != nil {
+		return nil, nil
+	}
+
+	for provider, db := range allDBs[api.VSphere] {
 		list := []vspheremodel.Cluster{}
-		listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
 		err := db.List(&list, listOptions)
 		if err != nil {
 			return nil, nil
 		}
 
 		for _, m := range list {
-			c := with(&m)
-			c.Provider = provider
+			c := withVsphere(&m, provider)
 			clusters = append(clusters, c)
 		}
 	}
 
+	for provider, db := range allDBs[api.OVirt] {
+		list := []ovirtmodel.Cluster{}
+		err := db.List(&list, listOptions)
+		if err != nil {
+			return nil, nil
+		}
+
+		for _, m := range list {
+			c := withOvirt(&m, provider)
+			clusters = append(clusters, c)
+		}
+	}
 	return clusters, nil
 }
 
@@ -57,9 +74,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereCluster, 
 		t.Log.Info(msg)
 	}
 
-	c := with(m)
-	c.Provider = provider
-
+	c := withVsphere(m, provider)
 	return c, nil
 }
 
@@ -82,15 +97,14 @@ func (t *Resolver) GetByDatacenter(folderID, provider string) ([]*graphmodel.Vsp
 	}
 
 	for _, m := range list {
-		c := with(&m)
-		c.Provider = provider
+		c := withVsphere(&m, provider)
 		clusters = append(clusters, c)
 	}
 
 	return clusters, nil
 }
 
-func with(m *vspheremodel.Cluster) (h *graphmodel.VsphereCluster) {
+func withVsphere(m *vspheremodel.Cluster, provider string) (h *graphmodel.VsphereCluster) {
 	var dasVmList []string
 	for _, dasVm := range m.DasVms {
 		dasVmList = append(dasVmList, dasVm.ID)
@@ -114,6 +128,8 @@ func with(m *vspheremodel.Cluster) (h *graphmodel.VsphereCluster) {
 	return &graphmodel.VsphereCluster{
 		ID:            m.ID,
 		Name:          m.Name,
+		Kind:          "VsphereCluster",
+		Provider:      provider,
 		DasEnabled:    m.DasEnabled,
 		DasVmsIDs:     dasVmList,
 		DrsEnabled:    m.DrsEnabled,
@@ -121,5 +137,14 @@ func with(m *vspheremodel.Cluster) (h *graphmodel.VsphereCluster) {
 		DrsVmsIDs:     drsVmList,
 		DatastoresIDs: datastoresIDs,
 		NetworksIDs:   networksIDs,
+	}
+}
+
+func withOvirt(m *ovirtmodel.Cluster, provider string) (h *graphmodel.OvirtCluster) {
+	return &graphmodel.OvirtCluster{
+		ID:       m.ID,
+		Name:     m.Name,
+		Provider: provider,
+		Kind:     "OvirtCluster",
 	}
 }

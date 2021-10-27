@@ -10,6 +10,7 @@ import (
 	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
 	model "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ocp"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
+	webvsphere "github.com/konveyor/forklift-controller/pkg/controller/provider/web/vsphere"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -63,47 +64,60 @@ func (t *Resolver) GetChildrenIDs(db libmodel.DB, folderId, kind string) (list [
 }
 
 //
-// Get DB for all providers.
-func (t *Resolver) GetDBs() (map[string]libmodel.DB, error) {
-	var providers = map[string]libmodel.DB{}
-
+// Get all providers DBs.
+func (t *Resolver) GetDBs(provider *string) (map[string]map[string]libmodel.DB, error) {
+	vsphere := map[string]libmodel.DB{}
+	ovirt := map[string]libmodel.DB{}
+	var allProviders = map[string]map[string]libmodel.DB{
+		api.VSphere: vsphere,
+		api.OVirt:   ovirt,
+	}
 	list := t.Container.List()
 
 	for _, collector := range list {
 		if p, cast := collector.Owner().(*api.Provider); cast {
-			if p.Type() == api.VSphere {
-				m := &model.Provider{}
-				m.With(p)
+			m := &model.Provider{}
+			m.With(p)
+			r := webvsphere.Provider{}
+			r.With(m)
 
-				db, err := t.GetDB(m.UID)
-				if err != nil {
-					return nil, err
-				}
-				providers[m.UID] = db
+			db, err := t.GetDB(m.UID)
+			if err != nil {
+				return nil, err
+			}
+
+			switch p.Spec.Type {
+			case api.VSphere:
+				vsphere = make(map[string]libmodel.DB)
+				vsphere[m.UID] = db
+				allProviders[api.VSphere] = vsphere
+
+			case api.OVirt:
+				ovirt = make(map[string]libmodel.DB)
+				ovirt[m.UID] = db
+				allProviders[api.OVirt] = ovirt
 			}
 		}
 	}
 
+	if provider == nil {
+		return allProviders, nil
+	}
+
+	providers := t.FindProvider(*provider, allProviders)
 	return providers, nil
 }
 
-//
-// Map providers DBs
-func (t *Resolver) ListDBs(provider *string) map[string]libmodel.DB {
-	var providers = map[string]libmodel.DB{}
-	if provider == nil {
-		var err error
-		providers, err = t.GetDBs()
-		if err != nil {
-			return nil
+func (t *Resolver) FindProvider(provider string, providers map[string]map[string]libmodel.DB) map[string]map[string]libmodel.DB {
+	for providerType, v := range providers {
+		for uid := range v {
+			if uid == provider {
+				found := map[string]map[string]libmodel.DB{
+					providerType: v,
+				}
+				return found
+			}
 		}
-	} else {
-		db, err := t.GetDB(*provider)
-		if err != nil {
-			return nil
-		}
-		providers[*provider] = db
 	}
-
-	return providers
+	return nil
 }

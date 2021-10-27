@@ -1,10 +1,12 @@
-package datastore
+package storage
 
 import (
 	"errors"
 	"fmt"
 
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
+	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
+	ovirtmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ovirt"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
 	base "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver"
@@ -15,22 +17,38 @@ type Resolver struct {
 }
 
 //
-// List all datastores.
-func (t *Resolver) List(provider *string) ([]*graphmodel.VsphereDatastore, error) {
-	var datastores []*graphmodel.VsphereDatastore
+// List all storage entities.
+func (t *Resolver) List(provider *string) ([]graphmodel.Storage, error) {
+	var datastores []graphmodel.Storage
 
-	providers := t.ListDBs(provider)
-	for provider, db := range providers {
+	allDBs, err := t.GetDBs(provider)
+	if err != nil {
+		return nil, nil
+	}
+
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
+	for provider, db := range allDBs[api.VSphere] {
 		list := []vspheremodel.Datastore{}
-		listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
 		err := db.List(&list, listOptions)
 		if err != nil {
 			return nil, nil
 		}
 
 		for _, m := range list {
-			d := with(&m)
-			d.Provider = provider
+			d := withVsphere(&m, provider)
+			datastores = append(datastores, d)
+		}
+	}
+
+	for provider, db := range allDBs[api.OVirt] {
+		list := []ovirtmodel.StorageDomain{}
+		err := db.List(&list, listOptions)
+		if err != nil {
+			return nil, nil
+		}
+
+		for _, m := range list {
+			d := withOvirt(&m, provider)
 			datastores = append(datastores, d)
 		}
 	}
@@ -56,8 +74,7 @@ func (t *Resolver) GetByIds(ids []string, provider string) ([]*graphmodel.Vspher
 	}
 
 	for _, m := range list {
-		c := with(&m)
-		c.Provider = provider
+		c := withVsphere(&m, provider)
 		datastores = append(datastores, c)
 	}
 
@@ -84,8 +101,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatastore
 		return nil, errors.New(msg)
 	}
 
-	c := with(m)
-	c.Provider = provider
+	c := withVsphere(m, provider)
 
 	return c, nil
 }
@@ -109,19 +125,27 @@ func (t *Resolver) GetByDatacenter(folderID, provider string) ([]*graphmodel.Vsp
 	}
 
 	for _, m := range list {
-		c := with(&m)
-		c.Provider = provider
+		c := withVsphere(&m, provider)
 		datastores = append(datastores, c)
 	}
 	return datastores, nil
 }
 
-func with(m *vspheremodel.Datastore) (h *graphmodel.VsphereDatastore) {
+func withVsphere(m *vspheremodel.Datastore, provider string) (h *graphmodel.VsphereDatastore) {
 	return &graphmodel.VsphereDatastore{
 		ID:          m.ID,
 		Name:        m.Name,
+		Provider:    provider,
 		Capacity:    int(m.Capacity),
 		Free:        int(m.Free),
 		Maintenance: m.MaintenanceMode,
+	}
+}
+
+func withOvirt(m *ovirtmodel.StorageDomain, provider string) (h *graphmodel.OvirtStorageDomain) {
+	return &graphmodel.OvirtStorageDomain{
+		ID:       m.ID,
+		Name:     m.Name,
+		Provider: provider,
 	}
 }

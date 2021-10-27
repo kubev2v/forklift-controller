@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
+	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
+	ovirtmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ovirt"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
 	base "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver"
@@ -16,8 +18,8 @@ type Resolver struct {
 
 //
 // List all vms.
-func (t *Resolver) List(provider *string, filter *graphmodel.VMFilter) ([]*graphmodel.VsphereVM, error) {
-	var vms []*graphmodel.VsphereVM
+func (t *Resolver) List(provider *string, filter *graphmodel.VMFilter) ([]graphmodel.VM, error) {
+	var vms []graphmodel.VM
 	var listOptions = libmodel.ListOptions{Detail: libmodel.MaxDetail}
 
 	if filter != nil {
@@ -37,8 +39,12 @@ func (t *Resolver) List(provider *string, filter *graphmodel.VMFilter) ([]*graph
 		listOptions.Predicate = predicates
 	}
 
-	providers := t.ListDBs(provider)
-	for p, db := range providers {
+	allDBs, err := t.GetDBs(provider)
+	if err != nil {
+		return nil, nil
+	}
+
+	for provider, db := range allDBs[api.VSphere] {
 		list := []vspheremodel.VM{}
 		err := db.List(&list, listOptions)
 		if err != nil {
@@ -46,11 +52,23 @@ func (t *Resolver) List(provider *string, filter *graphmodel.VMFilter) ([]*graph
 		}
 
 		for _, m := range list {
-			vm := with(&m, p)
+			vm := withVsphere(&m, provider)
 			vms = append(vms, vm)
 		}
 	}
 
+	for provider, db := range allDBs[api.OVirt] {
+		list := []ovirtmodel.VM{}
+		err := db.List(&list, listOptions)
+		if err != nil {
+			return nil, nil
+		}
+
+		for _, m := range list {
+			vm := withOvirt(&m, provider)
+			vms = append(vms, vm)
+		}
+	}
 	return vms, nil
 }
 
@@ -75,7 +93,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereVM, error
 		return nil, errors.New(msg)
 	}
 
-	vm := with(m, provider)
+	vm := withVsphere(m, provider)
 	return vm, nil
 }
 
@@ -96,21 +114,22 @@ func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, 
 		return nil, nil
 	}
 	for _, m := range list {
-		vms = append(vms, with(&m, provider))
+		vms = append(vms, withVsphere(&m, provider))
 	}
 
 	return vms, nil
 }
 
 //
-// Get all VMs for a specific datastore/
-func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.VsphereVM, error) {
-	list, err := t.List(&provider, nil)
+// Get all VMs for a specific storage/
+func (t *Resolver) GetByDatastore(datastoreId, provider string) ([]*graphmodel.VsphereVM, error) {
+	var vms []*graphmodel.VsphereVM
+
+	list, err := t.listVsphere(provider)
 	if err != nil {
 		return nil, nil
 	}
 
-	var vms []*graphmodel.VsphereVM
 	for _, vm := range list {
 		if contains(vm.Disks, datastoreId) {
 			vms = append(vms, vm)
@@ -140,10 +159,32 @@ func (t *Resolver) GetByDatacenter(folderID, provider string) ([]graphmodel.Vsph
 	}
 
 	for _, m := range list {
-		c := with(&m, provider)
+		c := withVsphere(&m, provider)
 		vms = append(vms, c)
 	}
 
+	return vms, nil
+}
+
+func (t *Resolver) listVsphere(provider string) ([]*graphmodel.VsphereVM, error) {
+	var vms []*graphmodel.VsphereVM
+
+	db, err := t.GetDB(provider)
+	if err != nil {
+		return nil, nil
+	}
+
+	list := []vspheremodel.VM{}
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
+	err = db.List(&list, listOptions)
+	if err != nil {
+		return nil, nil
+	}
+
+	for _, m := range list {
+		vm := withVsphere(&m, provider)
+		vms = append(vms, vm)
+	}
 	return vms, nil
 }
 
@@ -175,7 +216,7 @@ func withConcern(m *vspheremodel.Concern) (c *graphmodel.Concern) {
 	}
 }
 
-func with(m *vspheremodel.VM, provider string) (h *graphmodel.VsphereVM) {
+func withVsphere(m *vspheremodel.VM, provider string) (h *graphmodel.VsphereVM) {
 	var cpuAffinity []int
 	for _, c := range m.CpuAffinity {
 		cpuAffinity = append(cpuAffinity, int(c))
@@ -206,6 +247,7 @@ func with(m *vspheremodel.VM, provider string) (h *graphmodel.VsphereVM) {
 
 	return &graphmodel.VsphereVM{
 		ID:                    m.ID,
+		Kind:                  api.VSphere,
 		Provider:              provider,
 		Name:                  m.Name,
 		Revision:              int(m.Revision),
@@ -231,5 +273,34 @@ func with(m *vspheremodel.VM, provider string) (h *graphmodel.VsphereVM) {
 		Devices:               devices,
 		HostID:                m.Host,
 		NetIDs:                networks,
+	}
+}
+
+func withOvirt(m *ovirtmodel.VM, provider string) (h *graphmodel.OvirtVM) {
+	return &graphmodel.OvirtVM{
+		ID:                          m.ID,
+		Kind:                        api.OVirt,
+		Provider:                    provider,
+		Name:                        m.Name,
+		Description:                 m.Description,
+		Cluster:                     m.Cluster,
+		Host:                        m.Host,
+		RevisionValidated:           int(m.RevisionValidated),
+		PolicyVersion:               m.PolicyVersion,
+		GuestName:                   m.GuestName,
+		CPUSockets:                  int(m.CpuSockets),
+		CPUCores:                    int(m.CpuCores),
+		CPUThreads:                  int(m.CpuThreads),
+		CPUShares:                   int(m.CpuShares),
+		Memory:                      int(m.Memory),
+		BalloonedMemory:             m.BootMenuEnabled,
+		Bios:                        m.BIOS,
+		Display:                     m.Display,
+		IOThreads:                   int(m.IOThreads),
+		StorageErrorResumeBehaviour: m.StorageErrorResumeBehaviour,
+		HaEnabled:                   m.HaEnabled,
+		UsbEnabled:                  m.UsbEnabled,
+		BootMenuEnabled:             m.BootMenuEnabled,
+		// CPUAffinity:                 m.CpuAffinity,
 	}
 }

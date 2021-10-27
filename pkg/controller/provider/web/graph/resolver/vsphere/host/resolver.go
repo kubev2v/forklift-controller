@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
+	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
+	ovirtmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ovirt"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
 	base "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver"
@@ -16,25 +18,40 @@ type Resolver struct {
 
 //
 // List all hosts.
-func (t *Resolver) List(provider *string) ([]*graphmodel.VsphereHost, error) {
-	var hosts []*graphmodel.VsphereHost
+func (t *Resolver) List(provider *string) ([]graphmodel.Host, error) {
+	var hosts []graphmodel.Host
 
-	providers := t.ListDBs(provider)
-	for provider, db := range providers {
+	allDBs, err := t.GetDBs(provider)
+	if err != nil {
+		return nil, nil
+	}
+
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
+	for provider, db := range allDBs[api.VSphere] {
 		list := []vspheremodel.Host{}
-		listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
 		err := db.List(&list, listOptions)
 		if err != nil {
 			return nil, nil
 		}
 
 		for _, m := range list {
-			h := with(&m)
-			h.Provider = provider
+			h := withVsphere(&m, provider)
 			hosts = append(hosts, h)
 		}
 	}
 
+	for provider, db := range allDBs[api.OVirt] {
+		list := []ovirtmodel.Host{}
+		err := db.List(&list, listOptions)
+		if err != nil {
+			return nil, nil
+		}
+
+		for _, m := range list {
+			h := withOvirt(&m, provider)
+			hosts = append(hosts, h)
+		}
+	}
 	return hosts, nil
 }
 
@@ -58,8 +75,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereHost, err
 		return nil, errors.New(msg)
 	}
 
-	h := with(m)
-	h.Provider = provider
+	h := withVsphere(m, provider)
 
 	return h, nil
 }
@@ -82,8 +98,7 @@ func (t *Resolver) GetByCluster(clusterId, provider string) ([]*graphmodel.Vsphe
 	}
 
 	for _, m := range list {
-		h := with(&m)
-		h.Provider = provider
+		h := withVsphere(&m, provider)
 		hosts = append(hosts, h)
 	}
 
@@ -101,23 +116,33 @@ func contains(l []string, s string) bool {
 
 //
 // Get all hosts for a specific datastore.
-func (t *Resolver) GetbyDatastore(datastoreId, provider string) ([]*graphmodel.VsphereHost, error) {
-	list, err := t.List(&provider)
+func (t *Resolver) GetByDatastore(datastoreId, providerId string) ([]*graphmodel.VsphereHost, error) {
+	var hosts []*graphmodel.VsphereHost
+
+	provider, err := t.GetDBs(&providerId)
 	if err != nil {
 		return nil, nil
 	}
 
-	var hosts []*graphmodel.VsphereHost
-	for _, h := range list {
-		if contains(h.DatastoreIDs, datastoreId) {
-			hosts = append(hosts, h)
+	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
+	for provider, db := range provider[api.VSphere] {
+		list := []vspheremodel.Host{}
+		err := db.List(&list, listOptions)
+		if err != nil {
+			return nil, nil
+		}
+
+		for _, h := range list {
+			vh := withVsphere(&h, provider)
+			if contains(vh.DatastoreIDs, datastoreId) {
+				hosts = append(hosts, vh)
+			}
 		}
 	}
-
 	return hosts, nil
 }
 
-func with(m *vspheremodel.Host) (h *graphmodel.VsphereHost) {
+func withVsphere(m *vspheremodel.Host, provider string) (h *graphmodel.VsphereHost) {
 	var datastores []string
 	for _, d := range m.Datastores {
 		datastores = append(datastores, d.ID)
@@ -171,6 +196,8 @@ func with(m *vspheremodel.Host) (h *graphmodel.VsphereHost) {
 	return &graphmodel.VsphereHost{
 		ID:             m.ID,
 		Name:           m.Name,
+		Kind:           "VsphereHost",
+		Provider:       provider,
 		Cluster:        m.Cluster,
 		ProductName:    m.ProductName,
 		ProductVersion: m.ProductVersion,
@@ -186,5 +213,15 @@ func with(m *vspheremodel.Host) (h *graphmodel.VsphereHost) {
 			VSwitches:  vswitches,
 		},
 		NetworkAdapters: networkAdapters,
+	}
+}
+
+func withOvirt(m *ovirtmodel.Host, provider string) (h *graphmodel.OvirtHost) {
+	return &graphmodel.OvirtHost{
+		ID:       m.ID,
+		Name:     m.Name,
+		Kind:     "OvirtHost",
+		Provider: provider,
+		Cluster:  m.Cluster,
 	}
 }

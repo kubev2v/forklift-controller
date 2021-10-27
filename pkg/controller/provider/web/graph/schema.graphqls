@@ -1,11 +1,18 @@
-union NetworkGroup = Network | DvPortGroup | DvSwitch
+union Datacenter = VsphereDatacenter | OvirtDatacenter
+union Cluster = VsphereCluster | OvirtCluster
+union Host = VsphereHost | OvirtHost
+union Storage = VsphereDatastore | OvirtStorageDomain
+union Network = VsphereNetwork | DvPortGroup | DvSwitch | OvirtNetwork
+union VM = VsphereVM | VsphereFolder | OvirtVM
+
+union VsphereNetworkGroup = VsphereNetwork | DvPortGroup | DvSwitch
 union VsphereVMGroup = VsphereFolder | VsphereVM
 union VsphereFolderGroup =
       VsphereFolder
     | VsphereDatacenter
     | VsphereCluster
     | VsphereDatastore
-    | Network
+    | VsphereNetwork
     | DvPortGroup
     | DvSwitch
     | VsphereVM
@@ -24,19 +31,20 @@ type Provider {
   name: String!
   type: String!
   product: String!
-  datacenters: [VsphereDatacenter!]!
+  datacenters: [Datacenter!]!
 }
 
 type VsphereDatacenter {
   id: ID!
   provider: ID!
+  kind: String!
   name: String!
   clustersID: ID!
   clusters: [VsphereCluster!]!
   datastoresID: ID!
   datastores: [VsphereDatastore!]!
   networksID: ID!
-  networks: [NetworkGroup!]!
+  networks: [VsphereNetworkGroup!]!
   vmsID: ID!
   vms: [VsphereVMGroup!]!
 }
@@ -44,11 +52,12 @@ type VsphereDatacenter {
 type VsphereCluster {
   id: ID!
   provider: ID!
+  kind: String!
   name: String!
   datastoresIDs: [ID!]!
   datastores: [VsphereDatastore!]!
   networksIDs: [ID!]!
-  networks: [NetworkGroup!]!
+  networks: [VsphereNetworkGroup!]!
   hosts: [VsphereHost!]!
   dasEnabled: Boolean!
   dasVmsIDs: [ID!]!
@@ -62,6 +71,7 @@ type VsphereCluster {
 type VsphereHost {
   id: ID!
   provider: ID!
+  kind: String!
   name: String!
   cluster: ID!
   productName: String!
@@ -74,7 +84,7 @@ type VsphereHost {
   datastores: [VsphereDatastore!]!
   networking: ConfigNetwork!
   networksIDs: [ID!]!
-  networks: [NetworkGroup!]!
+  networks: [VsphereNetworkGroup!]!
   networkAdapters: [NetworkAdapter!]!
 }
 
@@ -89,7 +99,7 @@ type VsphereDatastore {
   vms: [VsphereVM!]!
 }
 
-type Network {
+type VsphereNetwork {
   id: ID!
   variant: String!
   name: String!
@@ -167,6 +177,7 @@ type NetworkAdapter {
 
 type VsphereVM {
   id: ID!
+  kind: String!
   provider: ID!
   name: String!
   path: String!
@@ -195,7 +206,7 @@ type VsphereVM {
   devices: [Device]
   disks: [Disk!]!
   netIDs: [ID!]!
-  networks: [NetworkGroup!]!
+  networks: [VsphereNetworkGroup!]!
   concerns: [Concern!]!
 }
 
@@ -218,6 +229,143 @@ type Concern {
   assessment: String!
 }  
 
+type OvirtDatacenter {
+  id: ID!
+  provider: ID!
+  kind: String!
+  name: String!
+  storagedomain: String!
+}
+
+type OvirtCluster {
+  id: ID!
+  provider: ID!
+  kind: String!
+  name: String!
+}
+
+type OvirtHost {
+  id: ID!
+  kind: String!
+  provider: ID!
+  name: String!
+  cluster: ID!
+}
+
+type OvirtStorageDomain {
+  id: ID!
+  provider: ID!
+  name: String!
+  description: String!
+	dataCenter: String! 
+	type: String!
+	storage: Storage!
+	Available: Int!
+	Used: Int!
+}
+
+type OvirtNetwork {
+  id: ID!
+  provider: ID!
+  name: String!
+  description: String!
+	dataCenter: ID! 
+	vLan: String!
+	usages:     [String!]!
+	profiles:   [String!]!
+}
+
+type OvirtVM {
+  id: ID!
+  kind: String!
+  provider: ID!
+  name: String!
+  description: String!
+	cluster: String!
+	host: String!
+	revisionValidated: Int!
+	policyVersion: Int!
+	guestName: String!
+	cpuSockets: Int!
+	cpuCores: Int!
+	cpuThreads: Int!
+	cpuAffinity: [CpuPinning]!
+	cpuShares: Int!
+	memory: Int!
+	balloonedMemory: Boolean!
+	bios: String!
+	display: String!
+	iOThreads: Int!
+	storageErrorResumeBehaviour: String!
+	haEnabled: Boolean!
+	usbEnabled: Boolean!
+	bootMenuEnabled: Boolean!
+	placementPolicyAffinity: String!
+	timezone: String!
+	status: String!
+	stateless: String!
+	serialNumber: String!
+	hasIllegalImages: Boolean!
+	numaNodeAffinity: [String!]
+	leaseStorageDomain: String!
+	diskAttachments: [DiskAttachment!]!
+	nics: [String!]!
+	hostDevices: [HostDevice!]!
+	cdroms: [CDROM!]!
+	watchDogs: [WatchDog!]!
+	properties: [Property!]!
+	snapshots: [Snapshot!]!
+	concerns: [Concern!]!
+	guest: Guest!
+	osType: String!
+}
+
+type CpuPinning {
+	set: Int!
+	cpu: Int!
+}
+
+type Snapshot {
+	id: ID!
+	description: String!
+	type: String!
+	persistMemory: Boolean!
+}
+
+type DiskAttachment {
+	id: ID!
+	interface: String!
+	scsiReservation: Boolean!
+	disk: String!
+}
+
+type HostDevice {
+	capability: String!
+	product: String!
+	vendor: String!
+}
+
+type CDROM {
+	id: ID!
+	file: String!
+}
+
+type WatchDog {
+	id: ID!
+	action: String!
+	model: String!
+}
+
+type Property {
+	name: String!
+	value: String!
+}
+
+type Guest {
+	distribution: String!
+	fullVersion: String!
+}
+
 input VMFilter {
   cpuHotAddEnabled: Boolean
   ipAddress: String
@@ -228,19 +376,20 @@ input VMFilter {
 type Query {
   providers: [Provider!]!
   provider(id: ID!): Provider!
+  datacenters(provider: ID): [Datacenter!]!
+  datacenter(id: ID!, provider: ID!): Datacenter!
+  clusters(provider: ID): [Cluster!]!
+  cluster(id: ID!, provider: ID!): Cluster!
+  hosts(provider: ID): [Host!]!
+  host(id: ID!, provider: ID!): Host!
+  storages(provider: ID): [Storage!]!
+  storage(id: ID!, provider: ID!): Storage!
+  networks(provider: ID): [Network!]!
+  network(id: ID!, provider: ID!): Network!
+  vms(provider: ID, filter: VMFilter): [VM!]!
+  vm(id: ID!, provider: ID!): VM!
+
   vspherefolders(provider: ID): [VsphereFolder!]!
   vspherefolder(id: ID!, provider: ID!): VsphereFolder!
-  vsphereDatacenters(provider: ID): [VsphereDatacenter!]!
-  vsphereDatacenter(id: ID!, provider: ID!): VsphereDatacenter!
-  vsphereClusters(provider: ID): [VsphereCluster!]!
-  vsphereCluster(id: ID!, provider: ID!): VsphereCluster!
-  vsphereHosts(provider: ID): [VsphereHost!]!
-  vsphereHost(id: ID!, provider: ID!): VsphereHost!
-  vsphereDatastores(provider: ID): [VsphereDatastore!]!
-  vsphereDatastore(id: ID!, provider: ID!): VsphereDatastore!
-  vsphereNetworks(provider: ID): [NetworkGroup!]!
-  vsphereNetwork(id: ID!, provider: ID!): NetworkGroup!
-  vsphereVMs(provider: ID, filter: VMFilter): [VsphereVM!]!
-  vsphereVM(id: ID!, provider: ID!): VsphereVM!
 }
 

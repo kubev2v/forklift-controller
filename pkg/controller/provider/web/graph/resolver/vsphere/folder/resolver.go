@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
+	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
 	base "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/resolver"
@@ -19,8 +20,8 @@ type Resolver struct {
 func (t *Resolver) List(provider *string) ([]*graphmodel.VsphereFolder, error) {
 	var folders []*graphmodel.VsphereFolder
 
-	providers := t.ListDBs(provider)
-	for provider, db := range providers {
+	providers, _ := t.GetDBs(provider)
+	for provider, db := range providers[api.VSphere] {
 		list := []vspheremodel.Folder{}
 		listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail}
 		err := db.List(&list, listOptions)

@@ -11,7 +11,7 @@ import (
 	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
 )
 
-func (r *providerResolver) Datacenters(ctx context.Context, obj *graphmodel.Provider) ([]*graphmodel.VsphereDatacenter, error) {
+func (r *providerResolver) Datacenters(ctx context.Context, obj *graphmodel.Provider) ([]graphmodel.Datacenter, error) {
 	return r.Resolver.Datacenter.List(&obj.ID)
 }
 
@@ -23,6 +23,54 @@ func (r *queryResolver) Provider(ctx context.Context, id string) (*graphmodel.Pr
 	return r.Resolver.Providers.Get(id)
 }
 
+func (r *queryResolver) Datacenters(ctx context.Context, provider *string) ([]graphmodel.Datacenter, error) {
+	return r.Resolver.Datacenter.List(provider)
+}
+
+func (r *queryResolver) Datacenter(ctx context.Context, id string, provider string) (graphmodel.Datacenter, error) {
+	return r.Resolver.Datacenter.Get(id, provider)
+}
+
+func (r *queryResolver) Clusters(ctx context.Context, provider *string) ([]graphmodel.Cluster, error) {
+	return r.Resolver.Cluster.List(provider)
+}
+
+func (r *queryResolver) Cluster(ctx context.Context, id string, provider string) (graphmodel.Cluster, error) {
+	return r.Resolver.Cluster.Get(id, provider)
+}
+
+func (r *queryResolver) Hosts(ctx context.Context, provider *string) ([]graphmodel.Host, error) {
+	return r.Resolver.Host.List(provider)
+}
+
+func (r *queryResolver) Host(ctx context.Context, id string, provider string) (graphmodel.Host, error) {
+	return r.Resolver.Host.Get(id, provider)
+}
+
+func (r *queryResolver) Storages(ctx context.Context, provider *string) ([]graphmodel.Storage, error) {
+	return r.Resolver.Storage.List(provider)
+}
+
+func (r *queryResolver) Storage(ctx context.Context, id string, provider string) (graphmodel.Storage, error) {
+	return r.Resolver.Storage.Get(id, provider)
+}
+
+func (r *queryResolver) Networks(ctx context.Context, provider *string) ([]graphmodel.Network, error) {
+	return r.Resolver.Network.List(provider)
+}
+
+func (r *queryResolver) Network(ctx context.Context, id string, provider string) (graphmodel.Network, error) {
+	return r.Resolver.Network.Get(id, provider)
+}
+
+func (r *queryResolver) Vms(ctx context.Context, provider *string, filter *graphmodel.VMFilter) ([]graphmodel.VM, error) {
+	return r.Resolver.VM.List(provider, filter)
+}
+
+func (r *queryResolver) VM(ctx context.Context, id string, provider string) (graphmodel.VM, error) {
+	return r.Resolver.VM.Get(id, provider)
+}
+
 func (r *queryResolver) Vspherefolders(ctx context.Context, provider *string) ([]*graphmodel.VsphereFolder, error) {
 	return r.Resolver.Folder.List(provider)
 }
@@ -31,59 +79,11 @@ func (r *queryResolver) Vspherefolder(ctx context.Context, id string, provider s
 	return r.Resolver.Folder.Get(id, provider)
 }
 
-func (r *queryResolver) VsphereDatacenters(ctx context.Context, provider *string) ([]*graphmodel.VsphereDatacenter, error) {
-	return r.Resolver.Datacenter.List(provider)
-}
-
-func (r *queryResolver) VsphereDatacenter(ctx context.Context, id string, provider string) (*graphmodel.VsphereDatacenter, error) {
-	return r.Resolver.Datacenter.Get(id, provider)
-}
-
-func (r *queryResolver) VsphereClusters(ctx context.Context, provider *string) ([]*graphmodel.VsphereCluster, error) {
-	return r.Resolver.Cluster.List(provider)
-}
-
-func (r *queryResolver) VsphereCluster(ctx context.Context, id string, provider string) (*graphmodel.VsphereCluster, error) {
-	return r.Resolver.Cluster.Get(id, provider)
-}
-
-func (r *queryResolver) VsphereHosts(ctx context.Context, provider *string) ([]*graphmodel.VsphereHost, error) {
-	return r.Resolver.Host.List(provider)
-}
-
-func (r *queryResolver) VsphereHost(ctx context.Context, id string, provider string) (*graphmodel.VsphereHost, error) {
-	return r.Resolver.Host.Get(id, provider)
-}
-
-func (r *queryResolver) VsphereDatastores(ctx context.Context, provider *string) ([]*graphmodel.VsphereDatastore, error) {
-	return r.Resolver.Datastore.List(provider)
-}
-
-func (r *queryResolver) VsphereDatastore(ctx context.Context, id string, provider string) (*graphmodel.VsphereDatastore, error) {
-	return r.Resolver.Datastore.Get(id, provider)
-}
-
-func (r *queryResolver) VsphereNetworks(ctx context.Context, provider *string) ([]graphmodel.NetworkGroup, error) {
-	return r.Resolver.Network.List(provider)
-}
-
-func (r *queryResolver) VsphereNetwork(ctx context.Context, id string, provider string) (graphmodel.NetworkGroup, error) {
-	return r.Resolver.Network.Get(id, provider)
-}
-
-func (r *queryResolver) VsphereVMs(ctx context.Context, provider *string, filter *graphmodel.VMFilter) ([]*graphmodel.VsphereVM, error) {
-	return r.Resolver.VM.List(provider, filter)
-}
-
-func (r *queryResolver) VsphereVM(ctx context.Context, id string, provider string) (*graphmodel.VsphereVM, error) {
-	return r.Resolver.VM.Get(id, provider)
-}
-
 func (r *vsphereClusterResolver) Datastores(ctx context.Context, obj *graphmodel.VsphereCluster) ([]*graphmodel.VsphereDatastore, error) {
-	return r.Resolver.Datastore.GetByIds(obj.DatastoresIDs, obj.Provider)
+	return r.Resolver.Storage.GetByIds(obj.DatastoresIDs, obj.Provider)
 }
 
-func (r *vsphereClusterResolver) Networks(ctx context.Context, obj *graphmodel.VsphereCluster) ([]graphmodel.NetworkGroup, error) {
+func (r *vsphereClusterResolver) Networks(ctx context.Context, obj *graphmodel.VsphereCluster) ([]graphmodel.VsphereNetworkGroup, error) {
 	return r.Resolver.Network.GetByIDs(obj.NetworksIDs, obj.Provider)
 }
 
@@ -104,10 +104,10 @@ func (r *vsphereDatacenterResolver) Clusters(ctx context.Context, obj *graphmode
 }
 
 func (r *vsphereDatacenterResolver) Datastores(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]*graphmodel.VsphereDatastore, error) {
-	return r.Resolver.Datastore.GetByDatacenter(obj.DatastoresID, obj.Provider)
+	return r.Resolver.Storage.GetByDatacenter(obj.DatastoresID, obj.Provider)
 }
 
-func (r *vsphereDatacenterResolver) Networks(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]graphmodel.NetworkGroup, error) {
+func (r *vsphereDatacenterResolver) Networks(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]graphmodel.VsphereNetworkGroup, error) {
 	return r.Resolver.Network.GetByDatacenter(obj.NetworksID, obj.Provider)
 }
 
@@ -116,11 +116,11 @@ func (r *vsphereDatacenterResolver) Vms(ctx context.Context, obj *graphmodel.Vsp
 }
 
 func (r *vsphereDatastoreResolver) Hosts(ctx context.Context, obj *graphmodel.VsphereDatastore) ([]*graphmodel.VsphereHost, error) {
-	return r.Resolver.Host.GetbyDatastore(obj.ID, obj.Provider)
+	return r.Resolver.Host.GetByDatastore(obj.ID, obj.Provider)
 }
 
 func (r *vsphereDatastoreResolver) Vms(ctx context.Context, obj *graphmodel.VsphereDatastore) ([]*graphmodel.VsphereVM, error) {
-	return r.Resolver.VM.GetbyDatastore(obj.ID, obj.Provider)
+	return r.Resolver.VM.GetByDatastore(obj.ID, obj.Provider)
 }
 
 func (r *vsphereFolderResolver) Children(ctx context.Context, obj *graphmodel.VsphereFolder) ([]graphmodel.VsphereFolderGroup, error) {
@@ -132,10 +132,10 @@ func (r *vsphereHostResolver) Vms(ctx context.Context, obj *graphmodel.VsphereHo
 }
 
 func (r *vsphereHostResolver) Datastores(ctx context.Context, obj *graphmodel.VsphereHost) ([]*graphmodel.VsphereDatastore, error) {
-	return r.Resolver.Datastore.GetByIds(obj.DatastoreIDs, obj.Provider)
+	return r.Resolver.Storage.GetByIds(obj.DatastoreIDs, obj.Provider)
 }
 
-func (r *vsphereHostResolver) Networks(ctx context.Context, obj *graphmodel.VsphereHost) ([]graphmodel.NetworkGroup, error) {
+func (r *vsphereHostResolver) Networks(ctx context.Context, obj *graphmodel.VsphereHost) ([]graphmodel.VsphereNetworkGroup, error) {
 	return r.Resolver.Network.GetByIDs(obj.NetworksIDs, obj.Provider)
 }
 
@@ -143,7 +143,7 @@ func (r *vsphereVMResolver) Host(ctx context.Context, obj *graphmodel.VsphereVM)
 	return r.Resolver.Host.Get(obj.HostID, obj.Provider)
 }
 
-func (r *vsphereVMResolver) Networks(ctx context.Context, obj *graphmodel.VsphereVM) ([]graphmodel.NetworkGroup, error) {
+func (r *vsphereVMResolver) Networks(ctx context.Context, obj *graphmodel.VsphereVM) ([]graphmodel.VsphereNetworkGroup, error) {
 	return r.Resolver.Network.GetByIDs(obj.NetIDs, obj.Provider)
 }
 
