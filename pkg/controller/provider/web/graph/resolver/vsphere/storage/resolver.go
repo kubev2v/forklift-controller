@@ -170,9 +170,14 @@ func withVsphere(m *vspheremodel.Datastore, provider string) (h *graphmodel.Vsph
 
 func withOvirt(m *ovirtmodel.StorageDomain, provider string) (h *graphmodel.OvirtStorageDomain) {
 	return &graphmodel.OvirtStorageDomain{
-		ID:       m.ID,
-		Kind:     "OvirtStorageDomain",
-		Name:     m.Name,
-		Provider: provider,
+		ID:          m.ID,
+		Kind:        "OvirtStorageDomain",
+		Name:        m.Name,
+		Provider:    provider,
+		DataCenter:  m.DataCenter,
+		Type:        m.Type,
+		StorageType: m.Storage.Type,
+		Available:   int(m.Available),
+		Used:        int(m.Used),
 	}
 }

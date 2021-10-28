@@ -255,18 +255,37 @@ func withVsphere(m *vspheremodel.Host, provider string) (h *graphmodel.VsphereHo
 }
 
 func withOvirt(m *ovirtmodel.Host, provider string) (h *graphmodel.OvirtHost) {
+	var networkAttachments []*graphmodel.NetworkAttachment
+	for _, na := range m.NetworkAttachments {
+		networkAttachment := graphmodel.NetworkAttachment{
+			ID:      na.ID,
+			Network: na.Network,
+		}
+		networkAttachments = append(networkAttachments, &networkAttachment)
+	}
+	var nics []*graphmodel.HostNic
+	for _, nic := range m.NICs {
+		nic := graphmodel.HostNic{
+			ID:        nic.ID,
+			Name:      nic.Name,
+			LinkSpeed: int(nic.LinkSpeed),
+			Mtu:       int(nic.MTU),
+			Vlan:      nic.VLan,
+		}
+		nics = append(nics, &nic)
+	}
 	return &graphmodel.OvirtHost{
-		ID:             m.ID,
-		Name:           m.Name,
-		Kind:           "OvirtHost",
-		Provider:       provider,
-		Status:         m.Status,
-		ProductName:    m.ProductName,
-		ProductVersion: m.ProductVersion,
-		InMaintenance:  m.InMaintenance,
-		CPUSockets:     int(m.CpuSockets),
-		CPUCores:       int(m.CpuCores),
-		// networkAttachments: [NetworkAttachment!]!,
-		// nics: [HostNIC!]!,
+		ID:                 m.ID,
+		Name:               m.Name,
+		Kind:               "OvirtHost",
+		Provider:           provider,
+		Status:             m.Status,
+		ProductName:        m.ProductName,
+		ProductVersion:     m.ProductVersion,
+		InMaintenance:      m.InMaintenance,
+		CPUSockets:         int(m.CpuSockets),
+		CPUCores:           int(m.CpuCores),
+		NetworkAttachments: networkAttachments,
+		Nics:               nics,
 	}
 }

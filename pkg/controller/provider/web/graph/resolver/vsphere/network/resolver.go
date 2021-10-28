@@ -222,9 +222,14 @@ func withDvSwitch(m *vspheremodel.Network, provider string) (h *graphmodel.DvSwi
 
 func withOvirtNetwork(m *ovirtmodel.Network, provider string) (h *graphmodel.OvirtNetwork) {
 	return &graphmodel.OvirtNetwork{
-		ID:       m.ID,
-		Provider: provider,
-		Kind:     "OvirtNetwork",
-		Name:     m.Name,
+		ID:          m.ID,
+		Provider:    provider,
+		Kind:        "OvirtNetwork",
+		Name:        m.Name,
+		Description: m.Description,
+		DataCenter:  m.DataCenter,
+		Vlan:        m.VLan,
+		Usages:      m.Usages,
+		Profiles:    m.Profiles,
 	}
 }

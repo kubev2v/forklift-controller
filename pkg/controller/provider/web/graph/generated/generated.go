@@ -147,7 +147,7 @@ type ComplexityRoot struct {
 		LinkSpeed func(childComplexity int) int
 		Mtu       func(childComplexity int) int
 		Name      func(childComplexity int) int
-		VLan      func(childComplexity int) int
+		Vlan      func(childComplexity int) int
 	}
 
 	NetworkAdapter struct {
@@ -224,7 +224,7 @@ type ComplexityRoot struct {
 		Profiles    func(childComplexity int) int
 		Provider    func(childComplexity int) int
 		Usages      func(childComplexity int) int
-		VLan        func(childComplexity int) int
+		Vlan        func(childComplexity int) int
 	}
 
 	OvirtStorageDomain struct {
@@ -943,12 +943,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HostNic.Name(childComplexity), true
 
-	case "HostNIC.vLan":
-		if e.complexity.HostNic.VLan == nil {
+	case "HostNIC.vlan":
+		if e.complexity.HostNic.Vlan == nil {
 			break
 		}
 
-		return e.complexity.HostNic.VLan(childComplexity), true
+		return e.complexity.HostNic.Vlan(childComplexity), true
 
 	case "NetworkAdapter.ipAddress":
 		if e.complexity.NetworkAdapter.IPAddress == nil {
@@ -1335,12 +1335,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OvirtNetwork.Usages(childComplexity), true
 
-	case "OvirtNetwork.vLan":
-		if e.complexity.OvirtNetwork.VLan == nil {
+	case "OvirtNetwork.vlan":
+		if e.complexity.OvirtNetwork.Vlan == nil {
 			break
 		}
 
-		return e.complexity.OvirtNetwork.VLan(childComplexity), true
+		return e.complexity.OvirtNetwork.Vlan(childComplexity), true
 
 	case "OvirtStorageDomain.available":
 		if e.complexity.OvirtStorageDomain.Available == nil {
@@ -3122,7 +3122,7 @@ type HostNIC {
 	name: String!
 	linkSpeed: Int!
 	mtu: Int! 
-	vLan: String!
+	vlan: String!
 }
 
 type OvirtStorageDomain {
@@ -3145,7 +3145,7 @@ type OvirtNetwork {
   name: String!
   description: String!
 	dataCenter: ID! 
-	vLan: String!
+	vlan: String!
 	usages: [String!]!
 	profiles: [String!]!
 }
@@ -3155,7 +3155,7 @@ type OvirtNICProfile {
   provider: ID!
   name: String!
   description: String!
-	network: String!
+	network: ID!
 	portMirroring: Boolean!
   networkFilter: String!
 	qos: String!
@@ -3168,7 +3168,7 @@ type DiskProfile {
   provider: ID!
   name: String!
   description: String!
-	storageDomain: OvirtStorageDomain!
+	storageDomain: ID!
 	qos: String!
 }
 
@@ -4588,9 +4588,9 @@ func (ec *executionContext) _DiskProfile_storageDomain(ctx context.Context, fiel
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.OvirtStorageDomain)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNOvirtStorageDomain2ᚖgithubᚗcomᚋkonveyorᚋforkliftᚑcontrollerᚋpkgᚋcontrollerᚋproviderᚋwebᚋgraphᚋmodelᚐOvirtStorageDomain(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _DiskProfile_qos(ctx context.Context, field graphql.CollectedField, obj *model.DiskProfile) (ret graphql.Marshaler) {
@@ -5538,7 +5538,7 @@ func (ec *executionContext) _HostNIC_mtu(ctx context.Context, field graphql.Coll
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _HostNIC_vLan(ctx context.Context, field graphql.CollectedField, obj *model.HostNic) (ret graphql.Marshaler) {
+func (ec *executionContext) _HostNIC_vlan(ctx context.Context, field graphql.CollectedField, obj *model.HostNic) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5556,7 +5556,7 @@ func (ec *executionContext) _HostNIC_vLan(ctx context.Context, field graphql.Col
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.VLan, nil
+		return obj.Vlan, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7031,7 +7031,7 @@ func (ec *executionContext) _OvirtNICProfile_network(ctx context.Context, field 
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _OvirtNICProfile_portMirroring(ctx context.Context, field graphql.CollectedField, obj *model.OvirtNICProfile) (ret graphql.Marshaler) {
@@ -7419,7 +7419,7 @@ func (ec *executionContext) _OvirtNetwork_dataCenter(ctx context.Context, field 
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _OvirtNetwork_vLan(ctx context.Context, field graphql.CollectedField, obj *model.OvirtNetwork) (ret graphql.Marshaler) {
+func (ec *executionContext) _OvirtNetwork_vlan(ctx context.Context, field graphql.CollectedField, obj *model.OvirtNetwork) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -7437,7 +7437,7 @@ func (ec *executionContext) _OvirtNetwork_vLan(ctx context.Context, field graphq
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.VLan, nil
+		return obj.Vlan, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -16572,8 +16572,8 @@ func (ec *executionContext) _HostNIC(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "vLan":
-			out.Values[i] = ec._HostNIC_vLan(ctx, field, obj)
+		case "vlan":
+			out.Values[i] = ec._HostNIC_vlan(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -17041,8 +17041,8 @@ func (ec *executionContext) _OvirtNetwork(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "vLan":
-			out.Values[i] = ec._OvirtNetwork_vLan(ctx, field, obj)
+		case "vlan":
+			out.Values[i] = ec._OvirtNetwork_vlan(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

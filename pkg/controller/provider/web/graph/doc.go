@@ -1,3 +1,7 @@
+// The graph packages provides graphql services for essentially querying the controller inventory
+
+// Query examples:
+
 // query Providers {
 // 	providers {
 // 	  id name type
@@ -12,7 +16,7 @@
 // 			  vms {
 // 				id name firmware
 // 				 networks {
-// 				   ... on Network { id variant }
+// 				   ... on VsphereNetwork { id variant }
 // 				   ... on DvPortGroup { id variant dvSwitch }
 // 				   ... on DvSwitch { id variant host { host PNIC } }
 // 				}
@@ -39,7 +43,7 @@
 // 			  vms {
 // 				id name firmware
 // 				 networks {
-// 				   ... on Network { id variant }
+// 				   ... on VsphereNetwork { id variant }
 // 				   ... on DvPortGroup { id variant dvSwitch }
 // 				   ... on DvSwitch { id variant host { host PNIC } }
 // 				}
@@ -47,7 +51,10 @@
 // 			}
 // 		  }
 // 		}
-// 		... on OvirtDatacenter { id provider name }
+// 		... on OvirtDatacenter {
+//       id provider name
+//       clusters { id kind name }
+//     }
 // 	  }
 // 	}
 // }
@@ -69,14 +76,14 @@
 // 			name
 // 		  }
 // 		  networks {
-// 		  ... on Network { id variant }
+// 		  ... on VsphereNetwork { id variant }
 // 		  ... on DvPortGroup { id variant dvSwitch }
 // 		  ... on DvSwitch { id variant host { host PNIC } }
 // 		  }
 // 		}
 // 		datastores { id name }
 // 		networks {
-// 		  ... on Network { id variant }
+// 		  ... on VsphereNetwork { id variant }
 // 		  ... on DvPortGroup { id variant dvSwitch }
 // 		  ... on DvSwitch { id variant host { host PNIC } }
 // 		}
@@ -103,14 +110,14 @@
 // 			name
 // 		  }
 // 		  networks {
-// 		  ... on Network { id variant }
+// 		  ... on VsphereNetwork { id variant }
 // 		  ... on DvPortGroup { id variant dvSwitch }
 // 		  ... on DvSwitch { id variant host { host PNIC } }
 // 		  }
 // 		}
 // 		datastores { id name }
 // 		networks {
-// 		  ... on Network { id variant }
+// 		  ... on VsphereNetwork { id variant }
 // 		  ... on DvPortGroup { id variant dvSwitch }
 // 		  ... on DvSwitch { id variant host { host PNIC } }
 // 		}
@@ -127,7 +134,7 @@
 // 		clusters { id name }
 // 		datastores { id name }
 // 		networks {
-// 		  ... on Network { id variant name  }
+// 		  ... on VsphereNetwork { id variant name  }
 // 		  ... on DvPortGroup { id variant name dvSwitch }
 // 		  ... on DvSwitch { id variant name host { host PNIC } }
 // 		}
@@ -143,7 +150,7 @@
 // 		id kind name provider dasEnabled drsEnabled drsBehavior
 // 		hosts { id name cpuCores cpuSockets provider }
 // 		networks {
-// 		  ... on Network { id variant name }
+// 		  ... on VsphereNetwork { id variant name }
 // 		  ... on DvPortGroup { id variant name dvSwitch }
 // 		  ... on DvSwitch { id variant name host { host } }
 // 		}
@@ -159,7 +166,7 @@
 // 		 id kind name dasEnabled drsEnabled drsBehavior
 // 		 hosts { id name cpuCores cpuSockets provider }
 // 		 networks {
-// 		   ... on Network { id variant name }
+// 		   ... on VsphereNetwork { id variant name }
 // 		   ... on DvPortGroup { id variant name dvSwitch }
 // 		   ... on DvSwitch { id variant name host { host } }
 // 		 }
@@ -174,9 +181,14 @@
 // 	  ... on VsphereHost {
 // 		id name provider cpuCores cpuSockets
 // 		datastores { id name }
-// 		vms { id name firmware }
+// 		vspherevms: vms { id name firmware }
 // 	  }
-// 	  ... on OvirtHost { id provider name }
+// 	  ... on OvirtHost {
+//       id provider name
+//     ovirtvms: vms {
+//       id kind provider description cpuCores cpuSockets cpuAffinity { set cpu } memory
+//       }
+//     }
 // 	}
 // }
 
@@ -197,7 +209,7 @@
 // 		id name cpuCores cpuSockets
 // 		datastores { id }
 // 		networks {
-// 		  ... on Network { id variant name }
+// 		  ... on VsphereNetwork { id variant name }
 // 		  ... on DvPortGroup { id variant name dvSwitch }
 // 		  ... on DvSwitch { id variant name host { host } }
 // 		}
@@ -225,87 +237,142 @@
 // 	}
 // }
 
-// query AllDatastores {
-// 	vsphereDatastores {
-// 	  id name provider
-// 	  hosts { id name }
-// 	  vms { id name firmware }
+// query AllStorages {
+// 	storages {
+//     ... on VsphereDatastore {
+//    	  id name provider
+// 	    hosts { id name }
+// 	    vms { id name firmware }
+//     }
+//     ... on OvirtStorageDomain {
+//       id name provider
+//     }
 // 	}
 // }
 
 // query Datastores($provider: ID!) {
-// 	vsphereDatastores(provider: $provider) {
-// 	  id name
-// 	  hosts { id name }
-// 	  vms { id name firmware }
+// 	storages (provider: $provider) {
+//     ... on VsphereDatastore {
+// 	    id name
+// 	    hosts { id name }
+// 	    vms { id name firmware }
+//     }
 // 	}
 // }
 
 // query Datastore($provider: ID!) {
-// 	vsphereDatastore(id: "datastore-45", provider: $provider) {
-// 	  id name
-// 	  hosts { id name }
-// 	  vms { id name firmware }
-// 	}
+// 	storage (id: "datastore-45", provider: $provider) {
+//     ... on VsphereDatastore {
+//       id name
+//       hosts { id name }
+//       vms { id name firmware }
+// 	  }
+//   }
 // }
 
 // query AllNetworks{
-// 	vsphereNetworks {
-// 	  ... on Network { id provider tag }
+//   networks {
+// 	  ... on VsphereNetwork { id provider tag }
 // 	  ... on DvPortGroup { id provider dvSwitch }
 // 	  ... on DvSwitch { id provider host { host PNIC }}
 // 	}
 // }
 
 // query Networks($provider: ID!){
-// 	vsphereNetworks(provider: $provider) {
-// 	  ... on Network { id variant tag }
+// 	networks(provider: $provider) {
+// 	  ... on VsphereNetwork { id variant tag }
 // 	  ... on DvPortGroup { id variant dvSwitch }
 // 	  ... on DvSwitch { id variant host { host PNIC }}
 // 	}
 // }
 
 // query Network($provider: ID!){
-// 	vsphereNetwork(id: "dvportgroup-56", provider: $provider) {
-// 	  ... on Network { id variant }
+// 	network(id: "dvportgroup-56", provider: $provider) {
+// 	  ... on VsphereNetwork { id variant }
 // 	  ... on DvPortGroup { id variant dvSwitch }
 // 	  ... on DvSwitch { id variant host { host PNIC }}
 // 	}
 // }
 
 // query AllVMs {
-// 	vsphereVMs {
-// 	  id provider name revision ipAddress cpuHotAddEnabled powerState memoryMB
-// 	  disks { key datastore }
-// 	  concerns { label }
-// 	  networks {
-// 		... on Network { id variant }
-// 		... on DvPortGroup { id variant dvSwitch }
-// 		... on DvSwitch { id variant host { host PNIC } }
-// 	  }
+// 	vms {
+//  	  ... on VsphereVM {
+//   	  id provider name revision ipAddress cpuHotAddEnabled powerState memoryMB
+// 	    disks { key datastore }
+// 	    concerns { label }
+// 	    networks {
+// 	    	... on VsphereNetwork { id variant }
+//   	  	... on DvPortGroup { id variant dvSwitch }
+//   	  	... on DvSwitch { id variant host { host PNIC } }
+// 	    }
+//     }
+//     ... on OvirtVM {
+//       id kind provider description cpuCores cpuSockets cpuAffinity { set cpu } memory
+//     }
 // 	}
 // }
 
 // query VMs($provider: ID!){
-// 	vsphereVMs(provider: $provider, filter: {cpuHotAddEnabled: false, ipAddress: "10.19.2.32", powerState: "poweredOn", memoryMB: 4096}) {
-// 	  id name revision ipAddress cpuHotAddEnabled powerState memoryMB
-// 	  disks { key datastore }
-// 	  concerns { label }
-// 	  networks {
-// 		... on Network { id variant }
-// 		... on DvPortGroup { id variant dvSwitch }
-// 		... on DvSwitch { id variant host { host PNIC } }
+// 	vms(provider: $provider, filter: {cpuHotAddEnabled: false, ipAddress: "10.19.2.32", powerState: "poweredOn", memoryMB: 4096}) {
+// 	  ... on VsphereVM {
+//       id name revision ipAddress cpuHotAddEnabled powerState memoryMB
+// 	    disks { key datastore }
+// 	    concerns { label }
+// 	    networks {
+// 	    	... on VsphereNetwork { id variant }
+// 		    ... on DvPortGroup { id variant dvSwitch }
+// 		    ... on DvSwitch { id variant host { host PNIC } }
+//       }
 // 	  }
 // 	}
 // }
 
 // query VM($provider: ID!){
-// 	vsphereVM(id: "vm-3344", provider: $provider) {
-// 	  id name disks { key datastore } concerns { label }
-// 	  networks {
-// 		... on Network { id variant }
-// 		... on DvPortGroup { id variant dvSwitch }
-// 		... on DvSwitch { id variant host { host PNIC } }
+// 	vm (id: "vm-3344", provider: $provider) {
+//     ... on VsphereVM {
+//   	  id name disks { key datastore } concerns { label }
+// 	    networks {
+// 		    ... on VsphereNetwork { id variant }
+// 		    ... on DvPortGroup { id variant dvSwitch }
+// 		    ... on DvSwitch { id variant host { host PNIC } }
+//       }
+// 	  }
+// 	}
+// }
+
+// fragment FolderFields on VsphereFolder {
+// 	id
+// 	name
+// 	provider
+// 	parent
+// 	children {
+// 	  ... on VsphereDatacenter { id name }
+// 	  ... on VsphereCluster { id name }
+// 	  ... on VsphereDatastore { id name }
+// 	  ... on VsphereNetwork { id name }
+// 	  ... on DvPortGroup { id name }
+// 	  ... on DvSwitch { id name }
+// 	  ... on VsphereVM { id name }
+// 	}
+// }
+
+// fragment ChildrenRecursive on VsphereFolder {
+// 	children {
+// 	  ...FolderFields
+// 	  ... on VsphereFolder {
+// 		...FolderFields
+// 		children {
+// 		  ...FolderFields
+// 		  ... on VsphereFolder {
+// 			...FolderFields
+// 			children {
+// 			  ...FolderFields
+// 			  ... on VsphereFolder {
+// 				...FolderFields
+// 			  }
+// 			}
+// 		  }
+// 		}
 // 	  }
 // 	}
 // }
@@ -331,42 +398,21 @@
 // 	}
 // }
 
-//   fragment FolderFields on VsphereFolder {
-// 	id
-// 	name
-// 	provider
-// 	parent
-// 	children {
-// 	  ... on VsphereDatacenter {id name }
-// 	  ... on VsphereCluster {id name }
-// 	  ... on VsphereDatastore {id name }
-// 	  ... on Network {id name }
-// 	  ... on DvPortGroup {id name }
-// 	  ... on DvSwitch {id name }
-// 	  ... on VsphereVM {id name }
-// 	}
-// }
-
-//   fragment ChildrenRecursive on VsphereFolder {
-// 	children {
-// 	  ...FolderFields
-// 	  ... on VsphereFolder {
-// 		...FolderFields
-// 		children {
-// 		  ...FolderFields
-// 		  ... on VsphereFolder {
+// query VMandTemplateTree {
+// 	providers {
+// 	  id name product
+// 	  datacenters {
+// 		... on VsphereDatacenter {
+// 		  id name
+// 		  children: vms {
 // 			...FolderFields
-// 			children {
-// 			  ...FolderFields
-// 			  ... on VsphereFolder {
-// 				...FolderFields
-// 			  }
-// 			}
+// 			...ChildrenRecursive
+// 			... on VsphereVM { id name }
 // 		  }
 // 		}
 // 	  }
 // 	}
-// }
+//   }
 
 // query NonExistingProvider{
 // 	hosts(provider: "mystery") {

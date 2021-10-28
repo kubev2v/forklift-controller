@@ -82,12 +82,12 @@ type DiskAttachment struct {
 }
 
 type DiskProfile struct {
-	ID            string              `json:"id"`
-	Provider      string              `json:"provider"`
-	Name          string              `json:"name"`
-	Description   string              `json:"description"`
-	StorageDomain *OvirtStorageDomain `json:"storageDomain"`
-	Qos           string              `json:"qos"`
+	ID            string `json:"id"`
+	Provider      string `json:"provider"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	StorageDomain string `json:"storageDomain"`
+	Qos           string `json:"qos"`
 }
 
 type DvPortGroup struct {
@@ -140,7 +140,7 @@ type HostNic struct {
 	Name      string `json:"name"`
 	LinkSpeed int    `json:"linkSpeed"`
 	Mtu       int    `json:"mtu"`
-	VLan      string `json:"vLan"`
+	Vlan      string `json:"vlan"`
 }
 
 type NetworkAdapter struct {
@@ -221,7 +221,7 @@ type OvirtNetwork struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
 	DataCenter  string   `json:"dataCenter"`
-	VLan        string   `json:"vLan"`
+	Vlan        string   `json:"vlan"`
 	Usages      []string `json:"usages"`
 	Profiles    []string `json:"profiles"`
 }

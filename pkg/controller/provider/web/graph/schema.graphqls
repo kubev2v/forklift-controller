@@ -281,7 +281,7 @@ type HostNIC {
 	name: String!
 	linkSpeed: Int!
 	mtu: Int! 
-	vLan: String!
+	vlan: String!
 }
 
 type OvirtStorageDomain {
@@ -304,7 +304,7 @@ type OvirtNetwork {
   name: String!
   description: String!
 	dataCenter: ID! 
-	vLan: String!
+	vlan: String!
 	usages: [String!]!
 	profiles: [String!]!
 }
@@ -314,7 +314,7 @@ type OvirtNICProfile {
   provider: ID!
   name: String!
   description: String!
-	network: String!
+	network: ID!
 	portMirroring: Boolean!
   networkFilter: String!
 	qos: String!
@@ -327,7 +327,7 @@ type DiskProfile {
   provider: ID!
   name: String!
   description: String!
-	storageDomain: OvirtStorageDomain!
+	storageDomain: ID!
 	qos: String!
 }
 
