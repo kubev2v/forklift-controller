@@ -93,6 +93,38 @@ type Plan struct {
 }
 
 //
+// Add a finalizer to the Plan.
+func (r *Plan) AddFinalizer(finalizer string) {
+	if !r.HasFinalizer(finalizer) {
+		r.Finalizers = append(r.Finalizers, finalizer)
+	}
+}
+
+//
+// Check whether the Plan has a particular finalizer.
+func (r *Plan) HasFinalizer(finalizer string) (found bool) {
+	for _, f := range r.Finalizers {
+		if f == finalizer {
+			found = true
+			return
+		}
+	}
+	return
+}
+
+//
+// Remove a finalizer from the Plan.
+func (r *Plan) RemoveFinalizer(finalizer string) {
+	keep := make([]string, 0)
+	for _, f := range r.Finalizers {
+		if f != finalizer {
+			keep = append(keep, f)
+		}
+	}
+	r.Finalizers = keep
+}
+
+//
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type PlanList struct {
 	meta.TypeMeta `json:",inline"`

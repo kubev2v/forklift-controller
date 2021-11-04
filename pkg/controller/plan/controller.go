@@ -47,6 +47,12 @@ const (
 	Name = "plan"
 )
 
+// Finalizers
+const (
+	// Finalizer to archive the plan before deletion.
+	ArchiveFinalizer = "plans.forklift.konveyor.io/archive"
+)
+
 //
 // Package logger.
 var log = logging.WithName(Name)
@@ -204,8 +210,19 @@ func (r Reconciler) Reconcile(request reconcile.Request) (result reconcile.Resul
 		r.Log.V(2).Info("Conditions.", "all", plan.Status.Conditions)
 	}()
 
-	// Don't reconcile if the plan is archived.
-	if plan.Spec.Archived && plan.Status.HasCondition(Archived) {
+	// Set archive finalizer to ensure resources are
+	// cleaned up if the plan is deleted without
+	// having been manually archived.
+	if plan.DeletionTimestamp.IsZero() && !plan.HasFinalizer(ArchiveFinalizer) {
+		plan.AddFinalizer(ArchiveFinalizer)
+		err = r.Update(context.TODO(), plan)
+		if err != nil {
+			return
+		}
+	}
+
+	// Don't reconcile if the plan is archived, unless the plan is being deleted.
+	if plan.Spec.Archived && plan.Status.HasCondition(Archived) && plan.DeletionTimestamp.IsZero() {
 		r.Log.Info("Aborting reconcile of archived plan.")
 		return
 	}
@@ -229,9 +246,28 @@ func (r Reconciler) Reconcile(request reconcile.Request) (result reconcile.Resul
 		return
 	}
 
-	// Archive the plan.
+	// Archive before deleting the plan.
+	if !plan.DeletionTimestamp.IsZero() {
+		r.archive(plan)
+		plan.RemoveFinalizer(ArchiveFinalizer)
+		err = r.Update(context.TODO(), plan)
+		if err != nil {
+			return
+		}
+		return
+	}
+
+	// Archive the plan due to a user request.
 	if plan.Spec.Archived {
 		r.archive(plan)
+		plan.Status.SetCondition(
+			libcnd.Condition{
+				Type:     Archived,
+				Status:   True,
+				Category: Advisory,
+				Reason:   UserRequested,
+				Message:  "The migration plan has been archived.",
+			})
 	}
 
 	// Ready condition.
@@ -281,15 +317,6 @@ func (r *Reconciler) archive(plan *api.Plan) {
 		runner := Migration{Context: ctx}
 		runner.Archive()
 	}
-	// Regardless of whether or not we can clean up, mark the plan archived.
-	plan.Status.SetCondition(
-		libcnd.Condition{
-			Type:     Archived,
-			Status:   True,
-			Category: Advisory,
-			Reason:   UserRequested,
-			Message:  "The migration plan has been archived.",
-		})
 	r.Log.Info("Plan archived.")
 }
 
