@@ -10,6 +10,7 @@ import (
 	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
 	model "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ocp"
 	vspheremodel "github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
+	graphmodel "github.com/konveyor/forklift-controller/pkg/controller/provider/web/graph/model"
 	webvsphere "github.com/konveyor/forklift-controller/pkg/controller/provider/web/vsphere"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -120,4 +121,174 @@ func (t *Resolver) FindProvider(provider string, providers map[string]map[string
 		}
 	}
 	return nil
+}
+
+func (t *Resolver) WithVsphereCluster(m *vspheremodel.Cluster, provider string) (h *graphmodel.VsphereCluster) {
+	var dasVmList []string
+	for _, dasVm := range m.DasVms {
+		dasVmList = append(dasVmList, dasVm.ID)
+	}
+
+	var drsVmList []string
+	for _, dasVm := range m.DasVms {
+		drsVmList = append(drsVmList, dasVm.ID)
+	}
+
+	var datastoresIDs []string
+	for _, ds := range m.Datastores {
+		datastoresIDs = append(datastoresIDs, ds.ID)
+	}
+
+	var networksIDs []string
+	for _, n := range m.Networks {
+		networksIDs = append(networksIDs, n.ID)
+	}
+
+	return &graphmodel.VsphereCluster{
+		ID:            m.ID,
+		Name:          m.Name,
+		Kind:          api.VSphere + "Cluster",
+		Provider:      provider,
+		DasEnabled:    m.DasEnabled,
+		DasVmsIDs:     dasVmList,
+		DrsEnabled:    m.DrsEnabled,
+		DrsBehavior:   m.DrsBehavior,
+		DrsVmsIDs:     drsVmList,
+		DatastoresIDs: datastoresIDs,
+		NetworksIDs:   networksIDs,
+	}
+}
+
+func (t *Resolver) WithVsphereStorage(m *vspheremodel.Datastore, provider string) (h *graphmodel.VsphereDatastore) {
+	return &graphmodel.VsphereDatastore{
+		ID:          m.ID,
+		Kind:        api.VSphere + "Datastore",
+		Name:        m.Name,
+		Provider:    provider,
+		Capacity:    int(m.Capacity),
+		Free:        int(m.Free),
+		Maintenance: m.MaintenanceMode,
+	}
+}
+
+func withDisk(m *vspheremodel.Disk) (h *graphmodel.Disk) {
+	return &graphmodel.Disk{
+		Key:       int(m.Key),
+		Datastore: m.Datastore.ID,
+		File:      m.File,
+		Capacity:  int(m.Capacity),
+		Shared:    m.Shared,
+		Rdm:       m.RDM,
+	}
+}
+
+func withConcern(m *vspheremodel.Concern) (c *graphmodel.Concern) {
+	return &graphmodel.Concern{
+		Label:      m.Label,
+		Category:   m.Category,
+		Assessment: m.Assessment,
+	}
+}
+
+func (t *Resolver) WithVsphereNetwork(m *vspheremodel.Network, provider string) (h *graphmodel.VsphereNetwork) {
+	return &graphmodel.VsphereNetwork{
+		ID:       m.ID,
+		Provider: provider,
+		Kind:     api.VSphere + "Network",
+		Variant:  m.Variant,
+		Name:     m.Name,
+		Tag:      m.Tag,
+	}
+}
+
+func (t *Resolver) WithDvPortGroup(m *vspheremodel.Network, provider string) (h *graphmodel.DvPortGroup) {
+	return &graphmodel.DvPortGroup{
+		ID:       m.ID,
+		Variant:  m.Variant,
+		Name:     m.Name,
+		Provider: provider,
+		DvSwitch: m.DVSwitch.ID,
+		// Host:  m.Host,
+		// Ports: m.Ports,
+	}
+}
+
+func (t *Resolver) WithDvSwitch(m *vspheremodel.Network, provider string) (h *graphmodel.DvSwitch) {
+	var host []*graphmodel.DvSHost
+
+	for _, h := range m.Host {
+		nh := graphmodel.DvSHost{
+			Host: h.Host.ID,
+			Pnic: h.PNIC,
+		}
+		host = append(host, &nh)
+	}
+
+	return &graphmodel.DvSwitch{
+		ID:       m.ID,
+		Variant:  m.Variant,
+		Name:     m.Name,
+		Provider: provider,
+		Host:     host,
+	}
+}
+
+func (t *Resolver) WithVsphereVM(m *vspheremodel.VM, provider string) (h *graphmodel.VsphereVM) {
+	var cpuAffinity []int
+	for _, c := range m.CpuAffinity {
+		cpuAffinity = append(cpuAffinity, int(c))
+	}
+
+	var disks []*graphmodel.Disk
+	for _, d := range m.Disks {
+		disks = append(disks, withDisk(&d))
+	}
+
+	var concerns []*graphmodel.Concern
+	for _, c := range m.Concerns {
+		concerns = append(concerns, withConcern(&c))
+	}
+
+	var networks []string
+	for _, n := range m.Networks {
+		networks = append(networks, n.ID)
+	}
+
+	var devices []*graphmodel.Device
+	for _, n := range m.Devices {
+		d := graphmodel.Device{
+			Kind: n.Kind,
+		}
+		devices = append(devices, &d)
+	}
+
+	return &graphmodel.VsphereVM{
+		ID:                    m.ID,
+		Kind:                  api.VSphere + "VM",
+		Provider:              provider,
+		Name:                  m.Name,
+		Revision:              int(m.Revision),
+		RevisionValidated:     int(m.RevisionValidated),
+		IPAddress:             m.IpAddress,
+		UUID:                  m.UUID,
+		Firmware:              m.Firmware,
+		PowerState:            m.PowerState,
+		CPUHotAddEnabled:      m.CpuHotAddEnabled,
+		CPUHotRemoveEnabled:   m.CpuHotRemoveEnabled,
+		MemoryHotAddEnabled:   m.MemoryHotAddEnabled,
+		FaultToleranceEnabled: m.FaultToleranceEnabled,
+		CPUCount:              int(m.CpuCount),
+		CoresPerSocket:        int(m.CoresPerSocket),
+		MemoryMb:              int(m.MemoryMB),
+		GuestName:             m.GuestName,
+		BalloonedMemory:       int(m.BalloonedMemory),
+		StorageUsed:           int(m.StorageUsed),
+		Concerns:              concerns,
+		Disks:                 disks,
+		NumaNodeAffinity:      m.NumaNodeAffinity,
+		CPUAffinity:           cpuAffinity,
+		Devices:               devices,
+		HostID:                m.Host,
+		NetIDs:                networks,
+	}
 }

@@ -340,79 +340,138 @@
 // 	}
 // }
 
+// query AllFolders {
+// 	vspherefolders {
+//     id
+// 	  name
+// 	  provider
+//     kind
+// 	  children {
+//       ...ClusterFields
+//       ...DatastoreFields
+//       ...NetworkFields
+//       ...DvPortGroupFields
+//       ...DvSwitchFields
+//       ...VMFields
+//       ...FolderFields
+//       ...FolderRecursive
+//    	}
+//   }
+// }
+
+// query Folder {
+// 	vspherefolder(id:"group-n25", provider:"866883b4-4526-4868-807d-8aa8d8d7c72e") {
+//     id
+// 	  name
+// 	  provider
+//     kind
+// 	  children {
+//       # ...ClusterFields
+//       # ...DatastoreFields
+//       ...NetworkFields
+//       ...DvPortGroupFields
+//       ...DvSwitchFields
+//       # ...VMFields
+//       ...FolderFields
+//       ...FolderRecursive
+//    	}
+//   }
+// }
+
+// query VMandTemplateTree {
+// 	datacenter(id: "datacenter-21", provider: "866883b4-4526-4868-807d-8aa8d8d7c72e") {
+// 	  ... on VsphereDatacenter {
+// 		  id name
+// 		  children: vms {
+//         id name kind
+//         children {
+//           ...VMFields
+//           ...FolderFields
+//           ...FolderRecursive
+//       	}
+//       }
+//     }
+//   }
+// }
+
+// fragment ClusterFields on VsphereCluster {
+// 	id
+// 	name
+// 	provider
+//   kind
+// }
+
+// fragment DatastoreFields on VsphereDatastore {
+// 	id
+// 	name
+// 	provider
+//   kind
+// }
+
+// fragment NetworkFields on VsphereNetwork {
+// 	id
+// 	name
+// 	provider
+//   kind
+//   tag
+// }
+
+// fragment DvPortGroupFields on DvPortGroup {
+// 	id
+// 	variant
+//   dvSwitch
+// }
+
+// fragment DvSwitchFields on DvSwitch{
+// 	id
+// 	variant
+//   host { host PNIC }
+// }
+
+// fragment VMFields on VsphereVM {
+// 	id
+// 	name
+// 	provider
+//   kind
+// }
+
 // fragment FolderFields on VsphereFolder {
 // 	id
 // 	name
 // 	provider
-// 	parent
-// 	children {
-// 	  ... on VsphereDatacenter { id name }
-// 	  ... on VsphereCluster { id name }
-// 	  ... on VsphereDatastore { id name }
-// 	  ... on VsphereNetwork { id name }
-// 	  ... on DvPortGroup { id name }
-// 	  ... on DvSwitch { id name }
-// 	  ... on VsphereVM { id name }
-// 	}
+//   kind
+//   children {
+//     # It seems only Vsphere VM folders are recursive
+//     ...VMFields
+//   }
 // }
 
-// fragment ChildrenRecursive on VsphereFolder {
+// fragment FolderRecursive on VsphereFolder {
 // 	children {
 // 	  ...FolderFields
 // 	  ... on VsphereFolder {
-// 		...FolderFields
-// 		children {
 // 		  ...FolderFields
-// 		  ... on VsphereFolder {
-// 			...FolderFields
-// 			children {
-// 			  ...FolderFields
-// 			  ... on VsphereFolder {
-// 				...FolderFields
-// 			  }
-// 			}
-// 		  }
-// 		}
+// 	  	children {
+// 	    	...FolderFields
+// 	    	... on VsphereFolder {
+// 	      	...FolderFields
+// 	      	children {
+// 	        	...FolderFields
+// 	        	... on VsphereFolder {
+// 	  	      	...FolderFields
+//               children {
+// 	            	...FolderFields
+// 	            	... on VsphereFolder {
+// 	  	          	...FolderFields
+// 	             	}
+// 	          	}
+// 	        	}
+// 	      	}
+// 	  	  }
+// 	  	}
 // 	  }
 // 	}
 // }
-
-// query AllFolders {
-// 	vspherefolders {
-// 	  ...FolderFields
-// 	  ...ChildrenRecursive
-// 	}
-// }
-
-// query Folders($provider: ID!) {
-// 	vspherefolders(provider: $provider) {
-// 	  ...FolderFields
-// 	  ...ChildrenRecursive
-// 	}
-// }
-
-// query Folder($provider: ID!) {
-// 	vspherefolder(id: "group-s24", provider: $provider) {
-// 	  ...FolderFields
-// 	  ...ChildrenRecursive
-// 	}
-// }
-
-// query VMandTemplateTree {
-// 	providers {
-// 	  id name product
-// 	  datacenters {
-// 		... on VsphereDatacenter {
-// 		  id name
-// 		  children: vms {
-// 			...FolderFields
-// 			...ChildrenRecursive
-// 			... on VsphereVM { id name }
-// 		  }
-// 		}
-// 	  }
-// 	}
-//   }
 
 // query NonExistingProvider{
 // 	hosts(provider: "mystery") {

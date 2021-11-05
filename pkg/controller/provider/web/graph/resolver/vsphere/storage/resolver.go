@@ -35,7 +35,7 @@ func (t *Resolver) List(provider *string) ([]graphmodel.Storage, error) {
 		}
 
 		for _, m := range list {
-			d := withVsphere(&m, provider)
+			d := t.WithVsphereStorage(&m, provider)
 			datastores = append(datastores, d)
 		}
 	}
@@ -74,7 +74,7 @@ func (t *Resolver) GetByIds(ids []string, provider string) ([]*graphmodel.Vspher
 	}
 
 	for _, m := range list {
-		c := withVsphere(&m, provider)
+		c := t.WithVsphereStorage(&m, provider)
 		datastores = append(datastores, c)
 	}
 
@@ -101,34 +101,9 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereDatastore
 		return nil, errors.New(msg)
 	}
 
-	c := withVsphere(m, provider)
+	c := t.WithVsphereStorage(m, provider)
 
 	return c, nil
-}
-
-//
-// Get all datastores for a specific vsphere datacenter.
-func (t *Resolver) GetByVsphereDatacenter(folderID, provider string) ([]*graphmodel.VsphereDatastore, error) {
-	var datastores []*graphmodel.VsphereDatastore
-	db, err := t.GetDB(provider)
-	if err != nil {
-		return nil, err
-	}
-
-	dl := t.GetChildrenIDs(db, folderID, "Datastore")
-
-	list := []vspheremodel.Datastore{}
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", dl)}
-	err = db.List(&list, listOptions)
-	if err != nil {
-		return nil, nil
-	}
-
-	for _, m := range list {
-		c := withVsphere(&m, provider)
-		datastores = append(datastores, c)
-	}
-	return datastores, nil
 }
 
 //
@@ -156,22 +131,10 @@ func (t *Resolver) GetByOvirtDatacenter(datacenterId, provider string) ([]*graph
 	return clusters, nil
 }
 
-func withVsphere(m *vspheremodel.Datastore, provider string) (h *graphmodel.VsphereDatastore) {
-	return &graphmodel.VsphereDatastore{
-		ID:          m.ID,
-		Kind:        "VsphereDatastore",
-		Name:        m.Name,
-		Provider:    provider,
-		Capacity:    int(m.Capacity),
-		Free:        int(m.Free),
-		Maintenance: m.MaintenanceMode,
-	}
-}
-
 func withOvirt(m *ovirtmodel.StorageDomain, provider string) (h *graphmodel.OvirtStorageDomain) {
 	return &graphmodel.OvirtStorageDomain{
 		ID:          m.ID,
-		Kind:        "OvirtStorageDomain",
+		Kind:        api.OVirt + "StorageDomain",
 		Name:        m.Name,
 		Provider:    provider,
 		DataCenter:  m.DataCenter,

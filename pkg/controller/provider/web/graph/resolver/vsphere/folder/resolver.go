@@ -30,8 +30,7 @@ func (t *Resolver) List(provider *string) ([]*graphmodel.VsphereFolder, error) {
 		}
 
 		for _, m := range list {
-			f := with(&m)
-			f.Provider = provider
+			f := t.with(&m, provider)
 			folders = append(folders, f)
 		}
 	}
@@ -59,16 +58,15 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereFolder, e
 		return nil, errors.New(msg)
 	}
 
-	h := with(m)
-	h.Provider = provider
+	h := t.with(m, provider)
 
 	return h, nil
 }
 
 //
 // Get folders for specific IDs.
-func (t *Resolver) GetByIDs(ids []string, provider string) ([]graphmodel.VsphereFolderGroup, error) {
-	var folders []graphmodel.VsphereFolderGroup
+func (t *Resolver) GetByIDs(ids []string, provider string) ([]graphmodel.VsphereVMGroup, error) {
+	var folders []graphmodel.VsphereVMGroup
 
 	db, err := t.GetDB(provider)
 	if err != nil {
@@ -83,24 +81,124 @@ func (t *Resolver) GetByIDs(ids []string, provider string) ([]graphmodel.Vsphere
 	}
 
 	for _, m := range list {
-		c := with(&m)
-		c.Provider = provider
+		c := t.with(&m, provider)
 		folders = append(folders, c)
 	}
 
 	return folders, nil
 }
 
-func with(m *vspheremodel.Folder) (h *graphmodel.VsphereFolder) {
-	var children []string
+func (t *Resolver) GetChildren(folderId, providerId string) (children []graphmodel.VsphereFolderGroup) {
+	db, err := t.GetDB(providerId)
+	if err != nil {
+		return nil
+	}
+
+	folder := &vspheremodel.Folder{
+		Base: vspheremodel.Base{
+			ID: folderId,
+		},
+	}
+
+	err = db.Get(folder)
+	if err != nil {
+		return nil
+	}
+
+	for _, c := range folder.Children {
+		if c.Kind == "Folder" {
+			var f *graphmodel.VsphereFolder
+			f, err = t.Get(c.ID, providerId)
+			if err != nil {
+				return []graphmodel.VsphereFolderGroup{}
+			}
+			children = append(children, f)
+
+		}
+		if c.Kind == "Cluster" {
+			cluster := vspheremodel.Cluster{
+				Base: vspheremodel.Base{
+					ID: c.ID,
+				},
+			}
+			err = db.Get(&cluster)
+			if err != nil {
+				return []graphmodel.VsphereFolderGroup{}
+			}
+
+			c := t.WithVsphereCluster(&cluster, providerId)
+			children = append(children, c)
+		}
+		if c.Kind == "Datastore" {
+			storage := vspheremodel.Datastore{
+				Base: vspheremodel.Base{
+					ID: c.ID,
+				},
+			}
+			err = db.Get(&storage)
+			if err != nil {
+				return []graphmodel.VsphereFolderGroup{}
+			}
+
+			c := t.WithVsphereStorage(&storage, providerId)
+			children = append(children, c)
+		}
+		if c.Kind == "Network" {
+			network := vspheremodel.Network{
+				Base: vspheremodel.Base{
+					ID: c.ID,
+				},
+			}
+			err = db.Get(&network)
+			if err != nil {
+				return []graphmodel.VsphereFolderGroup{}
+			}
+
+			switch network.Variant {
+			case vspheremodel.NetStandard:
+				c := t.WithVsphereNetwork(&network, providerId)
+				children = append(children, c)
+			case vspheremodel.NetDvPortGroup:
+				c := t.WithDvPortGroup(&network, providerId)
+				children = append(children, c)
+			case vspheremodel.NetDvSwitch:
+				c := t.WithDvSwitch(&network, providerId)
+				children = append(children, c)
+			}
+
+		}
+		if c.Kind == "VM" {
+			vm := vspheremodel.VM{
+				Base: vspheremodel.Base{
+					ID: c.ID,
+				},
+			}
+
+			err = db.Get(&vm)
+			if err != nil {
+				return []graphmodel.VsphereFolderGroup{}
+			}
+
+			v := t.WithVsphereVM(&vm, providerId)
+			children = append(children, v)
+		}
+	}
+
+	return children
+}
+
+func (t *Resolver) with(m *vspheremodel.Folder, providerId string) (h *graphmodel.VsphereFolder) {
+	var childrenIDs []string
 	for _, c := range m.Children {
-		children = append(children, c.ID)
+		childrenIDs = append(childrenIDs, c.ID)
 	}
 
 	return &graphmodel.VsphereFolder{
 		ID:          m.ID,
 		Name:        m.Name,
+		Provider:    providerId,
+		Kind:        "Folder",
 		Parent:      m.Parent.ID,
-		ChildrenIDs: children,
+		ChildrenIDs: childrenIDs,
 	}
 }

@@ -123,20 +123,20 @@ func (r *vsphereClusterResolver) DrsVms(ctx context.Context, obj *graphmodel.Vsp
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *vsphereDatacenterResolver) Clusters(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]*graphmodel.VsphereCluster, error) {
-	return r.Resolver.Cluster.GetByVsphereDatacenter(obj.ClustersID, obj.Provider)
+func (r *vsphereDatacenterResolver) Clusters(ctx context.Context, obj *graphmodel.VsphereDatacenter) (*graphmodel.VsphereFolder, error) {
+	return r.Resolver.Folder.Get(obj.ClustersID, obj.Provider)
 }
 
-func (r *vsphereDatacenterResolver) Datastores(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]*graphmodel.VsphereDatastore, error) {
-	return r.Resolver.Storage.GetByVsphereDatacenter(obj.DatastoresID, obj.Provider)
+func (r *vsphereDatacenterResolver) Datastores(ctx context.Context, obj *graphmodel.VsphereDatacenter) (*graphmodel.VsphereFolder, error) {
+	return r.Resolver.Folder.Get(obj.DatastoresID, obj.Provider)
 }
 
-func (r *vsphereDatacenterResolver) Networks(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]graphmodel.VsphereNetworkGroup, error) {
-	return r.Resolver.Network.GetByVsphereDatacenter(obj.NetworksID, obj.Provider)
+func (r *vsphereDatacenterResolver) Networks(ctx context.Context, obj *graphmodel.VsphereDatacenter) (*graphmodel.VsphereFolder, error) {
+	return r.Resolver.Folder.Get(obj.NetworksID, obj.Provider)
 }
 
-func (r *vsphereDatacenterResolver) Vms(ctx context.Context, obj *graphmodel.VsphereDatacenter) ([]graphmodel.VsphereVMGroup, error) {
-	return r.Resolver.VM.GetByVsphereDatacenter(obj.VmsID, obj.Provider)
+func (r *vsphereDatacenterResolver) Vms(ctx context.Context, obj *graphmodel.VsphereDatacenter) (*graphmodel.VsphereFolder, error) {
+	return r.Resolver.Folder.Get(obj.VmsID, obj.Provider)
 }
 
 func (r *vsphereDatastoreResolver) Hosts(ctx context.Context, obj *graphmodel.VsphereDatastore) ([]*graphmodel.VsphereHost, error) {
@@ -148,7 +148,7 @@ func (r *vsphereDatastoreResolver) Vms(ctx context.Context, obj *graphmodel.Vsph
 }
 
 func (r *vsphereFolderResolver) Children(ctx context.Context, obj *graphmodel.VsphereFolder) ([]graphmodel.VsphereFolderGroup, error) {
-	return r.Resolver.Folder.GetByIDs(obj.ChildrenIDs, obj.Provider)
+	return r.Resolver.Folder.GetChildren(obj.ID, obj.Provider), nil
 }
 
 func (r *vsphereHostResolver) Vms(ctx context.Context, obj *graphmodel.VsphereHost) ([]*graphmodel.VsphereVM, error) {

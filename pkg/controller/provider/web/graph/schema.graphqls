@@ -20,6 +20,7 @@ union VsphereFolderGroup =
 type VsphereFolder {
   id: ID!
   provider: ID!
+  kind: String!
   name: String!
   parent: ID!
   childrenIDs: [ID!]!
@@ -40,13 +41,13 @@ type VsphereDatacenter {
   kind: String!
   name: String!
   clustersID: ID!
-  clusters: [VsphereCluster!]!
+  clusters: VsphereFolder!
   datastoresID: ID!
-  datastores: [VsphereDatastore!]!
+  datastores: VsphereFolder!
   networksID: ID!
-  networks: [VsphereNetworkGroup!]!
+  networks: VsphereFolder!
   vmsID: ID!
-  vms: [VsphereVMGroup!]!
+  vms: VsphereFolder!
 }
 
 type VsphereCluster {

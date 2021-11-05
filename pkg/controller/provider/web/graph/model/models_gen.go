@@ -366,18 +366,18 @@ func (VsphereCluster) IsCluster()            {}
 func (VsphereCluster) IsVsphereFolderGroup() {}
 
 type VsphereDatacenter struct {
-	ID           string                `json:"id"`
-	Provider     string                `json:"provider"`
-	Kind         string                `json:"kind"`
-	Name         string                `json:"name"`
-	ClustersID   string                `json:"clustersID"`
-	Clusters     []*VsphereCluster     `json:"clusters"`
-	DatastoresID string                `json:"datastoresID"`
-	Datastores   []*VsphereDatastore   `json:"datastores"`
-	NetworksID   string                `json:"networksID"`
-	Networks     []VsphereNetworkGroup `json:"networks"`
-	VmsID        string                `json:"vmsID"`
-	Vms          []VsphereVMGroup      `json:"vms"`
+	ID           string         `json:"id"`
+	Provider     string         `json:"provider"`
+	Kind         string         `json:"kind"`
+	Name         string         `json:"name"`
+	ClustersID   string         `json:"clustersID"`
+	Clusters     *VsphereFolder `json:"clusters"`
+	DatastoresID string         `json:"datastoresID"`
+	Datastores   *VsphereFolder `json:"datastores"`
+	NetworksID   string         `json:"networksID"`
+	Networks     *VsphereFolder `json:"networks"`
+	VmsID        string         `json:"vmsID"`
+	Vms          *VsphereFolder `json:"vms"`
 }
 
 func (VsphereDatacenter) IsDatacenter()         {}
@@ -401,6 +401,7 @@ func (VsphereDatastore) IsVsphereFolderGroup() {}
 type VsphereFolder struct {
 	ID          string               `json:"id"`
 	Provider    string               `json:"provider"`
+	Kind        string               `json:"kind"`
 	Name        string               `json:"name"`
 	Parent      string               `json:"parent"`
 	ChildrenIDs []string             `json:"childrenIDs"`

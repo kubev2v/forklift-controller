@@ -52,7 +52,7 @@ func (t *Resolver) List(provider *string, filter *graphmodel.VMFilter) ([]graphm
 		}
 
 		for _, m := range list {
-			vm := withVsphere(&m, provider)
+			vm := t.WithVsphereVM(&m, provider)
 			vms = append(vms, vm)
 		}
 	}
@@ -93,7 +93,7 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereVM, error
 		return nil, errors.New(msg)
 	}
 
-	vm := withVsphere(m, provider)
+	vm := t.WithVsphereVM(m, provider)
 	return vm, nil
 }
 
@@ -114,7 +114,7 @@ func (t *Resolver) GetByHost(hostId, provider string) ([]*graphmodel.VsphereVM, 
 		return nil, nil
 	}
 	for _, m := range list {
-		vms = append(vms, withVsphere(&m, provider))
+		vms = append(vms, t.WithVsphereVM(&m, provider))
 	}
 
 	return vms, nil
@@ -134,33 +134,6 @@ func (t *Resolver) GetByDatastore(datastoreId, provider string) ([]*graphmodel.V
 		if contains(vm.Disks, datastoreId) {
 			vms = append(vms, vm)
 		}
-	}
-
-	return vms, nil
-}
-
-//
-// Get all vms for a specific vsphere datacenter.
-func (t *Resolver) GetByVsphereDatacenter(folderID, provider string) ([]graphmodel.VsphereVMGroup, error) {
-	var vms []graphmodel.VsphereVMGroup
-	db, err := t.GetDB(provider)
-	if err != nil {
-		return nil, err
-
-	}
-
-	cl := t.GetChildrenIDs(db, folderID, "VM")
-
-	list := []vspheremodel.VM{}
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", cl)}
-	err = db.List(&list, listOptions)
-	if err != nil {
-		return nil, nil
-	}
-
-	for _, m := range list {
-		c := withVsphere(&m, provider)
-		vms = append(vms, c)
 	}
 
 	return vms, nil
@@ -232,7 +205,7 @@ func (t *Resolver) listVsphere(provider string) ([]*graphmodel.VsphereVM, error)
 	}
 
 	for _, m := range list {
-		vm := withVsphere(&m, provider)
+		vm := t.WithVsphereVM(&m, provider)
 		vms = append(vms, vm)
 	}
 	return vms, nil
@@ -247,89 +220,10 @@ func contains(l []*graphmodel.Disk, s string) bool {
 	return false
 }
 
-func withDisk(m *vspheremodel.Disk) (h *graphmodel.Disk) {
-	return &graphmodel.Disk{
-		Key:       int(m.Key),
-		Datastore: m.Datastore.ID,
-		File:      m.File,
-		Capacity:  int(m.Capacity),
-		Shared:    m.Shared,
-		Rdm:       m.RDM,
-	}
-}
-
-func withConcern(m *vspheremodel.Concern) (c *graphmodel.Concern) {
-	return &graphmodel.Concern{
-		Label:      m.Label,
-		Category:   m.Category,
-		Assessment: m.Assessment,
-	}
-}
-
-func withVsphere(m *vspheremodel.VM, provider string) (h *graphmodel.VsphereVM) {
-	var cpuAffinity []int
-	for _, c := range m.CpuAffinity {
-		cpuAffinity = append(cpuAffinity, int(c))
-	}
-
-	var disks []*graphmodel.Disk
-	for _, d := range m.Disks {
-		disks = append(disks, withDisk(&d))
-	}
-
-	var concerns []*graphmodel.Concern
-	for _, c := range m.Concerns {
-		concerns = append(concerns, withConcern(&c))
-	}
-
-	var networks []string
-	for _, n := range m.Networks {
-		networks = append(networks, n.ID)
-	}
-
-	var devices []*graphmodel.Device
-	for _, n := range m.Devices {
-		d := graphmodel.Device{
-			Kind: n.Kind,
-		}
-		devices = append(devices, &d)
-	}
-
-	return &graphmodel.VsphereVM{
-		ID:                    m.ID,
-		Kind:                  api.VSphere,
-		Provider:              provider,
-		Name:                  m.Name,
-		Revision:              int(m.Revision),
-		RevisionValidated:     int(m.RevisionValidated),
-		IPAddress:             m.IpAddress,
-		UUID:                  m.UUID,
-		Firmware:              m.Firmware,
-		PowerState:            m.PowerState,
-		CPUHotAddEnabled:      m.CpuHotAddEnabled,
-		CPUHotRemoveEnabled:   m.CpuHotRemoveEnabled,
-		MemoryHotAddEnabled:   m.MemoryHotAddEnabled,
-		FaultToleranceEnabled: m.FaultToleranceEnabled,
-		CPUCount:              int(m.CpuCount),
-		CoresPerSocket:        int(m.CoresPerSocket),
-		MemoryMb:              int(m.MemoryMB),
-		GuestName:             m.GuestName,
-		BalloonedMemory:       int(m.BalloonedMemory),
-		StorageUsed:           int(m.StorageUsed),
-		Concerns:              concerns,
-		Disks:                 disks,
-		NumaNodeAffinity:      m.NumaNodeAffinity,
-		CPUAffinity:           cpuAffinity,
-		Devices:               devices,
-		HostID:                m.Host,
-		NetIDs:                networks,
-	}
-}
-
 func withOvirt(m *ovirtmodel.VM, provider string) (h *graphmodel.OvirtVM) {
 	return &graphmodel.OvirtVM{
 		ID:                          m.ID,
-		Kind:                        api.OVirt,
+		Kind:                        api.OVirt + "VM",
 		Provider:                    provider,
 		Name:                        m.Name,
 		Description:                 m.Description,

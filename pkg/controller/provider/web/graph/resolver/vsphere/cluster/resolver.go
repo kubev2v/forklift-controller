@@ -35,7 +35,7 @@ func (t *Resolver) List(provider *string) ([]graphmodel.Cluster, error) {
 		}
 
 		for _, m := range list {
-			c := withVsphere(&m, provider)
+			c := t.WithVsphereCluster(&m, provider)
 			clusters = append(clusters, c)
 		}
 	}
@@ -74,34 +74,8 @@ func (t *Resolver) Get(id string, provider string) (*graphmodel.VsphereCluster, 
 		t.Log.Info(msg)
 	}
 
-	c := withVsphere(m, provider)
+	c := t.WithVsphereCluster(m, provider)
 	return c, nil
-}
-
-//
-// Get all clusters for a specific vsphere datacenter.
-func (t *Resolver) GetByVsphereDatacenter(folderID, provider string) ([]*graphmodel.VsphereCluster, error) {
-	var clusters []*graphmodel.VsphereCluster
-	db, err := t.GetDB(provider)
-	if err != nil {
-		return nil, err
-	}
-
-	cl := t.GetChildrenIDs(db, folderID, "Cluster")
-
-	list := []vspheremodel.Cluster{}
-	listOptions := libmodel.ListOptions{Detail: libmodel.MaxDetail, Predicate: libmodel.Eq("id", cl)}
-	err = db.List(&list, listOptions)
-	if err != nil {
-		return nil, nil
-	}
-
-	for _, m := range list {
-		c := withVsphere(&m, provider)
-		clusters = append(clusters, c)
-	}
-
-	return clusters, nil
 }
 
 //
@@ -127,42 +101,6 @@ func (t *Resolver) GetByOvirtDatacenter(datacenterId, provider string) ([]*graph
 	}
 
 	return clusters, nil
-}
-
-func withVsphere(m *vspheremodel.Cluster, provider string) (h *graphmodel.VsphereCluster) {
-	var dasVmList []string
-	for _, dasVm := range m.DasVms {
-		dasVmList = append(dasVmList, dasVm.ID)
-	}
-
-	var drsVmList []string
-	for _, dasVm := range m.DasVms {
-		drsVmList = append(drsVmList, dasVm.ID)
-	}
-
-	var datastoresIDs []string
-	for _, ds := range m.Datastores {
-		datastoresIDs = append(datastoresIDs, ds.ID)
-	}
-
-	var networksIDs []string
-	for _, n := range m.Networks {
-		networksIDs = append(networksIDs, n.ID)
-	}
-
-	return &graphmodel.VsphereCluster{
-		ID:            m.ID,
-		Name:          m.Name,
-		Kind:          "VsphereCluster",
-		Provider:      provider,
-		DasEnabled:    m.DasEnabled,
-		DasVmsIDs:     dasVmList,
-		DrsEnabled:    m.DrsEnabled,
-		DrsBehavior:   m.DrsBehavior,
-		DrsVmsIDs:     drsVmList,
-		DatastoresIDs: datastoresIDs,
-		NetworksIDs:   networksIDs,
-	}
 }
 
 func withOvirt(m *ovirtmodel.Cluster, provider string) (h *graphmodel.OvirtCluster) {
