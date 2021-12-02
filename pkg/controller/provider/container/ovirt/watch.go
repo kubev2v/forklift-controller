@@ -38,7 +38,7 @@ const (
         // The (max) number of batched task results.
 	MaxBatch = 1024
 	// Transaction label.
-￼	ValidationLabel = "VM-validated"
+	ValidationLabel = "VM-validated"
 )
 
 //
@@ -132,8 +132,8 @@ func (r *VMEventHandler) Updated(event libmodel.Event) {
 		return
 	}
 	if event.HasLabel(ValidationLabel) {
-￼		return
-￼	}
+		return
+	}
 	if vm, cast := event.Updated.(*model.VM); cast {
 		if !vm.Validated() {
 			if r.validate(vm) == nil {
