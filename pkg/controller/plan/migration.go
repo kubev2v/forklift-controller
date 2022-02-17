@@ -563,7 +563,9 @@ func (r *Migration) execute(vm *plan.VMStatus) (err error) {
 			return
 		}
 		if step, found := vm.FindStep(r.step(vm)); found {
+			step.Phase = Running
 			if step.MarkedCompleted() && step.Error == nil {
+				step.Phase = Completed
 				vm.Phase = r.next(vm.Phase)
 			}
 		} else {
@@ -917,6 +919,7 @@ func (r *Migration) buildPipeline(vm *plan.VM) (pipeline []*plan.Step, err error
 						Name:        PreHook,
 						Description: "Run pre-migration hook.",
 						Progress:    libitr.Progress{Total: 1},
+						Phase:       Pending,
 					},
 				})
 		case CopyDisks:
@@ -989,6 +992,7 @@ func (r *Migration) buildPipeline(vm *plan.VM) (pipeline []*plan.Step, err error
 						Name:        PostHook,
 						Description: "Run post-migration hook.",
 						Progress:    libitr.Progress{Total: 1},
+						Phase:       Pending,
 					},
 				})
 		}
