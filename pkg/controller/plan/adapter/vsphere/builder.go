@@ -256,6 +256,9 @@ func (r *Builder) DataVolumes(vmRef ref.Ref, secret *core.Secret, _ *core.Config
 				if mapped.Destination.AccessMode != "" {
 					accessMode = mapped.Destination.AccessMode
 				}
+
+				sizeWithOverhead := int64(float64(disk.Capacity) * 1.06)
+
 				dvSpec := cdi.DataVolumeSpec{
 					Source: cdi.DataVolumeSource{
 						VDDK: &cdi.DataVolumeSourceVDDK{
@@ -273,7 +276,7 @@ func (r *Builder) DataVolumes(vmRef ref.Ref, secret *core.Secret, _ *core.Config
 						VolumeMode: &volumeMode,
 						Resources: core.ResourceRequirements{
 							Requests: core.ResourceList{
-								core.ResourceStorage: *resource.NewQuantity(disk.Capacity, resource.BinarySI),
+								core.ResourceStorage: *resource.NewQuantity(sizeWithOverhead, resource.BinarySI),
 							},
 						},
 						StorageClassName: &storageClass,
