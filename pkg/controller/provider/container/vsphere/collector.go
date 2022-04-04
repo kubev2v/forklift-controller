@@ -83,6 +83,7 @@ const (
 	fMgtServerIp    = "summary.managementServerIp"
 	// Network
 	fTag = "tag"
+	fKey = "key"
 	// PortGroup
 	fDVSwitch = "config.distributedVirtualSwitch"
 	// DV Switch
@@ -662,6 +663,7 @@ func (r *Collector) propertySpec() []types.PropertySpec {
 				fName,
 				fDVSwitch,
 				fTag,
+				fKey,
 			},
 		},
 		{

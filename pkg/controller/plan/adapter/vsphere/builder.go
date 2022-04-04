@@ -11,6 +11,7 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1/plan"
 	"github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1/ref"
 	plancontext "github.com/konveyor/forklift-controller/pkg/controller/plan/context"
+	"github.com/konveyor/forklift-controller/pkg/controller/provider/model/vsphere"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/base"
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/web/ocp"
@@ -374,11 +375,21 @@ func (r *Builder) mapNetworks(vm *model.VM, object *cnv.VirtualMachineSpec) (err
 
 		needed := false
 		mac := ""
+	loop:
 		for _, nic := range vm.NICs {
-			if nic.Network.ID == network.ID {
-				needed = true
-				mac = nic.MAC
-				break
+			switch network.Variant {
+			case vsphere.NetDvPortGroup:
+				if nic.Network.ID == network.Key {
+					needed = true
+					mac = nic.MAC
+					break loop
+				}
+			default:
+				if nic.Network.ID == network.ID {
+					needed = true
+					mac = nic.MAC
+					break loop
+				}
 			}
 		}
 		if !needed {
