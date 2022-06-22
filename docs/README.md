@@ -4,4 +4,6 @@ This guide will provide you with hands-on exposure to OpenShift Migration Toolin
 
 ### Sections
 
+[Section 0 - Development docs](./dev-docs.md)<br>
+
 [Section 1 - Migration Hooks](./hooks.md)<br>
