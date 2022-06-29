@@ -19,6 +19,7 @@ E.g. The VM conversion itself is performed by ```virt-v2v``` executed in a pod (
 There is also an Inventory service which explores objects in source and destination cluster and provides such information to the UI, so user can choose from available clusters/VMs/networks/storage.
 
 Repo: https://github.com/konveyor/forklift-controller
+Migration pipeline: https://github.com/konveyor/forklift-controller/blob/main/pkg/controller/plan/migration.go
 
 ### UI
 Forklift UI is a React frontend application which communicates with Forklift (an related OpenShif components) via API and provides user interface.
@@ -63,9 +64,11 @@ For forklift-controller execution, an OpenShift/Kubernetes cluster (or their "li
 
 ### Run code the locally
 
-Before running the controller locally, scale down the forklift-controller deployment in your cluster.
+Before running the controller locally, scale down the forklift-controller deployment in your cluster to zero. Then use ```oc login``` to create connection (KUBECONFIG) to your cluster in terminal and finally execute ```make run```.
 
-Then use ```oc login``` to create connection (KUBECONFIG) to your cluster in terminal and finally execute ```make run```.
+The controller (in cluster or locally running) listens to events from openshift (its reconcile loop watches events in the cluster and process it, e.g. https://github.com/konveyor/forklift-controller/blob/main/pkg/controller/plan/controller.go#L180). When the controller in cluster is off, the local is up with ```make run```, it will reconcile events/resources from the cluster.
+
+To interact with the controller, use "normal" oc commands locally, like oc create -f migplan.yaml (or similar), or access Forklift UI running in the cluster directly. The local controller will handle its events.
 
 ### Run the code in cluster
 
@@ -78,4 +81,4 @@ make docker build
 make docker push
 ```
 
-Then update forklift-operator YAML in your cluster to use your image as the ```CONTROLLER_IMAGE```.
+Then update forklift-operator YAML in your cluster to use your image as the ```CONTROLLER_IMAGE``` (part of controller deployment env variables, not "related_images" section).
