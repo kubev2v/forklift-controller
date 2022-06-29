@@ -96,7 +96,7 @@ func TestAuth(t *testing.T) {
 		},
 	}
 	// token.
-	g.Expect(auth.token(ctx)).To(gomega.Equal(token))
+	g.Expect(auth.token(ctx.GetHeader("Authorization"))).To(gomega.Equal(token))
 	// First call with no cached token.
 	status := auth.Permit(ctx, provider)
 	g.Expect(auth.cache[token]).ToNot(gomega.BeNil())

@@ -47,7 +47,12 @@ func (r *Auth) Permit(ctx *gin.Context, p *api.Provider) (status int) {
 		r.cache = make(map[string]time.Time)
 	}
 	r.prune()
-	token := r.token(ctx)
+	header := ctx.GetHeader("Authorization")
+	if header == "" {
+		return
+	}
+
+	token := r.token(header)
 	if token == "" {
 		status = http.StatusUnauthorized
 		return
@@ -135,8 +140,7 @@ func (r *Auth) permit(token string, p *api.Provider) (allowed bool, err error) {
 
 //
 // Extract token.
-func (r *Auth) token(ctx *gin.Context) (token string) {
-	header := ctx.GetHeader("Authorization")
+func (r *Auth) token(header string) (token string) {
 	fields := strings.Fields(header)
 	if len(fields) == 2 && fields[0] == "Bearer" {
 		token = fields[1]
