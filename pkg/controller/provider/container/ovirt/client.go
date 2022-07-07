@@ -3,7 +3,6 @@ package ovirt
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/base64"
 	"net"
 	"net/http"
 	liburl "net/url"
@@ -34,6 +33,10 @@ type Client struct {
 	client *libweb.Client
 	// Secret.
 	secret *core.Secret
+}
+
+type ovirtTokenResponse struct {
+	AccessToken string `json:"access_token"`
 }
 
 //
@@ -73,12 +76,32 @@ func (r *Client) connect() (err error) {
 			TLSClientConfig:       TLSClientConfig,
 		},
 	}
+
+	url, err := liburl.Parse(r.url)
+	if err != nil {
+		return
+	}
+
+	url.Path = "/ovirt-engine/sso/oauth/token"
+	values := url.Query()
+	values.Add("grant_type", "password")
+	values.Add("username", string(r.secret.Data["user"]))
+	values.Add("password", string(r.secret.Data["password"]))
+	values.Add("scope", "ovirt-app-api")
+
 	client.Header = http.Header{
 		"Accept": []string{"application/json"},
-		"Authorization": []string{
-			"Basic",
-			r.auth()},
-		"Version": []string{"4"},
+	}
+
+	response := &ovirtTokenResponse{}
+	url.RawQuery = values.Encode()
+	client.Get(url.String(), response)
+
+	// Set the access token we received
+	client.Header = http.Header{
+		"Accept":        []string{"application/json"},
+		"Authorization": []string{"Bearer " + response.AccessToken},
+		"Version":       []string{"4"},
 	}
 
 	r.client = client
@@ -132,21 +155,6 @@ func (r *Client) get(path string, object interface{}, param ...libweb.Param) (er
 	default:
 		err = liberr.New(http.StatusText(status))
 	}
-
-	return
-}
-
-//
-// Basic authorization user.
-func (r *Client) auth() (user string) {
-	user = strings.Join(
-		[]string{
-			string(r.secret.Data["user"]),
-			string(r.secret.Data["password"]),
-		},
-		":")
-
-	user = base64.StdEncoding.EncodeToString([]byte(user))
 
 	return
 }
