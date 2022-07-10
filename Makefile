@@ -74,3 +74,8 @@ CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
+
+# Experimental e2e target
+e2e:
+	oc apply -f ./config/crds/forklift.konveyor.io_providers.yaml
+	go test tests/e2e_test.go
