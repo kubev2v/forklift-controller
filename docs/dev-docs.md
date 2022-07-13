@@ -1,4 +1,4 @@
-# Development docs
+# Development
 
 This page should provide basic technical information about a Konveyor Forklift project helpful for engineering onboarding.
 
@@ -12,13 +12,12 @@ Forklift Operator uses ansible and its main task is to install the Forklift into
 Repo: https://github.com/konveyor/forklift-operator
 
 ### Controller
-Forklift Controller is written in golang. Its task is to run/orchestate/drive all operations related to the VM migrations. An entrypoint is a reconcile loop which watches events from the cluster and handles received events.
-
-E.g. The VM conversion itself is performed by ```virt-v2v``` executed in a pod (a "conversion pod") created by Forklift.
-
-There is also an Inventory service which explores objects in source and destination clusters and provides such information to the UI, so users can choose from available clusters/VMs/networks/storage.
+Forklift Controller is written in golang. Its task is to run/orchestate/drive all operations related to the VM migrations. An entrypoint is a reconcile loop which watches events from the cluster and handles received events. Its deployment consists of 2 containers:
+- **inventory service** which explores objects in source and destination clusters and provides such information to the UI, so users can choose from available clusters/VMs/networks/storage.
+- **main controller** which orchestrates the migration, creates resources in cluster needed for running the migration (e.g. the VM conversion itself is performed by ```virt-v2v``` command executed in a pod (a "conversion pod") created by the forklift-controller).
 
 Repo: https://github.com/konveyor/forklift-controller
+Inventory service: https://github.com/konveyor/forklift-controller/tree/main/pkg/controller/provider
 Migration pipeline: https://github.com/konveyor/forklift-controller/blob/main/pkg/controller/plan/migration.go
 
 ### UI
@@ -83,4 +82,4 @@ make docker build
 make docker push
 ```
 
-Then update forklift-operator YAML in your cluster to use your image as the ```CONTROLLER_IMAGE``` (part of controller deployment env variables, not "related_images" section).
+Then update forklift-operator YAML in your cluster to use your image as the ```CONTROLLER_IMAGE``` for the forklift-controller deployment (see https://github.com/konveyor/forklift-operator/blob/main/roles/forkliftcontroller/defaults/main.yml#L20 for further configuration options).
