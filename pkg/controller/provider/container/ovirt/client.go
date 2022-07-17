@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-logr/logr"
 	liberr "github.com/konveyor/controller/pkg/error"
 	libweb "github.com/konveyor/controller/pkg/inventory/web"
 	core "k8s.io/api/core/v1"
@@ -32,17 +33,33 @@ type Client struct {
 	// Raw client.
 	client *libweb.Client
 	// Secret.
-	secret *core.Secret
+	secret        *core.Secret
+	created       time.Time
+	clientTimeout time.Duration
+	expiration    time.Time
+	log           logr.Logger
 }
 
 type ovirtTokenResponse struct {
 	AccessToken string `json:"access_token"`
+	Expiration  string `json:"exp"`
 }
 
 //
 // Connect.
 func (r *Client) connect() (err error) {
 	var TLSClientConfig *tls.Config
+
+	if time.Now().After(r.created.Local().Add(r.clientTimeout)) {
+		r.log.Info("Recreating client, timeout exceeded")
+		r.client = nil
+	}
+
+	if !r.expiration.IsZero() && time.Now().After(r.expiration) {
+		r.log.Info("Recreating client, token expired")
+		r.client = nil
+
+	}
 
 	if r.client != nil {
 		return
@@ -105,6 +122,14 @@ func (r *Client) connect() (err error) {
 	}
 
 	r.client = client
+	r.created = time.Now()
+
+	expiration, err := strconv.ParseInt(response.Expiration, 10, 64)
+	if err != nil {
+		return
+	}
+
+	r.expiration = time.Now().Local().Add(time.Duration(expiration))
 
 	return
 }
