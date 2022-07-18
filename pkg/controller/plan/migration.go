@@ -60,6 +60,9 @@ const (
 	ConvertGuest             = "ConvertGuest"
 	PostHook                 = "PostHook"
 	Completed                = "Completed"
+	WaitForSnapshot          = "WaitForSnapshot"
+	WaitForInitialSnapshot   = "WaitForInitialSnapshot"
+	WaitForFinalSnapshot     = "WaitForFinalSnapshot"
 )
 
 //
@@ -481,11 +484,11 @@ func (r *Migration) itinerary() *libitr.Itinerary {
 // Get the name of the pipeline step corresponding to the current VM phase.
 func (r *Migration) step(vm *plan.VMStatus) (step string) {
 	switch vm.Phase {
-	case Started, CreateInitialSnapshot, CreateDataVolumes, CreateVM, ScheduleVM:
+	case Started, CreateInitialSnapshot, WaitForInitialSnapshot, CreateDataVolumes, CreateVM, ScheduleVM:
 		step = Initialize
-	case CopyDisks, CopyingPaused, CreateSnapshot, AddCheckpoint:
+	case CopyDisks, CopyingPaused, CreateSnapshot, WaitForSnapshot, AddCheckpoint:
 		step = DiskTransfer
-	case CreateFinalSnapshot, AddFinalCheckpoint, Finalize:
+	case CreateFinalSnapshot, WaitForFinalSnapshot, AddFinalCheckpoint, Finalize:
 		step = Cutover
 	case CreateGuestConversionPod, ConvertGuest:
 		step = ImageConversion
@@ -706,11 +709,34 @@ func (r *Migration) execute(vm *plan.VMStatus) (err error) {
 
 		switch vm.Phase {
 		case CreateInitialSnapshot:
-			vm.Phase = CreateDataVolumes
+			vm.Phase = WaitForInitialSnapshot
 		case CreateSnapshot:
-			vm.Phase = AddCheckpoint
+			vm.Phase = WaitForSnapshot
 		case CreateFinalSnapshot:
-			vm.Phase = AddFinalCheckpoint
+			vm.Phase = WaitForFinalSnapshot
+		}
+	case WaitForInitialSnapshot, WaitForSnapshot, WaitForFinalSnapshot:
+		step, found := vm.FindStep(r.step(vm))
+		if !found {
+			vm.AddError(fmt.Sprintf("Step '%s' not found", r.step(vm)))
+			break
+		}
+		snapshot := vm.Warm.Precopies[len(vm.Warm.Precopies)-1].Snapshot
+		ready, err := r.provider.CheckSnapshotReady(vm.Ref, snapshot)
+		if err != nil {
+			step.AddError(err.Error())
+			err = nil
+			break
+		}
+		if ready {
+			switch vm.Phase {
+			case WaitForInitialSnapshot:
+				vm.Phase = CreateDataVolumes
+			case WaitForSnapshot:
+				vm.Phase = AddCheckpoint
+			case WaitForFinalSnapshot:
+				vm.Phase = AddFinalCheckpoint
+			}
 		}
 	case AddCheckpoint, AddFinalCheckpoint:
 		step, found := vm.FindStep(r.step(vm))

@@ -75,6 +75,26 @@ func (r *Client) RemoveSnapshots(vmRef ref.Ref, precopies []planapi.Precopy) (er
 }
 
 //
+// Check if a snapshot is ready to transfer, to avoid importer restarts
+func (r *Client) CheckSnapshotReady(vmRef ref.Ref, snapshot string) (ready bool, err error) {
+	_, vmService, err := r.getVM(vmRef)
+	if err != nil {
+		return
+	}
+	snapsService := vmService.SnapshotsService()
+	snapService := snapsService.SnapshotService(snapshot)
+	snap, err := snapService.Get().Query("correlation_id", r.Migration.Name).Send()
+	if err != nil {
+		err = liberr.Wrap(err)
+	}
+	status := snap.MustSnapshot().MustSnapshotStatus()
+	if status == ovirtsdk.SNAPSHOTSTATUS_OK {
+		ready = true
+	}
+	return
+}
+
+//
 // Set DataVolume checkpoints.
 func (r *Client) SetCheckpoints(vmRef ref.Ref, precopies []planapi.Precopy, datavolumes []cdi.DataVolume, final bool) (err error) {
 	n := len(precopies)
