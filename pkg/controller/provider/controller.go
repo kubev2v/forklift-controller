@@ -18,6 +18,11 @@ package provider
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"sync"
+	"time"
+
 	libcnd "github.com/konveyor/controller/pkg/condition"
 	liberr "github.com/konveyor/controller/pkg/error"
 	libfb "github.com/konveyor/controller/pkg/filebacked"
@@ -36,15 +41,12 @@ import (
 	core "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apiserver/pkg/storage/names"
-	"os"
-	"path/filepath"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"sync"
 )
 
 const (
@@ -230,6 +232,10 @@ func (r Reconciler) Reconcile(request reconcile.Request) (result reconcile.Resul
 		r.Log.Info(
 			"Waiting connection tested or inventory created.")
 		result.RequeueAfter = base.SlowReQ
+	}
+
+	if provider.Status.IsReady() {
+		result.RequeueAfter = 10 * time.Minute
 	}
 
 	// Done
