@@ -91,6 +91,10 @@ func (r *Client) CheckSnapshotReady(vmRef ref.Ref, snapshot string) (ready bool,
 		return
 	}
 	jobs, err := r.getJobs(correlationID)
+	if err != nil {
+		err = liberr.Wrap(err)
+		return
+	}
 	if len(jobs) > 1 {
 		err = liberr.New("Multiple jobs found for correlation ID %s", correlationID)
 		return
@@ -278,6 +282,7 @@ func (r *Client) getJobs(correlationID string) (ovirtJob []*ovirtsdk.Job, err er
 	ovirtJobs, ok := jobResponse.Jobs()
 	if !ok {
 		err = liberr.New(fmt.Sprintf("Job %s source lookup failed", correlationID))
+		return
 	}
 	ovirtJob = ovirtJobs.Slice()
 	return
