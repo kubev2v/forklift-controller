@@ -232,6 +232,13 @@ func (r Reconciler) Reconcile(request reconcile.Request) (result reconcile.Resul
 		result.RequeueAfter = base.SlowReQ
 	}
 
+	// Stop reconciliation when auth fails
+	if provider.Status.HasCondition(ConnectionAuthFailed) {
+		result.RequeueAfter = 0
+		err = nil
+		return
+	}
+
 	// Done
 	return
 }

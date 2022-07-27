@@ -25,6 +25,7 @@ const (
 	Validated               = "Validated"
 	ConnectionTestSucceeded = "ConnectionTestSucceeded"
 	ConnectionTestFailed    = "ConnectionTestFailed"
+	ConnectionAuthFailed    = "ConnectionAuthFailed"
 	InventoryCreated        = "InventoryCreated"
 	LoadInventory           = "LoadInventory"
 )
@@ -268,6 +269,19 @@ func (r *Reconciler) testConnection(provider *api.Provider, secret *core.Secret)
 				Message:  "Connection test, succeeded.",
 			})
 	} else {
+		if err.Error() == "Unauthorized" {
+			provider.Status.SetCondition(
+				libcnd.Condition{
+					Type:     ConnectionAuthFailed,
+					Status:   True,
+					Reason:   Tested,
+					Category: Critical,
+					Message: fmt.Sprintf(
+						"Connection auth failed, failed: %s",
+						err.Error()),
+				})
+			return nil
+		}
 		log.Info(
 			"Connection test failed.",
 			"reason",
