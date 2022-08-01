@@ -112,8 +112,10 @@ func (r *Validator) StorageMapped(vmRef ref.Ref) (ok bool, err error) {
 		return
 	}
 	for _, da := range vm.DiskAttachments {
-		if !r.plan.Referenced.Map.Storage.Status.Refs.Find(ref.Ref{ID: da.Disk.StorageDomain}) {
-			return
+		if da.Disk.StorageType != "lun" {
+			if !r.plan.Referenced.Map.Storage.Status.Refs.Find(ref.Ref{ID: da.Disk.StorageDomain}) {
+				return
+			}
 		}
 	}
 	ok = true

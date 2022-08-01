@@ -4,6 +4,13 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"math/rand"
+	"path"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
 	template "github.com/openshift/api/template/v1"
 	"github.com/openshift/library-go/pkg/template/generator"
 	"github.com/openshift/library-go/pkg/template/templateprocessing"
@@ -14,12 +21,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	cnv "kubevirt.io/client-go/api/v1"
 	libvirtxml "libvirt.org/libvirt-go-xml"
-	"math/rand"
-	"path"
-	"sort"
-	"strconv"
-	"strings"
-	"time"
 
 	libcnd "github.com/konveyor/controller/pkg/condition"
 	liberr "github.com/konveyor/controller/pkg/error"
@@ -448,6 +449,94 @@ func (r *KubeVirt) DataVolumes(vm *plan.VMStatus) (dataVolumes []cdi.DataVolume,
 }
 
 //
+// Ensure the PV exist on the destination.
+func (r *KubeVirt) EnsurePersistentVolume(vm *plan.VMStatus, persistentVolumes []core.PersistentVolume) (err error) {
+	/*list := &core.PersistentVolume{}
+	err = r.Destination.Client.List(
+		context.TODO(),
+		list,
+		&client.ListOptions{
+			LabelSelector: labels.SelectorFromSet(r.vmLabels(vm.Ref)),
+			Namespace:     r.Plan.Spec.TargetNamespace,
+		})
+	if err != nil {
+		err = liberr.Wrap(err)
+		return
+	}*/
+
+	for _, pv := range persistentVolumes {
+		exists := false
+		/*for _, item := range list.Items {
+			if r.Builder.ResolveDataVolumeIdentifier(&dv) == r.Builder.ResolveDataVolumeIdentifier(&item) {
+				exists = true
+				break
+			}
+		}*/
+
+		if !exists {
+			err = r.Destination.Client.Create(context.TODO(), &pv)
+			if err != nil {
+				err = liberr.Wrap(err)
+				return
+			}
+			r.Log.Info("Created PersistentVolume.",
+				"pv",
+				path.Join(
+					pv.Namespace,
+					pv.Name),
+				"vm",
+				vm.String())
+		}
+	}
+
+	return
+}
+
+//
+// Ensure the PV exist on the destination.
+func (r *KubeVirt) EnsurePersistentVolumeClaim(vm *plan.VMStatus, persistentVolumeClaims []core.PersistentVolumeClaim) (err error) {
+	/*list := &core.PersistentVolume{}
+	err = r.Destination.Client.List(
+		context.TODO(),
+		list,
+		&client.ListOptions{
+			LabelSelector: labels.SelectorFromSet(r.vmLabels(vm.Ref)),
+			Namespace:     r.Plan.Spec.TargetNamespace,
+		})
+	if err != nil {
+		err = liberr.Wrap(err)
+		return
+	}*/
+
+	for _, pvc := range persistentVolumeClaims {
+		exists := false
+		/*for _, item := range list.Items {
+			if r.Builder.ResolveDataVolumeIdentifier(&dv) == r.Builder.ResolveDataVolumeIdentifier(&item) {
+				exists = true
+				break
+			}
+		}*/
+
+		if !exists {
+			err = r.Destination.Client.Create(context.TODO(), &pvc)
+			if err != nil {
+				err = liberr.Wrap(err)
+				return
+			}
+			r.Log.Info("Created PersistentVolume.",
+				"pvc",
+				path.Join(
+					pvc.Namespace,
+					pvc.Name),
+				"vm",
+				vm.String())
+		}
+	}
+
+	return
+}
+
+//
 // Ensure the DataVolumes exist on the destination.
 func (r *KubeVirt) EnsureDataVolumes(vm *plan.VMStatus, dataVolumes []cdi.DataVolume) (err error) {
 	list := &cdi.DataVolumeList{}
@@ -677,6 +766,36 @@ func (r *KubeVirt) dataVolumes(vm *plan.VMStatus, secret *core.Secret, configMap
 		objects = append(objects, dv)
 	}
 
+	return
+}
+
+//
+// Build the PV CRs.
+func (r *KubeVirt) persistentVolumes(vm *plan.VMStatus) (pvs []core.PersistentVolume, err error) {
+	_, err = r.Source.Inventory.VM(&vm.Ref)
+	if err != nil {
+		return
+	}
+
+	pvs, err = r.Builder.PersistentVolumes(vm.Ref)
+	if err != nil {
+		return
+	}
+	return
+}
+
+//
+// Build the PVC CRs.
+func (r *KubeVirt) persistentVolumeClaims(vm *plan.VMStatus) (pvcs []core.PersistentVolumeClaim, err error) {
+	_, err = r.Source.Inventory.VM(&vm.Ref)
+	if err != nil {
+		return
+	}
+
+	pvcs, err = r.Builder.PersistentVolumeClaims(vm.Ref)
+	if err != nil {
+		return
+	}
 	return
 }
 

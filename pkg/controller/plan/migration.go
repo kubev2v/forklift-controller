@@ -10,6 +10,7 @@ import (
 	libcnd "github.com/konveyor/controller/pkg/condition"
 	liberr "github.com/konveyor/controller/pkg/error"
 	libitr "github.com/konveyor/controller/pkg/itinerary"
+	api "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1"
 	"github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1/plan"
 	"github.com/konveyor/forklift-controller/pkg/controller/plan/adapter"
 	plancontext "github.com/konveyor/forklift-controller/pkg/controller/plan/context"
@@ -40,26 +41,28 @@ var (
 //
 // Phases.
 const (
-	Started                  = "Started"
-	PreHook                  = "PreHook"
-	StorePowerState          = "StorePowerState"
-	PowerOffSource           = "PowerOffSource"
-	WaitForPowerOff          = "WaitForPowerOff"
-	CreateDataVolumes        = "CreateDataVolumes"
-	CreateVM                 = "CreateVM"
-	ScheduleVM               = "ScheduleVM"
-	CopyDisks                = "CopyDisks"
-	CopyingPaused            = "CopyingPaused"
-	AddCheckpoint            = "AddCheckpoint"
-	AddFinalCheckpoint       = "AddFinalCheckpoint"
-	CreateSnapshot           = "CreateSnapshot"
-	CreateInitialSnapshot    = "CreateInitialSnapshot"
-	CreateFinalSnapshot      = "CreateFinalSnapshot"
-	Finalize                 = "Finalize"
-	CreateGuestConversionPod = "CreateGuestConversionPod"
-	ConvertGuest             = "ConvertGuest"
-	PostHook                 = "PostHook"
-	Completed                = "Completed"
+	Started                      = "Started"
+	PreHook                      = "PreHook"
+	StorePowerState              = "StorePowerState"
+	PowerOffSource               = "PowerOffSource"
+	WaitForPowerOff              = "WaitForPowerOff"
+	CreateDataVolumes            = "CreateDataVolumes"
+	CreatePersistentVolumes      = "CreatePersistentVolumes"
+	CreatePersistentVolumeClaims = "CreatePersistentVolumeClaims"
+	CreateVM                     = "CreateVM"
+	ScheduleVM                   = "ScheduleVM"
+	CopyDisks                    = "CopyDisks"
+	CopyingPaused                = "CopyingPaused"
+	AddCheckpoint                = "AddCheckpoint"
+	AddFinalCheckpoint           = "AddFinalCheckpoint"
+	CreateSnapshot               = "CreateSnapshot"
+	CreateInitialSnapshot        = "CreateInitialSnapshot"
+	CreateFinalSnapshot          = "CreateFinalSnapshot"
+	Finalize                     = "Finalize"
+	CreateGuestConversionPod     = "CreateGuestConversionPod"
+	ConvertGuest                 = "ConvertGuest"
+	PostHook                     = "PostHook"
+	Completed                    = "Completed"
 )
 
 //
@@ -87,6 +90,8 @@ var (
 			{Name: StorePowerState},
 			{Name: PowerOffSource},
 			{Name: WaitForPowerOff},
+			{Name: CreatePersistentVolumes},
+			{Name: CreatePersistentVolumeClaims},
 			{Name: CreateDataVolumes},
 			{Name: CreateVM},
 			{Name: ScheduleVM},
@@ -481,7 +486,7 @@ func (r *Migration) itinerary() *libitr.Itinerary {
 // Get the name of the pipeline step corresponding to the current VM phase.
 func (r *Migration) step(vm *plan.VMStatus) (step string) {
 	switch vm.Phase {
-	case Started, CreateInitialSnapshot, CreateDataVolumes, CreateVM, ScheduleVM:
+	case Started, CreateInitialSnapshot, CreateDataVolumes, CreatePersistentVolumes, CreatePersistentVolumeClaims, CreateVM, ScheduleVM:
 		step = Initialize
 	case CopyDisks, CopyingPaused, CreateSnapshot, AddCheckpoint:
 		step = DiskTransfer
@@ -573,6 +578,65 @@ func (r *Migration) execute(vm *plan.VMStatus) (err error) {
 		} else {
 			vm.Phase = Completed
 		}
+	case CreatePersistentVolumes:
+		step, found := vm.FindStep(r.step(vm))
+		if !found {
+			vm.AddError(fmt.Sprintf("Step '%s' not found", r.step(vm)))
+			break
+		}
+		var pvs []core.PersistentVolume
+		pvs, err = r.kubevirt.persistentVolumes(vm)
+		if err != nil {
+			if !errors.As(err, &web.ProviderNotReadyError{}) {
+				step.AddError(err.Error())
+				err = nil
+				break
+			} else {
+				return
+			}
+		}
+		err = r.kubevirt.EnsurePersistentVolume(vm, pvs)
+		if err != nil {
+			log.Error(err, "PV creation failed")
+			if !errors.As(err, &web.ProviderNotReadyError{}) {
+				step.AddError(err.Error())
+				err = nil
+				break
+			} else {
+				return
+			}
+		}
+		vm.Phase = r.next(vm.Phase)
+	case CreatePersistentVolumeClaims:
+		step, found := vm.FindStep(r.step(vm))
+		if !found {
+			vm.AddError(fmt.Sprintf("Step '%s' not found", r.step(vm)))
+			break
+		}
+		var pvcs []core.PersistentVolumeClaim
+		pvcs, err = r.kubevirt.persistentVolumeClaims(vm)
+		if err != nil {
+			if !errors.As(err, &web.ProviderNotReadyError{}) {
+				step.AddError(err.Error())
+				err = nil
+				break
+			} else {
+				return
+			}
+		}
+		err = r.kubevirt.EnsurePersistentVolumeClaim(vm, pvcs)
+		if err != nil {
+			log.Error(err, "PVC creation failed")
+			if !errors.As(err, &web.ProviderNotReadyError{}) {
+				step.AddError(err.Error())
+				err = nil
+				break
+			} else {
+				return
+			}
+		}
+
+		vm.Phase = r.next(vm.Phase)
 	case CreateDataVolumes:
 		step, found := vm.FindStep(r.step(vm))
 		if !found {
@@ -608,7 +672,6 @@ func (r *Migration) execute(vm *plan.VMStatus) (err error) {
 				return
 			}
 		}
-
 		vm.Phase = r.next(vm.Phase)
 	case CreateVM:
 		step, found := vm.FindStep(r.step(vm))
@@ -1349,7 +1412,7 @@ func (r *Predicate) Evaluate(flag libitr.Flag) (allowed bool, err error) {
 	case HasPostHook:
 		_, allowed = r.vm.FindHook(PostHook)
 	case RequiresConversion:
-		allowed = r.context.Source.Provider.RequiresConversion()
+		allowed = r.context.Source.Provider.Type() == api.VSphere
 	}
 
 	return

@@ -2,6 +2,9 @@ package ovirt
 
 import (
 	"fmt"
+	"path"
+	"strings"
+
 	liberr "github.com/konveyor/controller/pkg/error"
 	libitr "github.com/konveyor/controller/pkg/itinerary"
 	"github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1/plan"
@@ -12,10 +15,9 @@ import (
 	model "github.com/konveyor/forklift-controller/pkg/controller/provider/web/ovirt"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	cnv "kubevirt.io/client-go/api/v1"
 	cdi "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
-	"path"
-	"strings"
 )
 
 // BIOS types
@@ -159,6 +161,98 @@ func (r *Builder) Secret(_ ref.Ref, in, object *core.Secret) (err error) {
 }
 
 //
+// Create PVs specs for the VM.
+func (r *Builder) PersistentVolumes(vmRef ref.Ref) (pvs []core.PersistentVolume, err error) {
+	vm := &model.Workload{}
+	err = r.Source.Inventory.Find(vm, vmRef)
+	if err != nil {
+		err = liberr.Wrap(
+			err,
+			"VM lookup failed.",
+			"vm",
+			vmRef.String())
+		return
+	}
+	for i, da := range vm.DiskAttachments {
+		if da.Disk.StorageType == "lun" {
+			volmode := core.PersistentVolumeBlock
+			pvSpec := core.PersistentVolume{
+				ObjectMeta: v1.ObjectMeta{
+					Name:      fmt.Sprintf("%v-vol-%v", vm.Name, i),
+					Namespace: r.Plan.Spec.TargetNamespace,
+					Labels: map[string]string{
+						"volume": "test",
+					},
+				},
+				Spec: core.PersistentVolumeSpec{
+					PersistentVolumeSource: core.PersistentVolumeSource{
+						ISCSI: &core.ISCSIPersistentVolumeSource{
+							TargetPortal: "<ip>:<port>",
+							IQN:          "<iqn>",
+							Lun:          0,
+							ReadOnly:     false,
+						},
+					},
+					Capacity: core.ResourceList{
+						core.ResourceStorage: *resource.NewQuantity(1024*1024*1024, resource.BinarySI),
+					},
+					AccessModes: []core.PersistentVolumeAccessMode{
+						core.ReadWriteOnce,
+					},
+					VolumeMode: &volmode,
+				},
+			}
+			pvs = append(pvs, pvSpec)
+		}
+	}
+	return
+}
+
+//
+// Create PVCs specs for the VM.
+func (r *Builder) PersistentVolumeClaims(vmRef ref.Ref) (pvcs []core.PersistentVolumeClaim, err error) {
+	vm := &model.Workload{}
+	err = r.Source.Inventory.Find(vm, vmRef)
+	if err != nil {
+		err = liberr.Wrap(
+			err,
+			"VM lookup failed.",
+			"vm",
+			vmRef.String())
+		return
+	}
+	for i, da := range vm.DiskAttachments {
+		if da.Disk.StorageType == "lun" {
+			volmode := core.PersistentVolumeBlock
+			pvcSpec := core.PersistentVolumeClaim{
+				ObjectMeta: v1.ObjectMeta{
+					Name:      fmt.Sprintf("%v-vol-%v", vm.Name, i),
+					Namespace: r.Plan.Spec.TargetNamespace,
+				},
+				Spec: core.PersistentVolumeClaimSpec{
+					AccessModes: []core.PersistentVolumeAccessMode{
+						core.ReadWriteOnce,
+					},
+					Selector: &v1.LabelSelector{
+						MatchLabels: map[string]string{
+							"volume": "test",
+						},
+					},
+					VolumeMode: &volmode,
+					Resources: core.ResourceRequirements{
+						Requests: core.ResourceList{
+							core.ResourceStorage: *resource.NewQuantity(1024*1024*1024, resource.BinarySI),
+						},
+					},
+				},
+			}
+			pvcs = append(pvcs, pvcSpec)
+		}
+	}
+	return
+}
+
+//
 // Create DataVolume specs for the VM.
 func (r *Builder) DataVolumes(vmRef ref.Ref, secret *core.Secret, configMap *core.ConfigMap) (dvs []cdi.DataVolumeSpec, err error) {
 	vm := &model.Workload{}
@@ -184,7 +278,7 @@ func (r *Builder) DataVolumes(vmRef ref.Ref, secret *core.Secret, configMap *cor
 			return
 		}
 		for _, da := range vm.DiskAttachments {
-			if da.Disk.StorageDomain == sd.ID {
+			if da.Disk.StorageType != "lun" && da.Disk.StorageDomain == sd.ID {
 				storageClass := mapped.Destination.StorageClass
 				size := da.Disk.ProvisionedSize
 				if da.Disk.ActualSize > size {
@@ -399,14 +493,6 @@ func (r *Builder) mapDisks(vm *model.Workload, dataVolumes []cdi.DataVolume, obj
 	for i, da := range vm.DiskAttachments {
 		dv := dvMap[da.Disk.ID]
 		volumeName := fmt.Sprintf("vol-%v", i)
-		volume := cnv.Volume{
-			Name: volumeName,
-			VolumeSource: cnv.VolumeSource{
-				DataVolume: &cnv.DataVolumeSource{
-					Name: dv.Name,
-				},
-			},
-		}
 		var bus string
 		switch da.Interface {
 		case VirtioScsi:
@@ -416,13 +502,44 @@ func (r *Builder) mapDisks(vm *model.Workload, dataVolumes []cdi.DataVolume, obj
 		default:
 			bus = Virtio
 		}
-		disk := cnv.Disk{
-			Name: volumeName,
-			DiskDevice: cnv.DiskDevice{
-				Disk: &cnv.DiskTarget{
-					Bus: bus,
+		var disk cnv.Disk
+		var volume cnv.Volume
+		if da.Disk.Disk.StorageType == "lun" {
+			volume = cnv.Volume{
+				Name: volumeName,
+				VolumeSource: cnv.VolumeSource{
+					PersistentVolumeClaim: &core.PersistentVolumeClaimVolumeSource{
+						ClaimName: fmt.Sprintf("%v-%v", vm.Name, volumeName),
+					},
 				},
-			},
+			}
+
+			disk = cnv.Disk{
+				Name: volumeName,
+				DiskDevice: cnv.DiskDevice{
+					LUN: &cnv.LunTarget{
+						Bus: bus,
+					},
+				},
+			}
+		} else {
+			volume = cnv.Volume{
+				Name: volumeName,
+				VolumeSource: cnv.VolumeSource{
+					DataVolume: &cnv.DataVolumeSource{
+						Name: dv.Name,
+					},
+				},
+			}
+
+			disk = cnv.Disk{
+				Name: volumeName,
+				DiskDevice: cnv.DiskDevice{
+					Disk: &cnv.DiskTarget{
+						Bus: bus,
+					},
+				},
+			}
 		}
 		kVolumes = append(kVolumes, volume)
 		kDisks = append(kDisks, disk)
@@ -444,18 +561,20 @@ func (r *Builder) Tasks(vmRef ref.Ref) (list []*plan.Task, err error) {
 			vmRef.String())
 	}
 	for _, da := range vm.DiskAttachments {
-		mB := da.Disk.ProvisionedSize / 0x100000
-		list = append(
-			list,
-			&plan.Task{
-				Name: da.Disk.ID,
-				Progress: libitr.Progress{
-					Total: mB,
-				},
-				Annotations: map[string]string{
-					"unit": "MB",
-				},
-			})
+		if da.Disk.StorageType != "lun" {
+			mB := da.Disk.ProvisionedSize / 0x100000
+			list = append(
+				list,
+				&plan.Task{
+					Name: da.Disk.ID,
+					Progress: libitr.Progress{
+						Total: mB,
+					},
+					Annotations: map[string]string{
+						"unit": "MB",
+					},
+				})
+		}
 	}
 
 	return

@@ -160,6 +160,24 @@ func (r *Client) PowerOff(vmRef ref.Ref) (err error) {
 }
 
 //
+// Remove disk attachment from the VM.
+func (r *Client) DetachDisk(vmRef ref.Ref) (err error) {
+	vm, vmService, err := r.getVM(vmRef)
+	if err != nil {
+		return
+	}
+	diskAttachments, _ := vm.DiskAttachments()
+	for _, da := range diskAttachments.Slice() {
+		disk, _ := da.Disk()
+		stype, _ := disk.StorageType()
+		if stype == ovirtsdk.DISKSTORAGETYPE_LUN {
+			vmService.DiskAttachmentsService().AttachmentService(da.MustId()).Remove()
+		}
+	}
+	return
+}
+
+//
 // Determine whether the VM has been powered off.
 func (r *Client) PoweredOff(vmRef ref.Ref) (poweredOff bool, err error) {
 	powerState, err := r.PowerState(vmRef)

@@ -4,6 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	liburl "net/url"
+	"path"
+	"regexp"
+	"sort"
+	"strings"
+
 	libcnd "github.com/konveyor/controller/pkg/condition"
 	liberr "github.com/konveyor/controller/pkg/error"
 	libitr "github.com/konveyor/controller/pkg/itinerary"
@@ -22,12 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	cnv "kubevirt.io/client-go/api/v1"
 	cdi "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
-	liburl "net/url"
-	"path"
-	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sort"
-	"strings"
 )
 
 // BIOS types
@@ -191,6 +192,20 @@ func (r *Builder) Secret(vmRef ref.Ref, in, object *core.Secret) (err error) {
 		"secretKey":   string(in.Data["password"]),
 	}
 
+	return
+}
+
+//
+// Create PVs specs for the VM.
+// No-op for vSphere.
+func (r *Builder) PersistentVolumes(vmRef ref.Ref) (pvs []core.PersistentVolume, err error) {
+	return
+}
+
+//
+// Create PVCs specs for the VM.
+// No-op for vSphere.
+func (r *Builder) PersistentVolumeClaims(vmRef ref.Ref) (pvcs []core.PersistentVolumeClaim, err error) {
 	return
 }
 

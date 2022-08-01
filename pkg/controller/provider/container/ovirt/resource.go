@@ -1,9 +1,10 @@
 package ovirt
 
 import (
-	model "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ovirt"
 	"sort"
 	"strconv"
+
+	model "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ovirt"
 )
 
 //
