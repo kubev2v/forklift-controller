@@ -167,10 +167,6 @@ func (r Reconciler) Reconcile(request reconcile.Request) (result reconcile.Resul
 		r.catalog.add(request, provider)
 	}
 
-	defer func() {
-		r.Log.V(2).Info("Conditions.", "all", provider.Status.Conditions)
-	}()
-
 	// Updated.
 	if !provider.HasReconciled() {
 		if r, found := r.container.Delete(provider); found {
@@ -178,6 +174,29 @@ func (r Reconciler) Reconcile(request reconcile.Request) (result reconcile.Resul
 			_ = r.DB().Close(true)
 		}
 	}
+
+	defer func() {
+		// End staging conditions.
+		provider.Status.EndStagingConditions()
+
+		// Record events.
+		r.Record(provider, provider.Status.Conditions)
+
+		// Apply changes.
+		provider.Status.ObservedGeneration = provider.Generation
+		err = r.Status().Update(context.TODO(), provider)
+		if err != nil {
+			return
+		}
+
+		// Update the DB.
+		err = r.updateProvider(provider)
+		if err != nil {
+			return
+		}
+
+		r.Log.V(2).Info("Conditions.", "all", provider.Status.Conditions)
+	}()
 
 	// Begin staging conditions.
 	provider.Status.BeginStagingConditions()
@@ -204,25 +223,6 @@ func (r Reconciler) Reconcile(request reconcile.Request) (result reconcile.Resul
 				Category: Required,
 				Message:  "The provider is ready.",
 			})
-	}
-
-	// End staging conditions.
-	provider.Status.EndStagingConditions()
-
-	// Record events.
-	r.Record(provider, provider.Status.Conditions)
-
-	// Apply changes.
-	provider.Status.ObservedGeneration = provider.Generation
-	err = r.Status().Update(context.TODO(), provider)
-	if err != nil {
-		return
-	}
-
-	// Update the DB.
-	err = r.updateProvider(provider)
-	if err != nil {
-		return
 	}
 
 	// ReQ.
