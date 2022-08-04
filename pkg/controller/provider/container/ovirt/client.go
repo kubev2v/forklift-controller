@@ -144,13 +144,13 @@ func (r *Client) auth() (user string) {
 
 //
 // Get system.
-func (r *Client) system() (s *System, err error) {
+func (r *Client) system() (s *System, status int, err error) {
 	err = r.connect()
 	if err != nil {
 		return
 	}
 	system := &System{}
-	status, err := r.client.Get(r.url, system)
+	status, err = r.client.Get(r.url, system)
 	if err != nil {
 		return
 	}

@@ -256,7 +256,7 @@ func (r *Reconciler) testConnection(provider *api.Provider, secret *core.Secret)
 		return nil
 	}
 	rl := container.Build(nil, provider, secret)
-	err := rl.Test()
+	status, err := rl.Test()
 	if err == nil {
 		log.Info(
 			"Connection test succeeded.")
@@ -269,7 +269,7 @@ func (r *Reconciler) testConnection(provider *api.Provider, secret *core.Secret)
 				Message:  "Connection test, succeeded.",
 			})
 	} else {
-		if err.Error() == "Unauthorized" {
+		if status == http.StatusUnauthorized {
 			provider.Status.SetCondition(
 				libcnd.Condition{
 					Type:     ConnectionAuthFailed,

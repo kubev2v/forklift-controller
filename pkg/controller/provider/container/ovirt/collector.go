@@ -119,8 +119,8 @@ func (r *Collector) HasParity() bool {
 
 //
 // Test connect/logout.
-func (r *Collector) Test() (err error) {
-	_, err = r.client.system()
+func (r *Collector) Test() (status int, err error) {
+	_, status, err = r.client.system()
 	return
 }
 

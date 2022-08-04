@@ -2,6 +2,11 @@ package vsphere
 
 import (
 	"context"
+	"net/http"
+	liburl "net/url"
+	"path"
+	"time"
+
 	"github.com/go-logr/logr"
 	liberr "github.com/konveyor/controller/pkg/error"
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
@@ -17,9 +22,6 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	liburl "net/url"
-	"path"
-	"time"
 )
 
 //
@@ -290,11 +292,11 @@ func (r *Collector) HasParity() bool {
 
 //
 // Test connect/logout.
-func (r *Collector) Test() (err error) {
+func (r *Collector) Test() (status int, err error) {
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	err = r.connect(ctx)
+	status, err = r.connect(ctx)
 	if err == nil {
 		r.close()
 	}
@@ -349,7 +351,7 @@ func (r *Collector) Shutdown() {
 //  2. apply updates.
 // Blocks waiting on updates until canceled.
 func (r *Collector) getUpdates(ctx context.Context) error {
-	err := r.connect(ctx)
+	_, err := r.connect(ctx)
 	if err != nil {
 		return err
 	}
@@ -495,11 +497,11 @@ func (r *Collector) watch() (list []*libmodel.Watch) {
 
 //
 // Build the client.
-func (r *Collector) connect(ctx context.Context) error {
+func (r *Collector) connect(ctx context.Context) (int, error) {
 	r.close()
 	url, err := liburl.Parse(r.url)
 	if err != nil {
-		return liberr.Wrap(err)
+		return 0, liberr.Wrap(err)
 	}
 	url.User = liburl.UserPassword(
 		r.user(),
@@ -508,7 +510,7 @@ func (r *Collector) connect(ctx context.Context) error {
 	soapClient.SetThumbprint(url.Host, r.thumbprint())
 	vimClient, err := vim25.NewClient(ctx, soapClient)
 	if err != nil {
-		return liberr.Wrap(err)
+		return 0, liberr.Wrap(err)
 	}
 	r.client = &govmomi.Client{
 		SessionManager: session.NewManager(vimClient),
@@ -516,10 +518,10 @@ func (r *Collector) connect(ctx context.Context) error {
 	}
 	err = r.client.Login(ctx, url.User)
 	if err != nil {
-		return liberr.Wrap(err)
+		return http.StatusUnauthorized, liberr.Wrap(err)
 	}
 
-	return nil
+	return http.StatusOK, nil
 }
 
 //
