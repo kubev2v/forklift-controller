@@ -175,26 +175,28 @@ func (r *Builder) PersistentVolumes(vmRef ref.Ref) (pvs []core.PersistentVolume,
 	}
 	for i, da := range vm.DiskAttachments {
 		if da.Disk.StorageType == "lun" {
+			logicalUnit := da.Disk.Lun.LogicalUnits.LogicalUnit[0]
 			volmode := core.PersistentVolumeBlock
+			name := fmt.Sprintf("%v-%v-vol-%v", vm.ID, vm.Name, i)
 			pvSpec := core.PersistentVolume{
 				ObjectMeta: v1.ObjectMeta{
-					Name:      fmt.Sprintf("%v-vol-%v", vm.Name, i),
+					Name:      name,
 					Namespace: r.Plan.Spec.TargetNamespace,
 					Labels: map[string]string{
-						"volume": "test",
+						"volume": name,
 					},
 				},
 				Spec: core.PersistentVolumeSpec{
 					PersistentVolumeSource: core.PersistentVolumeSource{
 						ISCSI: &core.ISCSIPersistentVolumeSource{
-							TargetPortal: "<ip>:<port>",
-							IQN:          "<iqn>",
-							Lun:          0,
+							TargetPortal: fmt.Sprintf("%v:%v", logicalUnit.Address, logicalUnit.Port),
+							IQN:          logicalUnit.Target,
+							Lun:          logicalUnit.LunMapping,
 							ReadOnly:     false,
 						},
 					},
 					Capacity: core.ResourceList{
-						core.ResourceStorage: *resource.NewQuantity(1024*1024*1024, resource.BinarySI),
+						core.ResourceStorage: *resource.NewQuantity(logicalUnit.Size, resource.BinarySI),
 					},
 					AccessModes: []core.PersistentVolumeAccessMode{
 						core.ReadWriteOnce,
@@ -224,9 +226,10 @@ func (r *Builder) PersistentVolumeClaims(vmRef ref.Ref) (pvcs []core.PersistentV
 	for i, da := range vm.DiskAttachments {
 		if da.Disk.StorageType == "lun" {
 			volmode := core.PersistentVolumeBlock
+			name := fmt.Sprintf("%v-%v-vol-%v", vm.ID, vm.Name, i)
 			pvcSpec := core.PersistentVolumeClaim{
 				ObjectMeta: v1.ObjectMeta{
-					Name:      fmt.Sprintf("%v-vol-%v", vm.Name, i),
+					Name:      name,
 					Namespace: r.Plan.Spec.TargetNamespace,
 				},
 				Spec: core.PersistentVolumeClaimSpec{
@@ -235,13 +238,13 @@ func (r *Builder) PersistentVolumeClaims(vmRef ref.Ref) (pvcs []core.PersistentV
 					},
 					Selector: &v1.LabelSelector{
 						MatchLabels: map[string]string{
-							"volume": "test",
+							"volume": name,
 						},
 					},
 					VolumeMode: &volmode,
 					Resources: core.ResourceRequirements{
 						Requests: core.ResourceList{
-							core.ResourceStorage: *resource.NewQuantity(1024*1024*1024, resource.BinarySI),
+							core.ResourceStorage: *resource.NewQuantity(da.Disk.Lun.LogicalUnits.LogicalUnit[0].Size, resource.BinarySI),
 						},
 					},
 				},
@@ -509,7 +512,7 @@ func (r *Builder) mapDisks(vm *model.Workload, dataVolumes []cdi.DataVolume, obj
 				Name: volumeName,
 				VolumeSource: cnv.VolumeSource{
 					PersistentVolumeClaim: &core.PersistentVolumeClaimVolumeSource{
-						ClaimName: fmt.Sprintf("%v-%v", vm.Name, volumeName),
+						ClaimName: fmt.Sprintf("%v-%v-%v", vm.ID, vm.Name, volumeName),
 					},
 				},
 			}

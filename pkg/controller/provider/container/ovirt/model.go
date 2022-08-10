@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/go-logr/logr"
 	liberr "github.com/konveyor/controller/pkg/error"
 	fb "github.com/konveyor/controller/pkg/filebacked"
@@ -11,8 +14,6 @@ import (
 	libmodel "github.com/konveyor/controller/pkg/inventory/model"
 	libweb "github.com/konveyor/controller/pkg/inventory/web"
 	model "github.com/konveyor/forklift-controller/pkg/controller/provider/model/ovirt"
-	"strconv"
-	"strings"
 )
 
 //
