@@ -2,6 +2,8 @@ package ovirt
 
 import (
 	"fmt"
+	"sync"
+	"time"
 
 	liberr "github.com/konveyor/controller/pkg/error"
 	planapi "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1/plan"
@@ -10,6 +12,7 @@ import (
 	"github.com/konveyor/forklift-controller/pkg/controller/provider/container/ovirt"
 	model "github.com/konveyor/forklift-controller/pkg/controller/provider/web/ovirt"
 	ovirtsdk "github.com/ovirt/go-ovirt"
+	"k8s.io/apimachinery/pkg/util/wait"
 	cdi "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
 )
 
@@ -56,21 +59,7 @@ func (r *Client) CreateSnapshot(vmRef ref.Ref) (snapshot string, err error) {
 //
 // Remove all warm migration snapshots.
 func (r *Client) RemoveSnapshots(vmRef ref.Ref, precopies []planapi.Precopy) (err error) {
-	if len(precopies) == 0 {
-		return
-	}
-	_, vmService, err := r.getVM(vmRef)
-	if err != nil {
-		return
-	}
-	snapsService := vmService.SnapshotsService()
-	for i := range precopies {
-		snapService := snapsService.SnapshotService(precopies[i].Snapshot)
-		_, err = snapService.Remove().Async(true).Query("correlation_id", r.Migration.Name).Send()
-		if err != nil {
-			err = liberr.Wrap(err)
-		}
-	}
+	// NOOP
 	return
 }
 
@@ -281,6 +270,42 @@ func (r *Client) getDiskSnapshot(diskID, targetSnapshotID string) (diskSnapshotI
 	return
 }
 
+func (r *Client) getJobs(correlationID string) (ovirtJob []*ovirtsdk.Job, err error) {
+	jobService := r.connection.SystemService().JobsService().List()
+	jobResponse, err := jobService.Search(fmt.Sprintf("correlation_id=%s", correlationID)).Send()
+	if err != nil {
+		err = liberr.Wrap(err)
+		return
+	}
+	ovirtJobs, ok := jobResponse.Jobs()
+	if !ok {
+		err = liberr.New(fmt.Sprintf("Job %s source lookup failed", correlationID))
+		return
+	}
+	ovirtJob = ovirtJobs.Slice()
+	return
+}
+
+func (r *Client) isDiskBeingTransferred(diskID string) (bool, error) {
+	transfers, err := r.connection.SystemService().ImageTransfersService().List().Send()
+	if err != nil {
+		err = liberr.Wrap(err)
+		return false, err
+	}
+
+	for _, transfer := range transfers.MustImageTransfer().Slice() {
+		phase, _ := transfer.Phase()
+		if phase != ovirtsdk.IMAGETRANSFERPHASE_FINISHED_FAILURE && phase != ovirtsdk.IMAGETRANSFERPHASE_FINISHED_SUCCESS {
+			transferDiskID, _ := transfer.MustImage().Id()
+			if transferDiskID == diskID {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
 //
 // Connect to the oVirt API.
 func (r *Client) connect() (err error) {
@@ -317,4 +342,109 @@ func (r *Client) cacert() []byte {
 		return cacert
 	}
 	return nil
+}
+
+func (r Client) Finalize(vms []*planapi.VMStatus) {
+	r.connect()
+	defer r.Close()
+	var wg sync.WaitGroup
+	wg.Add(len(vms))
+	for _, vm := range vms {
+		_, vmService, err := r.getVM(vm.Ref)
+		if err != nil {
+			return
+		}
+
+		go r.removePrecopies(vm.Warm.Precopies, vmService, &wg)
+	}
+
+	wg.Wait()
+}
+
+func (r Client) removePrecopies(precopies []planapi.Precopy, vmService *ovirtsdk.VmService, wg *sync.WaitGroup) {
+	if len(precopies) == 0 {
+		return
+	}
+
+	defer wg.Done()
+	snapsService := vmService.SnapshotsService()
+	for i := range precopies {
+		snapshotID := precopies[i].Snapshot
+		snapService := snapsService.SnapshotService(snapshotID)
+		correlationID := fmt.Sprintf("%s_finalize", snapshotID[0:8])
+		_, err := snapService.Remove().Query("correlation_id", correlationID).Send()
+		r.Log.Error(err, "Remove request for snapshot failed", "snapshotID", snapshotID)
+		if err != nil {
+			// Assume we could not remove because of an ongoing transfer
+			backoff := wait.Backoff{
+				Duration: time.Second * 3,
+				Factor:   0,
+				Jitter:   0,
+				Steps:    3,
+			}
+
+			err = wait.ExponentialBackoff(backoff, func() (bool, error) {
+				snapshotDisksResponse, err := snapService.DisksService().List().Send()
+				if err != nil {
+					r.Log.Error(err, "snapshotDiksService Request failed")
+					err = liberr.Wrap(err, "Disks not found")
+					return false, err
+				}
+				snapshotDisks, found := snapshotDisksResponse.Disks()
+				if !found {
+					r.Log.Error(err, "disks not found")
+					err = liberr.Wrap(err, "Disks not found")
+					return false, err
+				}
+				for _, disk := range snapshotDisks.Slice() {
+					if transferred, err := r.isDiskBeingTransferred(disk.MustId()); transferred || err != nil {
+						r.Log.Info("Disk is being transferred, retrying..")
+						return false, nil
+					} else {
+						// Try to remove the snapshot again
+						_, err = snapService.Remove().Query("correlation_id", correlationID).Send()
+						if err != nil {
+							err = liberr.Wrap(err)
+							return true, err
+						}
+					}
+				}
+				return false, nil
+			})
+			if err != nil {
+				err = liberr.Wrap(err)
+				return
+			}
+
+		}
+
+		for {
+			jobs, err := r.getJobs(correlationID)
+			if err != nil {
+				err = liberr.Wrap(err)
+			}
+			if allJobsFinished(jobs) {
+				break
+			}
+
+			select {
+			case <-time.After(2 * time.Hour):
+				r.Log.Info("Timeout out waiting for snapshot removal")
+				return
+			default:
+				time.Sleep(3 * time.Second)
+			}
+		}
+	}
+}
+
+func allJobsFinished(jobs []*ovirtsdk.Job) bool {
+	for _, job := range jobs {
+		status, _ := job.Status()
+		if status != ovirtsdk.JOBSTATUS_FINISHED && status != ovirtsdk.JOBSTATUS_FAILED {
+			return false
+		}
+	}
+
+	return true
 }

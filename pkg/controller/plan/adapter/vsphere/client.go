@@ -3,6 +3,8 @@ package vsphere
 import (
 	"context"
 	"fmt"
+	liburl "net/url"
+
 	liberr "github.com/konveyor/controller/pkg/error"
 	planapi "github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1/plan"
 	"github.com/konveyor/forklift-controller/pkg/apis/forklift/v1beta1/ref"
@@ -17,7 +19,6 @@ import (
 	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
 	cdi "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
-	liburl "net/url"
 )
 
 const (
@@ -212,6 +213,12 @@ func (r *Client) Close() {
 		r.client.CloseIdleConnections()
 		r.client = nil
 	}
+}
+
+//
+// Finalize finalizes the migrations
+func (r *Client) Finalize(vms []*planapi.VMStatus) {
+	// NOOP
 }
 
 //
