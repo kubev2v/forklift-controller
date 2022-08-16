@@ -106,17 +106,20 @@ var (
 			{Name: Started},
 			{Name: PreHook, All: HasPreHook},
 			{Name: CreateInitialSnapshot},
+			{Name: WaitForInitialSnapshot},
 			{Name: CreateDataVolumes},
 			{Name: CreateVM},
 			{Name: ScheduleVM},
 			{Name: CopyDisks},
 			{Name: CopyingPaused},
 			{Name: CreateSnapshot},
+			{Name: WaitForSnapshot},
 			{Name: AddCheckpoint},
 			{Name: StorePowerState},
 			{Name: PowerOffSource},
 			{Name: WaitForPowerOff},
 			{Name: CreateFinalSnapshot},
+			{Name: WaitForFinalSnapshot},
 			{Name: AddFinalCheckpoint},
 			{Name: Finalize},
 			{Name: CreateGuestConversionPod, All: RequiresConversion},
@@ -706,15 +709,7 @@ func (r *Migration) execute(vm *plan.VMStatus) (err error) {
 		precopy := plan.Precopy{Snapshot: snapshot, Start: &now}
 		vm.Warm.Precopies = append(vm.Warm.Precopies, precopy)
 		r.resetPrecopyTasks(vm, step)
-
-		switch vm.Phase {
-		case CreateInitialSnapshot:
-			vm.Phase = WaitForInitialSnapshot
-		case CreateSnapshot:
-			vm.Phase = WaitForSnapshot
-		case CreateFinalSnapshot:
-			vm.Phase = WaitForFinalSnapshot
-		}
+		vm.Phase = r.next(vm.Phase)
 	case WaitForInitialSnapshot, WaitForSnapshot, WaitForFinalSnapshot:
 		step, found := vm.FindStep(r.step(vm))
 		if !found {
@@ -729,14 +724,7 @@ func (r *Migration) execute(vm *plan.VMStatus) (err error) {
 			break
 		}
 		if ready {
-			switch vm.Phase {
-			case WaitForInitialSnapshot:
-				vm.Phase = CreateDataVolumes
-			case WaitForSnapshot:
-				vm.Phase = AddCheckpoint
-			case WaitForFinalSnapshot:
-				vm.Phase = AddFinalCheckpoint
-			}
+			vm.Phase = r.next(vm.Phase)
 		}
 	case AddCheckpoint, AddFinalCheckpoint:
 		step, found := vm.FindStep(r.step(vm))
