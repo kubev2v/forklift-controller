@@ -95,22 +95,19 @@ func (r *Client) CheckSnapshotReady(vmRef ref.Ref, snapshot string) (ready bool,
 		err = liberr.Wrap(err)
 		return
 	}
-	if len(jobs) > 1 {
-		err = liberr.New("Multiple jobs found for correlation ID %s", correlationID)
-		return
-	} else if len(jobs) < 1 {
+	if len(jobs) < 1 {
 		err = liberr.New("No jobs found for correlation ID %", correlationID)
 		return
 	}
-	job := jobs[0]
-	switch job.MustStatus() {
-	case ovirtsdk.JOBSTATUS_FAILED, ovirtsdk.JOBSTATUS_ABORTED:
-		err = liberr.New("Snapshot creation failed! Correlation ID is %s", correlationID)
-		ready = false
-	case ovirtsdk.JOBSTATUS_STARTED, ovirtsdk.JOBSTATUS_UNKNOWN:
-		ready = false
-	case ovirtsdk.JOBSTATUS_FINISHED:
-		ready = true
+	ready = true
+	for _, job := range jobs {
+		switch job.MustStatus() {
+		case ovirtsdk.JOBSTATUS_FAILED, ovirtsdk.JOBSTATUS_ABORTED:
+			err = liberr.New("Snapshot creation failed! Correlation ID is %s", correlationID)
+			ready = false
+		case ovirtsdk.JOBSTATUS_STARTED, ovirtsdk.JOBSTATUS_UNKNOWN:
+			ready = false
+		}
 	}
 	return
 }
