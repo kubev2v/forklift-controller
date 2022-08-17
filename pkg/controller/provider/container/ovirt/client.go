@@ -112,7 +112,17 @@ func (r *Client) connect() (err error) {
 
 	response := &ovirtTokenResponse{}
 	url.RawQuery = values.Encode()
-	client.Get(url.String(), response)
+	status, err := client.Get(url.String(), response)
+	if err != nil {
+		return
+	}
+
+	// Providing bad credentials when requesting the token results
+	// in 400, and not 401. So checking for != 200 instead
+	if status != http.StatusOK {
+		err = liberr.New("Request for token failed", "status", status)
+		return
+	}
 
 	// Set the access token we received
 	client.Header = http.Header{
