@@ -29,6 +29,8 @@ type ControllerSettings struct {
 	Profiler
 	// Feature gates.
 	Features
+	// Admission Webhook settings.
+	AdmissionWebhook
 }
 
 //
@@ -63,6 +65,10 @@ func (r *ControllerSettings) Load() error {
 		return err
 	}
 	err = r.Features.Load()
+	if err != nil {
+		return err
+	}
+	err = r.AdmissionWebhook.Load()
 	if err != nil {
 		return err
 	}

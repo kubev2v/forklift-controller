@@ -81,8 +81,8 @@ func main() {
 	log.Info("setting up manager")
 	mgr, err := manager.New(cfg, manager.Options{
 		MetricsBindAddress: Settings.Metrics.Address(),
-		CertDir:            "/var/run/secrets/forklift-admission-webhook-serving-cert/",
-		Port:               8444,
+		CertDir:            Settings.AdmissionWebhook.CertDir,
+		Port:               Settings.AdmissionWebhook.Port,
 	})
 	if err != nil {
 		log.Error(err, "unable to set up overall controller manager")
@@ -91,7 +91,7 @@ func main() {
 
 	log.Info("Registering Components.")
 
-	if Settings.Role.Has(settings.MainRole) {
+	if Settings.Role.Has(settings.MainRole) && Settings.AdmissionWebhook.Enabled {
 		mgr.GetWebhookServer().Register("/webhooks/provider", &admission.Webhook{Handler: &webhook.Handler{Client: mgr.GetClient()}})
 	}
 
