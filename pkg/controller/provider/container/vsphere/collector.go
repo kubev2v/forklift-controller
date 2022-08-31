@@ -5,6 +5,7 @@ import (
 	"net/http"
 	liburl "net/url"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -497,7 +498,7 @@ func (r *Collector) watch() (list []*libmodel.Watch) {
 
 //
 // Build the client.
-func (r *Collector) connect(ctx context.Context) (int, error) {
+func (r *Collector) connect(ctx context.Context) (status int, err error) {
 	r.close()
 	url, err := liburl.Parse(r.url)
 	if err != nil {
@@ -518,7 +519,10 @@ func (r *Collector) connect(ctx context.Context) (int, error) {
 	}
 	err = r.client.Login(ctx, url.User)
 	if err != nil {
-		return http.StatusUnauthorized, liberr.Wrap(err)
+		if strings.Contains(err.Error(), "Cannot complete login due to an incorrect user name or password") {
+			return http.StatusUnauthorized, liberr.Wrap(err)
+		}
+		return 0, liberr.Wrap(err)
 	}
 
 	return http.StatusOK, nil

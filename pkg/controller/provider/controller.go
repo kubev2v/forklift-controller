@@ -171,6 +171,15 @@ func (r Reconciler) Reconcile(request reconcile.Request) (result reconcile.Resul
 		r.Log.V(2).Info("Conditions.", "all", provider.Status.Conditions)
 	}()
 
+	defer func() {
+		// Stop reconciliation when auth fails
+		if provider.Status.HasCondition(ConnectionAuthFailed) {
+			result.RequeueAfter = 0
+			err = nil
+			return
+		}
+	}()
+
 	// Updated.
 	if !provider.HasReconciled() {
 		if r, found := r.container.Delete(provider); found {
@@ -230,13 +239,6 @@ func (r Reconciler) Reconcile(request reconcile.Request) (result reconcile.Resul
 		r.Log.Info(
 			"Waiting connection tested or inventory created.")
 		result.RequeueAfter = base.SlowReQ
-	}
-
-	// Stop reconciliation when auth fails
-	if provider.Status.HasCondition(ConnectionAuthFailed) {
-		result.RequeueAfter = 0
-		err = nil
-		return
 	}
 
 	// Done

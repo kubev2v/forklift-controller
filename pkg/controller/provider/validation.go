@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	libcnd "github.com/konveyor/controller/pkg/condition"
