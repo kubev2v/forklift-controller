@@ -10,6 +10,12 @@ else
     CONTAINER_CMD = docker
 endif
 
+ifeq (, $(shell which controller-gen))
+    CONTROLLER_GEN := $(GOBIN)/controller-gen
+else
+    CONTROLLER_GEN := $(shell which controller-gen)
+endif
+
 ci: all
 
 all: test manager
@@ -69,14 +75,8 @@ docker-build:
 docker-push:
 	$(CONTAINER_CMD) push ${IMG}
 
-# find or download controller-gen
+.PHONY: controller-gen
+controller-gen: $(CONTROLLER_GEN)
 # download controller-gen if necessary
-controller-gen:
-ifeq (, $(shell which controller-gen))
-	@{ \
-	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.6.2 ;\
-	}
-CONTROLLER_GEN=$(GOBIN)/controller-gen
-else
-CONTROLLER_GEN=$(shell which controller-gen)
-endif
+$(CONTROLLER_GEN):
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.6.2
