@@ -4,17 +4,19 @@ GOOS ?= `go env GOOS`
 GOBIN ?= ${GOPATH}/bin
 GO111MODULE = auto
 
-ifeq (, $(shell which docker))
+ifeq (, $(shell which docker 2>/dev/null))
     CONTAINER_CMD = podman
 else
     CONTAINER_CMD = docker
 endif
+$(info Using $(CONTAINER_CMD) to manage containers)
 
-ifeq (, $(shell which controller-gen))
+ifeq (, $(shell which controller-gen 2>/dev/null))
     CONTROLLER_GEN := $(GOBIN)/controller-gen
 else
-    CONTROLLER_GEN := $(shell which controller-gen)
+    CONTROLLER_GEN := $(shell which controller-gen 2>/dev/null)
 endif
+$(info Using controller-gen at $(CONTROLLER_GEN))
 
 ci: all
 
