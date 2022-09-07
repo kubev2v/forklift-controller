@@ -278,7 +278,7 @@ func (r *Reconciler) testConnection(provider *api.Provider, secret *core.Secret)
 					Reason:   Tested,
 					Category: Critical,
 					Message: fmt.Sprintf(
-						"Connection auth failed, failed: %s",
+						"Connection auth failed, error: %s",
 						err.Error()),
 				})
 			return nil
