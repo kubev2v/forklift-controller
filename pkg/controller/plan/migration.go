@@ -1239,7 +1239,7 @@ func (r *Migration) updateCopyProgress(vm *plan.VMStatus, step *plan.Step) (err 
 			importer, found, kErr := r.kubevirt.GetImporterPod(dv)
 			if kErr != nil {
 				log.Error(
-					err,
+					kErr,
 					"Could not get CDI importer pod for DataVolume.",
 					"vm",
 					vm.String(),
