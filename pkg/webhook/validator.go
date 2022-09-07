@@ -48,7 +48,7 @@ func (a *Handler) Handle(ctx context.Context, req admission.Request) admission.R
 	// Get the provider type on which start the tests
 	createdForProviderType, ok := secret.GetLabels()["createdForProviderType"]
 	if !ok {
-		return admission.Errored(http.StatusBadRequest, liberr.New("The label 'createdForProviderType' is not set on secret"))
+		return admission.ValidationResponse(true, "The label 'createdForProviderType' is not set on secret, ignoring validation")
 	}
 	provider := &api.Provider{}
 	providerType := api.ProviderType(createdForProviderType)
