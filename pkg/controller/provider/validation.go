@@ -270,6 +270,7 @@ func (r *Reconciler) testConnection(provider *api.Provider, secret *core.Secret)
 				Message:  "Connection test, succeeded.",
 			})
 	} else {
+		// When the status is unauthorized controller stops the reconciliation, so the user account does not get locked.
 		if status == http.StatusUnauthorized {
 			provider.Status.SetCondition(
 				libcnd.Condition{
