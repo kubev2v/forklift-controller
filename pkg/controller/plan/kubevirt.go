@@ -46,6 +46,8 @@ const (
 	AnnKubevirtValidations = "vm.kubevirt.io/validations"
 	// PVC annotation containing the name of the importer pod.
 	AnnImporterPodName = "cdi.kubevirt.io/storage.import.importPodName"
+	// DV deletion on completion
+	AnnDeleteAfterCompletion = "cdi.kubevirt.io/storage.deleteAfterCompletion"
 )
 
 // Labels
@@ -669,6 +671,9 @@ func (r *KubeVirt) dataVolumes(vm *plan.VMStatus, secret *core.Secret, configMap
 			annotations[AnnDefaultNetwork] = path.Join(
 				r.Plan.Spec.TransferNetwork.Namespace, r.Plan.Spec.TransferNetwork.Name)
 		}
+		// Do not delete the DV when the import completes as we check the DV to get the current
+		// disk transfer status.
+		annotations[AnnDeleteAfterCompletion] = "false"
 		dv := cdi.DataVolume{
 			ObjectMeta: meta.ObjectMeta{
 				Namespace:   r.Plan.Spec.TargetNamespace,
